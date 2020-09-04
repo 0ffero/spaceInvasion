@@ -1,0 +1,114 @@
+[
+    {
+        "active": true,
+        "visible": true,
+        "on": false,
+        "particleBringToTop": false,
+        "frame": {
+            "frames": ["enemyPiece"],
+            "cycle": false,
+            "quantity": 1
+        },
+        "frequency": 1000,
+        "gravityX": 0,
+        "gravityY": -800,
+        "maxParticles": 1,
+        "timeScale": 1,
+        "blendMode": 0,
+        "alpha": 1,
+        "lifespan": 1000,
+        "maxVelocityX": 800,
+        "maxVelocityY": 800,
+        "quantity": 1,
+        "scale": {
+            "start": 1,
+            "end": 0.5,
+            "ease": "Linear"
+        },
+        "tint": [14601420]
+    },
+    {
+        "active": true,
+        "visible": true,
+        "on": false,
+        "particleBringToTop": false,
+        "frame": {
+            "frames": ["enemyPiece"],
+            "cycle": false,
+            "quantity": 1
+        },
+        "frequency": 1000,
+        "gravityX": 0,
+        "gravityY": 800,
+        "maxParticles": 1,
+        "timeScale": 1,
+        "blendMode": 0,
+        "alpha": 1,
+        "lifespan": 1000,
+        "maxVelocityX": 800,
+        "maxVelocityY": 800,
+        "quantity": 1,
+        "scale": {
+            "start": 1,
+            "end": 0.5,
+            "ease": "Linear"
+        },
+        "tint": [14601420]
+    },
+    {
+        "active": true,
+        "visible": true,
+        "on": false,
+        "particleBringToTop": false,
+        "frame": {
+            "frames": ["enemyPiece"],
+            "cycle": false,
+            "quantity": 1
+        },
+        "frequency": 1000,
+        "gravityX": 800,
+        "gravityY": 0,
+        "maxParticles": 1,
+        "timeScale": 1,
+        "blendMode": 0,
+        "alpha": 1,
+        "lifespan": 1000,
+        "maxVelocityX": 800,
+        "maxVelocityY": 800,
+        "quantity": 1,
+        "scale": {
+            "start": 1,
+            "end": 0.5,
+            "ease": "Linear"
+        },
+        "tint": [14601420]
+    },
+    {
+        "active": true,
+        "visible": true,
+        "on": false,
+        "particleBringToTop": false,
+        "frame": {
+            "frames": ["enemyPiece"],
+            "cycle": false,
+            "quantity": 1
+        },
+        "frequency": 1000,
+        "gravityX": -800,
+        "gravityY": 0,
+        "maxParticles": 1,
+        "timeScale": 1,
+        "blendMode": 0,
+        "alpha": 1,
+        "lifespan": 1000,
+        "maxVelocityX": 800,
+        "maxVelocityY": 800,
+        "quantity": 1,
+        "scale": {
+            "start": 1,
+            "end": 0.5,
+            "ease": "Linear"
+        },
+        "tint": [14601420]
+    }
+]
