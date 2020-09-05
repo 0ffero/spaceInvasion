@@ -193,10 +193,16 @@ class enemyBoss {
     constructor(enemyType) {
         let eV = vars.enemies;
         let cV = vars.canvas;
-        this.sprite = enemyType%eV.spriteCount;
+
+        eV.bossNext+1===eV.spriteCount ? eV.bossNext=0 : eV.bossNext++;
+        if (vars.levels.wave<3 && eV.bossNext===5) { // for the first 2 waves we dont show the real enemy (cthulhu)
+            eV.bossNext=0;
+        }
+        this.sprite = eV.bossNext;
+
         this.hp = 40 + (enemyType * 5);
         this.points = 2000 * (enemyType+1);
-        this.scale = vars.game.scale*4;
+        this.scale = vars.game.scale*3;
         this.startPosition = [cV.cX, cV.cY];
         let firerate = eV.bossFireRateGetRandom();
         this.firerate = firerate[0];
@@ -279,8 +285,8 @@ function enemyBossUpdate(_boss) {
             } else {
                 // fire the bullet(s)
                 for (let b=0; b<bPF; b++) {
-                    console.log('Firing Bullet');
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], Phaser.Math.RND.between(0,vars.enemies.spriteCount-1), vars.game.scale*2, 2);
+                    //console.log('Firing Bullet');
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], Phaser.Math.RND.between(0,vars.enemies.spriteCount-1), vars.game.scale*2, 2+(Phaser.Math.Clamp(vars.levels.wave-2, 0, 5)));
                 }
                 _boss.data.list.firerate.bulletcount--;
 
@@ -310,6 +316,7 @@ function enemyBossUpdate(_boss) {
 */
 function enemyDeath(enemy) {
     //console.log('Enemy has died, creating death tween...');
+    
     enemy.disableBody(); // disable interaction with bullets
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
     let xMove = Phaser.Math.RND.between(30,60);
@@ -324,8 +331,15 @@ function enemyDeath(enemy) {
         onComplete: enemyDestroy,
     }, this)
 
-    // check to see if we should spawn a boss yet
+    // check to see if we should spawn a power up
     let eV = vars.enemies;
+    eV.deadSinceLastPowerup++;
+    if (eV.deadSinceLastPowerup===25) {
+        healthUpgradeSpawn([enemy.x, enemy.y])
+        eV.deadSinceLastPowerup=0;
+    }
+
+    // check to see if we should spawn a boss yet
     eV.bossSpawnTimeout[0]--;
     if (eV.bossSpawnTimeout[0]===0) {
         if (enemyBossGroup.children.size<eV.bossLimit) {

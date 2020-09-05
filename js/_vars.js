@@ -82,6 +82,8 @@ var vars = {
         bossFireRates: [],
         bossFireRatesResets: [],
         bossLimit: 1,
+        bossNext: -1,
+        deadSinceLastPowerup: 0,
 
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
         list: [],

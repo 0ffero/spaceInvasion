@@ -22,4 +22,21 @@ function animationInit(_spriteName='player') {
             });
         }
     }
+
+    if (selectedSprite==='upgrades') {
+        console.log('Setting Up Health Pickup Animations');
+        let inc = 25;
+        let sC = 3*inc;
+        let fC = 6; // frame count for each animation
+        let hpUpgrade = 0;
+        for (let s=inc; s<=sC; s+=inc) {
+            scene.anims.create({
+                key: 'hp' + s,
+                frames: scene.anims.generateFrameNumbers('health', { start: hpUpgrade*fC, end: hpUpgrade*fC+fC-1 } ),
+                frameRate: fC*1.5,
+                repeat: -1
+            });
+            hpUpgrade++;
+        }
+    }
 }

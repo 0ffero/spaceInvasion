@@ -71,7 +71,6 @@ function preload() {
 
     // ENEMIES
     scene.load.spritesheet( 'enemies', 'enemy/enemies-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
-
     // BULLET
     scene.load.spritesheet('bulletPrimaryEnemy', 'enemy/bulletPrimary-ext.png', { frameWidth: 34, frameHeight: 42, margin: 1, spacing: 2 });
 
@@ -79,6 +78,9 @@ function preload() {
     scene.load.spritesheet( 'trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
     scene.load.spritesheet( 'barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet( 'barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
+
+    // UPGRADES
+    scene.load.spritesheet( 'health', 'upgrades/health-ext.png', { frameWidth: 100, frameHeight: 80, margin: 1, spacing: 2 });
 
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');
@@ -111,6 +113,8 @@ function create() {
     enemies = scene.physics.add.group();
     sceneryGroup = scene.add.group();
     shipUpgradeGroup = scene.add.group();
+    shipPowerUpGroup = scene.add.group();
+    animationInit('upgrades');
     // add enemy count to the enemies var
     let note = '\n\nNOTES:\nAnother weird thing PHASER does... the frame total, for some inexplicable fukn\nreason is 1 more than the actual count. So we need a version check here :S\nIf we get an error on the count we know that this count CANNOT be trusted!';
     vars.versionCheck();
@@ -138,6 +142,7 @@ function create() {
     player.setSize(sV.bodyWidths[0][0], sV.bodyWidths[0][1]);
     scene.physics.add.overlap(enemyBullets, player, playerHit, null, this);
     scene.physics.add.overlap(shipUpgradeGroup, player, shipUpgradePickUp, null, this);
+    scene.physics.add.overlap(shipPowerUpGroup, player, shipPowerUpPickUp, null, this);
 
     inputInit();
     //animationInit('player');
