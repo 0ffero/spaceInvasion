@@ -59,6 +59,23 @@ function main() {
         let y = Phaser.Math.RND.between(55, 725);
         starEmitter.emitParticleAt(x,y);
     }
+
+    if (vars.game.started===true) {
+        let ssV = vars.player.ship.special;
+        if (ssV.doubleDamageEnabled===true || ssV.doubleFireRate===true) {
+            ssV.upgradeTimeout[0]-=1;
+            if (ssV.upgradeTimeout[0]<=0) {
+                ssV.upgradeTimeout[0]=ssV.upgradeTimeout[1];
+                ssV.doubleDamageEnabled=false;
+                ssV.doubleFireRate=false;
+                
+            }
+        }
+    }
+
+    if (vars.DEBUGHIDE===false) {
+        debugTextDraw();
+    }
 }
 
 function startGame() {

@@ -31,10 +31,14 @@ var vars = {
         callFrom: 'font-size: 12px; color: green',
         callTo: 'font-size: 14px; color: green',
         doing: 'font-size: 10px; color: yellow',
+        playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
     DEBUG: false,
     VERBOSE: false,
+
+    DEBUGHIDE: false,
+    DEBUGTEXT: '',
 
     audio: {
         currentTrack: 0,
@@ -250,7 +254,7 @@ var vars = {
             scene.physics.resume();
             let vG = vars.game;
             vG.paused=false;
-            player.setVisible(true).setFrame(0);
+            player.setVisible(true); //.setFrame(0);
             enemies.children.each( function(c) {
                 c.setVisible(true).setVelocityX(50);
             })
@@ -336,7 +340,7 @@ var vars = {
 
                     bulletCheck: function() {
                         bullets.children.each( function(c) {
-                            if (c.y<=-540) {
+                            if (c.y<=-100) {
                                 let bulletName = c.getData('name');
                                 if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('%cBullet with name: ' + bulletName + ' is off the screen, destroying it', vars.console.doing); }
                                 c.destroy();
@@ -345,16 +349,22 @@ var vars = {
                     },
 
                     fire: function() {
+                        let ssV = vars.player.ship.special;
                         this.currentWait = this.currentWaitMax;
                         this.ready = false;
-                        new bullet(0, this.bulletOffset, this.bulletSpeed, this.damage, 'centre');
+                        let damage = this.damage;
+                        if (ssV.doubleDamageEnabled===true) { damage*=2; }
+                        new bullet(0, this.bulletOffset, this.bulletSpeed, damage, 'centre');
                     },
 
                     update: function() {
                         // first update the bullet wait time
+                        let ssV = vars.player.ship.special;
+                        let reductio=1;
                         if (this.currentWait>0) {
-                            this.currentWait--;
-                        } else if (this.currentWait===0 && this.ready===false) {
+                            if (ssV.doubleFireRate===true) { reductio*=2; }
+                            this.currentWait-=reductio;
+                        } else if (this.currentWait<=0 && this.ready===false) {
                             // allow the gun to fire
                             if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('%cCentre cannon is ready to fire!', vars.console.doing); }
                             this.ready=true;
@@ -408,6 +418,7 @@ var vars = {
             special: {
                 doubleDamageEnabled: false,
                 doubleFireRate: false,
+                upgradeTimeout: [3*fps, 3*fps],
             },
 
             upgrades: 0,

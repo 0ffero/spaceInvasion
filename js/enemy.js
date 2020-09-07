@@ -251,15 +251,18 @@ function enemyBossHit(_bullet, _boss) {
         _boss.setData('hp', bossHP);
         console.log('Boss HP: ' + bossHP);
     } else {
+        let pV = vars.player;
+        let lV = vars.levels;
+        let eV = vars.enemies;
         console.log('The boss is dead! Make him to explody things...');
         let points = _boss.getData('points');
-        vars.player.increaseScore(points);
-        if (vars.levels.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
-            vars.enemies.bossSpawnTimeout[0]=vars.enemies.bossSpawnTimeout[1];
-        } else if (vars.levels.wave===2) { // wave 2 sets the spawn timeout back to 5 giving the player a short time before the next boss
-            vars.enemies.bossSpawnTimeout[0]=vars.enemies.bossSpawnTimeout[1]/2;
+        pV.increaseScore(points);
+        if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
+            eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1];
+        } else if (lV.wave===2) { // wave 2 sets the spawn timeout back to 5 giving the player a short time before the next boss
+            eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1]/2;
         } else { // for waves 3 and up we only allow a maximum of 2 enemy deaths before spawning the next boss
-            vars.enemies.bossSpawnTimeout[0];
+            eV.bossSpawnTimeout[0];
         }
         // then spawn a ship upgrade
         new shipUpgrade(bossPosition); // player.js
@@ -335,7 +338,7 @@ function enemyDeath(enemy) {
     let eV = vars.enemies;
     eV.deadSinceLastPowerup++;
     if (eV.deadSinceLastPowerup===25) {
-        healthUpgradeSpawn([enemy.x, enemy.y])
+        healthBulletUpgradeSpawn([enemy.x, enemy.y])
         eV.deadSinceLastPowerup=0;
     }
 

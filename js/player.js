@@ -1,19 +1,37 @@
-function healthUpgradeSpawn(_spawnXY) {
+function healthBulletUpgradeSpawn(_spawnXY) {
     let vP = vars.player;
-    let healthUpgrades = [25,50,75]
-    let hpChances = [0,0,0];
-    if (vP.hitpoints>=100) {
-        hpChances[0] +=3;
-        hpChances[1] +=2;
-        hpChances[2] +=1;
+    let healthUpgrades = [25,50,75,4,5]; // health upgrades now include bullet upgrades
+    let hpChances = [0,0,0,0,0];
+    if (vP.hitpoints>=150) {
+        hpChances[0] +=1;
+        hpChances[1] +=0;
+        hpChances[2] +=0;
+        hpChances[3] +=3;
+        hpChances[4] +=2;
+    } else if (vP.hitpoints>=125) {
+        hpChances[0] +=1;
+        hpChances[1] +=1;
+        hpChances[2] +=0;
+        hpChances[3] +=2;
+        hpChances[4] +=1;
+    } else if (vP.hitpoints>=100) {
+        hpChances[0] +=1;
+        hpChances[1] +=1;
+        hpChances[2] +=0;
+        hpChances[3] +=4;
+        hpChances[4] +=2;
     } else if (vP.hitpoints>=75) {
         hpChances[0] +=1;
         hpChances[1] +=3;
         hpChances[2] +=2;
-    } else {
+        hpChances[3] +=2;
+        hpChances[4] +=1;
+    } else { // ie the player has between 1 (well 5 as thats the minimum) and 74 (ie 70)
         hpChances[0] +=1;
-        hpChances[1] +=2;
-        hpChances[2] +=3;
+        hpChances[1] +=3;
+        hpChances[2] +=4;
+        hpChances[3] +=0;
+        hpChances[4] +=1;
     }
 
     let chanceArray = [];
@@ -23,17 +41,39 @@ function healthUpgradeSpawn(_spawnXY) {
         }
     }
     shuffle(chanceArray);
+    let error = false;
     let rnd = Phaser.Math.RND.between(0, chanceArray.length-1);
     let randomPick = healthUpgrades[chanceArray[rnd]];
-    let hpU = scene.physics.add.sprite(_spawnXY[0],_spawnXY[1],'health').setScale(0.4);
-    hpU.setData('upgrade', 'hp_' + randomPick);
-    hpU.anims.play('hp' + randomPick);
-    shipPowerUpGroup.add(hpU);
-    scene.tweens.add({
-        targets: hpU,
-        y: 1000,
-        duration: 2500,
-    })
+    let hpU;
+
+    if (randomPick===25 ||randomPick===50 ||randomPick===75) {
+        hpU = scene.physics.add.sprite(_spawnXY[0],_spawnXY[1],'upgradesH').setScale(0.4);
+        hpU.setData('upgrade', 'hp_' + randomPick);
+        hpU.anims.play('hp' + randomPick);
+    } else if (randomPick===4 || randomPick===5) {
+        hpU = scene.physics.add.sprite(_spawnXY[0],_spawnXY[1],'upgradesB').setScale(0.4);
+        hpU.setData('upgrade', 'b_' + (randomPick-4));
+        if (randomPick===4) {
+            hpU.anims.play('bulletStrength');
+        } else if (randomPick===5) {
+            hpU.anims.play('bulletRate');
+        }
+    } else {
+        console.warn('%cRandom Upgrade ' + randomPick + ' is unknown!\nrnd is: ' + rnd + '\nChance Array is: ', 'font-size: 24px');
+        console.warn('%c' + chanceArray, 'font-size: 24px');
+        console.warn('%cCheck that ' + randomPick + ' exists in the array!', 'font-size: 24px');
+        error=true;
+        debugger;
+    }
+
+    if (error===false) {
+        shipPowerUpGroup.add(hpU);
+        scene.tweens.add({
+            targets: hpU,
+            y: 1000,
+            duration: 2500,
+        })
+    }
 }
 
 function playerHit(_player, _bullet) {
@@ -96,18 +136,36 @@ function playerHit(_player, _bullet) {
         /* vars.game.pause();
         vars.game.started=false; // this tells us that we have died
         vars.player.dead(); */
-
         enemiesLand();
     }
 }
 
 function shipPowerUpPickUp(_upgrade) {
+    let pV = vars.player;
+    let ssV = pV.ship.special;
     let upgrade = _upgrade.getData('upgrade');
     let split = upgrade.split('_');
-    if (split[0]==='hp') {
-        vars.player.hitpoints+=parseInt(split[1]);
+    let upgradeType=split[0];
+    let upgradeValue=parseInt(split[1]);
+    if (upgradeType==='hp') {
+        console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade);
+        pV.hitpoints+=upgradeValue;
         // upgrade the ship frame TODO
         // we can probably use player hit to set the shield colour
+    } else if (upgradeType==='b') { // bullet upgrades last for 5 seconds
+        if (upgradeValue===0) { // double damage
+            console.log('%cUpgrade Bullet: Double Damage', vars.console.playerUpgrade);
+            ssV.doubleDamageEnabled = true;
+        } else if (upgradeValue===1) { // double fire rate
+            console.log('%cUpgrade Bullet: Double Fire Rate', vars.console.playerUpgrade);
+            ssV.doubleFireRate = true;
+        } else {
+            console.warn('%cUnknown bullet upgrade picked up: ' + upgrade, 'font-size: 24px;');
+        }
+    } else {
+        console.warn('%cUnknown upgrade picked up: ' + upgrade, 'font-size: 24px;');
+        error=true;
+        debugger;
     }
     _upgrade.destroy();
 }
@@ -121,9 +179,9 @@ class shipUpgrade { // these are created when a boss is killed
         let spawnHealth = false;
         sV.upgrades<2? sV.upgrades++ : spawnHealth=true;
 
-        if (spawnHealth===true) { // player has fully upgraded ship, spawn them some health instead
+        if (spawnHealth===true) { // player has fully upgraded ship, spawn them some health or better bullets instead
             console.log('Spawning Health ::: TODO');
-            healthUpgradeSpawn(_spawnXY);
+            healthBulletUpgradeSpawn(_spawnXY);
         } else { // the player hasnt fully upgraded their ship, spawn ship upgrade crate
             console.log('Spawning Ship Part ::: TODO');
             let frame = -1;

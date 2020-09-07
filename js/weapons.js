@@ -7,7 +7,7 @@ class bullet {
         if (bulletStrength===-1 || bulletSpeed===-1) {
             console.error('%c !!! Invalid bullet strength or speed !!!', 'font-weight: bold; color: white; blackground-color: red;')
         } else {
-            this.name = Phaser.Math.RND.between(0,66666).toString();
+            this.name = 'playersBullet_' + generateRandomID();
             if (bulletSpeed>0) {
                 this.bulletSpeed = -bulletSpeed;
             } else {
@@ -25,14 +25,14 @@ class bullet {
                 this.x1 = -bulletOffset + playerXPosition;
                 this.x2 = bulletOffset + playerXPosition;
             }
-            
+
 
             this.create();
         }
     }
 
     create() {
-        this.physicsObject = scene.physics.add.sprite(this.x1, player.y-40, 'bulletPrimary').setScale(vars.game.scale).setName('bullet_' + this.name).setVelocityY(this.bulletSpeed);
+        this.physicsObject = scene.physics.add.sprite(this.x1, player.y-40, 'bulletPrimary').setScale(vars.game.scale*this.bulletStrength).setName('bullet_' + this.name).setVelocityY(this.bulletSpeed);
         this.physicsObject.setData({ name: this.name, hp: this.bulletStrength, weaponSlot: this.weaponSlot, weaponSlotName: this.weaponSlotName })
         bullets.add(this.physicsObject);
         playerMuzzleFlash.emitParticleAt(player.x,player.y-27);

@@ -80,7 +80,8 @@ function preload() {
     scene.load.spritesheet( 'barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
 
     // UPGRADES
-    scene.load.spritesheet( 'health', 'upgrades/health-ext.png', { frameWidth: 100, frameHeight: 80, margin: 1, spacing: 2 });
+    scene.load.spritesheet( 'upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });
+    scene.load.spritesheet( 'upgradesH', 'upgrades/health-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
 
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');
@@ -157,5 +158,11 @@ function create() {
     storyInit();
 
     player.setDepth(10);
+
+    if (vars.DEBUGHIDE===false) {
+        vars.DEBUGTEXT = this.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
+        vars.DEBUGTEXT.setOrigin(0,0);
+        vars.DEBUGTEXT.setStroke(0x000000,4)
+    }
 
 }
