@@ -52,5 +52,25 @@ function animationInit(_spriteName='player') {
             frameRate: fC*1.5,
             repeat: -1
         });
+
+        console.log('Setting Up Bonus Points Pickup Animations');
+        scene.anims.create({
+            key: 'score_2000',
+            frames: scene.anims.generateFrameNumbers('upgradesP', { start: 0, end: 1 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
+        scene.anims.create({
+            key: 'score_3000',
+            frames: scene.anims.generateFrameNumbers('upgradesP', { start: 2, end: 3 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
+        scene.anims.create({
+            key: 'score_5000',
+            frames: scene.anims.generateFrameNumbers('upgradesP', { start: 4, end: 5 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
     }
 }

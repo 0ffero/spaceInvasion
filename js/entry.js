@@ -82,6 +82,7 @@ function preload() {
     // UPGRADES
     scene.load.spritesheet( 'upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });
     scene.load.spritesheet( 'upgradesH', 'upgrades/health-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
+    scene.load.spritesheet( 'upgradesP', 'upgrades/points-ext.png', { frameWidth: 200, frameHeight: 100, margin: 1, spacing: 2 });
 
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');

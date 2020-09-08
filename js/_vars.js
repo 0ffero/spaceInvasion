@@ -87,6 +87,7 @@ var vars = {
         bossFireRatesResets: [],
         bossLimit: 1,
         bossNext: -1,
+        bulletDamage: 1,
         deadSinceLastPowerup: 0,
 
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
@@ -168,7 +169,7 @@ var vars = {
             eV.bossFireRatesInit();
         },
 
-        shootTimeoutDo: function() {
+        shootTimeoutDo: function() { // this is for standard enemies only! ie not bosses!
             let eV = vars.enemies;
             if (eV.isLanding===false) {
                 if (eV.shootTimeout[0]>0) {
@@ -182,8 +183,9 @@ var vars = {
                     let xy = [parseInt(randomEnemy.x), parseInt(randomEnemy.y+25)];
                     let bullet = randomEnemy.getData('row')-1;
                     let scale = vars.game.scale+0.1;
+                    let strength = vars.enemies.bulletDamage;
                     //console.log('    Spawning bullet for enemy: ' + randomEnemy.name + ' at ' + xy[0] + ',' + xy[1]);
-                    eV.bulletPhysicsObject(xy,bullet,scale);
+                    eV.bulletPhysicsObject(xy,bullet,scale,strength);
                 }
             }
         },
@@ -221,6 +223,9 @@ var vars = {
 
     game: {
         bulletCheckTimeout: [fps/2, fps/2],
+        bonusSpawnCount: [0,0,0,0,0,0,0,0], // basically used for debugging
+        upgradeNames: ['  Hit Points: +25 hp','  Hit Points: +50 hp','  Hit Points: +75 hp','  Bullets - Double Fire Rate','  Bullets - Double Damage','  Points: +2000','  Points: +3000','  Points: +5000'],
+        lastChanceArray: [],
         fps: fps,
         paused: true,
         started: false,
@@ -288,11 +293,13 @@ var vars = {
         },
 
         dead: function() {
+            vars.player.hitpoints=0;
+            vars.player.isDead=true;
+            player.disableBody(true,true);
             enemies.children.each( (c) => {
                 c.setVisible(true);
             })
             vars.player.destroyAllBullets();
-            enemiesLand();
         },
 
         destroyAllBullets: function() {
@@ -418,24 +425,19 @@ var vars = {
             special: {
                 doubleDamageEnabled: false,
                 doubleFireRate: false,
+                upgradeOnScreen: false,
                 upgradeTimeout: [3*fps, 3*fps],
+
+                resetVars: function() {
+                    let ssV = vars.player.ship.special;
+                    ssV.upgradeTimeout[0]=ssV.upgradeTimeout[1];
+                    ssV.doubleDamageEnabled=false;
+                    ssV.doubleFireRate=false;
+                    ssV.upgradeOnScreen=false;
+                }
             },
 
             upgrades: 0,
-            upgradePickup: function() {
-                // originally I was just gonna upgrade the ship, but now I give the player full health
-                let sV = vars.player.ship;
-                let newFrame = player.frame.name;
-                // update the frame
-                if (newFrame < 2) {
-                    newFrame++;
-                    player.setFrame(newFrame);
-                    player.setSize(sV.bodyWidths[newFrame][0], sV.bodyWidths[newFrame][1]);
-                } else { // I may eventually add code to allow upgrades beyond 2 so the "else" stays
-
-                }
-                
-            },
 
             init: function() {
                 console.log('      %c...init ship...', vars.console.doing);

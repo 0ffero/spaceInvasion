@@ -280,6 +280,7 @@ function enemyBossUpdate(_boss) {
         let bCount = firerate.bulletcount;// 10
         let bPF = firerate.bulletsperframe;// 1
         let bTimeout = firerate.bullettimeout;// 2
+        let wave = vars.levels.wave;
 
         if (bCount>0) {
             if (bTimeout>0) {
@@ -287,9 +288,12 @@ function enemyBossUpdate(_boss) {
                 return;
             } else {
                 // fire the bullet(s)
+                let damage = vars.enemies.bulletDamage*2; // boss bullets hit 2 times harder than a normal one!
+                let bulletScale = vars.game.scale*2;
                 for (let b=0; b<bPF; b++) {
                     //console.log('Firing Bullet');
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], Phaser.Math.RND.between(0,vars.enemies.spriteCount-1), vars.game.scale*2, 2+(Phaser.Math.Clamp(vars.levels.wave-2, 0, 5)));
+                    let bulletSprite = Phaser.Math.RND.between(0,vars.enemies.spriteCount-1); // basically the colour of the bullet
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage);
                 }
                 _boss.data.list.firerate.bulletcount--;
 
@@ -372,9 +376,14 @@ function enemyDestroy() {
                 })
             }
         }
+        // were moving on to a new wave, increase the bullet damage
+        setEnemyBulletDamage();
+
+        // generate the next wave
         enemiesGenerate();
+
         vars.game.pause();
-        wavePopUp();
+        wavePopUp(); // show the wave pop up
     }
 }
 
@@ -445,17 +454,29 @@ function enemyHit(bullet, enemy) {
 function enemiesLand() {
     let eV = vars.enemies;
     eV.isLanding = true;
+
     let count=0;
+    let yMinMax = [1200,0];
     enemies.children.each( (c) => {
-        let yDelta = c.y+215;
-        let row = c.getData('row'); // used for scaling the enemies
-        let eventualScale = (0.4 * (row/5));
+        c.body.velocity.x=0;
+        if (c.y<yMinMax[0]) {
+            yMinMax[0]=c.y;
+        }
+        if (c.y>yMinMax[1]) {
+            yMinMax[1]=c.y;
+        }
+    })
+    let yDelta = (vars.canvas.height-30) - yMinMax[1];
+
+    enemies.children.each( (c) => {
+        let scaleDelta = 0.25 + ((c.y/yDelta)*0.25);
+        thisYDelta = c.y+yDelta;
         if (count===0) {
             count=1;
             scene.tweens.add({
                 targets: c,
-                scale: eventualScale,
-                y: yDelta,
+                y: thisYDelta,
+                scale: scaleDelta,
                 //ease: 'linear',
                 duration: 2500,
                 onComplete: enemiesStopAnims,
@@ -463,8 +484,8 @@ function enemiesLand() {
         } else {
             scene.tweens.add({
                 targets: c,
-                scale: eventualScale,
-                y: yDelta,
+                y: thisYDelta,
+                scale: scaleDelta,
                 //ease: 'linear',
                 duration: 2500,
             })
@@ -474,7 +495,6 @@ function enemiesLand() {
 
 function enemiesMove() {
     let eV = vars.enemies;
-
     //first we check for a change in direction
     if (eV.updateTimeout>0) {
         eV.updateTimeout--;

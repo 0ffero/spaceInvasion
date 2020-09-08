@@ -38,8 +38,10 @@ function main() {
         }
 
         // update the enemies
-        vars.enemies.update();
-        // update any bosses
+        if (vars.enemies.isLanding !== true) {
+            vars.enemies.update();
+        }
+        // update any bosses (even if the player is dead the boss will continue to animate)
         if (enemyBossGroup.children.size>0) {
             enemyBossGroup.children.each( (c)=> {
                 enemyBossUpdate(c);
@@ -65,10 +67,7 @@ function main() {
         if (ssV.doubleDamageEnabled===true || ssV.doubleFireRate===true) {
             ssV.upgradeTimeout[0]-=1;
             if (ssV.upgradeTimeout[0]<=0) {
-                ssV.upgradeTimeout[0]=ssV.upgradeTimeout[1];
-                ssV.doubleDamageEnabled=false;
-                ssV.doubleFireRate=false;
-                
+                ssV.resetVars();
             }
         }
     }

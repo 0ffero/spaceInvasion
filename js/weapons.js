@@ -40,6 +40,14 @@ class bullet {
     }
 }
 
+function setEnemyBulletDamage() {
+    let wave = vars.levels.wave;
+    let eV = vars.enemies;
+    if (eV.bulletDamage<2 && wave%2===0) {
+        eV.bulletDamage += (wave - 1) * 0.2;
+    }
+}
+
 
 class weaponUpgrade {
 

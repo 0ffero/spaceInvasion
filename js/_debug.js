@@ -29,6 +29,20 @@ function debugTextDraw() {
     let dSU          = '  Deaths Since Upgrade     : ' + eV.deadSinceLastPowerup;
     debugArray.push(dSU);
 
+    debugArray.push('Ship Ugrade Spawn Count');
+    let uV = vars.game.bonusSpawnCount;
+    let upgradeNames = vars.game.upgradeNames;
+    for (let u=0; u<upgradeNames.length; u++) {
+        let suD=upgradeNames[u] + ' : ' + uV[u];
+        debugArray.push(suD);
+    }
+    let lcA = vars.game.lastChanceArray;
+    let lcText = '';
+    for (let l=0; l<lcA.length; l++) {
+        lcText += lcA[l] + ',';
+    }
+    lcText = lcText.substring(0,lcText.length-1);
+    debugArray.push('\n' + 'Previous Chance Array: ' + lcText);
     vars.DEBUGTEXT.setText(debugArray).setName('DEBUG_WINDOW');
     vars.DEBUGTEXT.setDepth(100);
 }
