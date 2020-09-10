@@ -61,33 +61,84 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
     splines: {
         alpha: {
             positions: [
-                [500, 30],
+                ['canvasWidth-220', 30],
                 ['canvasWidth-30', 250],
-                [0+50, 'enemyStartY+300'],
-                [0+50, 'enemyStartY+400'],
-                ['canvasWidth+50', 'enemyStartY+300'],
+                [0+100, 'enemyStartY+300'],
+                [0+100, 'enemyStartY+500'],
+                ['canvasWidth+50', 'enemyStartY+400'],
             ],
+            fireTimings: {
+                initialWait: 60, // in frames
+                bulletCount: 5,
+                bulletSpacing: 4, // frames
+                fireSpacing: 30,
+            },
+        },
+        alphaReversed: {
+            positions: [
+                [0+220, 30],
+                [0+30, 250],
+                ['canvasWidth-100', 'enemyStartY+300'],
+                ['canvasWidth-100', 'enemyStartY+500'],
+                [0-50, 'enemyStartY+400'],
+            ],
+            fireTimings: {
+                initialWait: 60, // in frames
+                bulletCount: 5,
+                bulletSpacing: 4, // frames
+                fireSpacing: 30,
+            },
         },
     },
 
-    convertPatternToSpline: function(_spline='alpha') {
+    convertPatternToSpline: function(_spline='alpha',_enemyPos=[]) {
+        if (_enemyPos.length!=2) {
+            console.error('You must send the enemies position to this function or the output will mean nothing\n(as the enemy position would always be 0,0');
+            debugger;
+            return false;
+        }
+
         let epV = vars.enemies.enemyPatterns;
         let sV = epV.splines;
+        let splineArray = [];
+
         let positions = sV[_spline].positions;
         for (let s=0; s<positions.length; s++) {
             //console.log(positions[s]);
-            if (typeof positions[s][0]!=='number') {
-                console.log('String found on X axis... converting it');
-                let xPos = epV.patternStringToInt(positions[s][0]);
+            let xPos=-1; let yPos=-1;
+            if (typeof positions[s][0]!=='number' || typeof positions[s][1]!=='number') {
+                if (typeof positions[s][0]!=='number') {
+                    //console.log('String found on X axis... converting it');
+                    xPos = epV.patternStringToInt(positions[s][0],_enemyPos);
+                }
+                if (typeof positions[s][1]!=='number') {
+                    //console.log('String found on Y axis... converting it');
+                    yPos = epV.patternStringToInt(positions[s][1],_enemyPos);
+                }
+                if (xPos===-1) { xPos = positions[s][0]; }
+                if (yPos===-1) { yPos = positions[s][1]; }
+            } else {
+                xPos = positions[s][0]; yPos = positions[s][1];
             }
-            if (typeof positions[s][1]!=='number') {
-                console.log('String found on Y axis... converting it');
-                let yPos = epV.patternStringToInt(positions[s][1]);
-            }
+            splineArray.push(xPos); splineArray.push(yPos); // this is the format that Phaser uses (ie [x,y,x,y,x,y...])
         }
+        //console.log(splineArray);
+        //console.log('Enemy Start from: ' + _enemyPos[0] + ',' + _enemyPos[1]);
+        
+        // create the path
+        let path1 = new Phaser.Curves.Path(_enemyPos[0], _enemyPos[1]).splineTo(splineArray);
+        // DEBUG
+        if (vars.DEBUG===true) {
+            // draw it so we can make sure it looks ok
+            graphics = scene.add.graphics();
+            graphics.lineStyle(1, 0xffffff, 1);
+            path1.draw(graphics, 128);
+        }
+        // END
+        return path1;
     },
 
-    patternStringToInt: function(_positionAsText) {
+    patternStringToInt: function(_positionAsText,_enemyXY) {
         let regex=/(\w+)([-,+])(\w+)/;
         if (typeof _positionAsText==='string') {
             let found = _positionAsText.match(regex);
@@ -98,14 +149,14 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
             let OKCount = 0;
             // make sure the what is a valid string
             if (typeof what === 'string') {
-                console.log('Valid "what" found.');
+                //console.log('Valid "what" found.');
                 OKCount++;
             } else {
                 console.error('ERROR: Invalid "what" found.')
             }
             // make sure the operator is valid
             if (operator==='+' || operator==='-') {
-                console.log('Valid operator found.');
+                //console.log('Valid operator found.');
                 OKCount++;
             } else {
                 console.error('ERROR: Invalid operator found.')
@@ -114,25 +165,51 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
             if (isNaN(parseInt(value))) {
                 console.error('ERROR: Value is not a number!');
             } else {
-                console.log('This is a number.');
+                //console.log('This is a number.');
                 OKCount++;
                 value = parseInt(value);
             }
 
             if (OKCount===3) { // everything looks fine, do the calculation
-                console.log('The OK Count was 3... CONTINUE FROM HERE (TODO)');
+                let outValue=-1;
                 if (what.includes('canvas')) {
-
+                    let cV = vars.canvas;
+                    let dimension = what.replace('canvas','').toLowerCase();
+                    let calcValue = cV[dimension];
+                    if (operator==='+') {
+                        //console.log(calcValue + '+' + value);
+                        outValue = calcValue + value;
+                    } else {
+                        //console.log(calcValue + '-' + value);
+                        outValue = calcValue - value;
+                    }
+                    //console.log('OutValue = ' + outValue); // this will be the integer after
                 } else if (what.includes('enemy')) {
-
+                    let dimension = what.replace('enemyStart','').toLowerCase();
+                    dimension = dimension==='x' ? 0 : 1;
+                    let calcValue = _enemyXY[dimension];
+                    if (operator==='+') {
+                        //console.log('Enemy ' + calcValue + '+' + value);
+                        outValue = calcValue + value;
+                    } else {
+                        //console.log('Enemy ' + calcValue + '-' + value);
+                        outValue = calcValue - value;
+                    }
                 } else {
                     console.log('The "what" variable contains an invalid reference.\nReferences accepted so far: enemy, canvas');
                 }
-                debugger;
+
+                if (outValue!==-1) {
+                    return outValue;
+                } else {
+                    console.error('The The outValue is still -1!\nThis is a real problem!');
+                    debugger;
+                    return false;
+                }
             } else {
                 console.error('The OK Count was NOT 3!\nPassed variable was: ' + _positionAsText + '\nIf you have the console enabled you should jump to\nthis line as theres a debugger call on the next line.');
-                return false;
                 debugger;
+                return false;
             }
         }
     },
@@ -321,6 +398,25 @@ function enemyBossUpdate(_boss) {
    █     █  ██ █     █ █ █   █      █     █   █ █  ██ █       █     █   █   █ █  ██     █ 
    █████ █   █ █████ █ █ █   █      █     █████ █   █ █████   █   █████ █████ █   █ █████ 
 */
+
+function enemyAttackerComplete(_follower) {
+    console.log('Enemy has finished its attack pattern. Pausing...');
+    console.log(_follower);
+    debugger;
+}
+
+function enemyAttackingHit(_enemy, _bullet) {
+    console.log('Enemy attacker has been hit. Pausing...');
+    let enemyName = _enemy.name.replace('f_','');
+    let enemyPhaser = scene.children.getByName(enemyName);
+    console.log(enemyPhaser);
+    console.log(_bullet);
+    enemyHit(_bullet, enemyPhaser);
+    if (enemyPhaser===null) {
+        _enemy.destroy();
+    }
+}
+
 function enemyDeath(enemy) {
     //console.log('Enemy has died, creating death tween...');
     
@@ -421,31 +517,33 @@ function enemyHit(bullet, enemy) {
 
     // destroy the bullet and remove it from the bullets array
     bullet.destroy();
-    enemyPieceParticle.emitParticleAt(enemy.x, enemy.y)
-    scene.sound.play('enemyHit');
+    if (enemy!==null) {
+        enemyPieceParticle.emitParticleAt(enemy.x, enemy.y)
+        scene.sound.play('enemyHit');
 
-    // single explosion
-    bulletHitEnemy.emitParticleAt(enemy.x, enemy.y);
+        // single explosion
+        bulletHitEnemy.emitParticleAt(enemy.x, enemy.y);
 
-    // increase the players score
-    let scoreTotal = 0;
-    scoreTotal += strength * 10;
+        // increase the players score
+        let scoreTotal = 0;
+        scoreTotal += strength * 10;
 
-    // reduce enemy hp by bullet strength
-    let enemyHP = enemy.getData('hp');
-    if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('hp: ' + enemyHP + ', bullet strength: ' + strength); }
-    enemyHP -= strength;
+        // reduce enemy hp by bullet strength
+        let enemyHP = enemy.getData('hp');
+        if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('hp: ' + enemyHP + ', bullet strength: ' + strength); }
+        enemyHP -= strength;
 
-    // check for enemy death
-    if (enemyHP<=0) { // enemy is dead
-        scoreTotal += enemy.getData('points'); // give the player the points for this enemy
-        enemyDeath(enemy);
-    } else {
-        enemy.setData('hp', enemyHP); // enemy is fine, update its HP
-        //console.log('enemy hp: ' + enemyHP);
+        // check for enemy death
+        if (enemyHP<=0) { // enemy is dead
+            scoreTotal += enemy.getData('points'); // give the player the points for this enemy
+            enemyDeath(enemy);
+        } else {
+            enemy.setData('hp', enemyHP); // enemy is fine, update its HP
+            //console.log('enemy hp: ' + enemyHP);
+        }
+
+        vars.player.increaseScore(scoreTotal);
     }
-
-    vars.player.increaseScore(scoreTotal);
 
     // enemy destroy has been moved to after its death animation: fn enemyDestroy
 

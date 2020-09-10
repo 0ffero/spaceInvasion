@@ -81,6 +81,7 @@ var vars = {
     },
 
     enemies: {
+        attackTimeout: [10*fps,10*fps],
         bossSpawnTimeout: [10,10], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
         bossSpawnCount: 0,
         bossFireRates: [],
@@ -114,6 +115,37 @@ var vars = {
         },
         updateTimeout: 10, // in frames. We use this to update the enemies velocity
         updateTimeoutMax: 10,
+
+        attackTimeoutDo: function() {
+            let eV=vars.enemies;
+            eV.attackTimeout[0]-=1;
+            if (eV.attackTimeout[0]===0) {
+                eV.attackTimeout[0] = eV.attackTimeout[1];
+                for (let rE=0; rE<3; rE++) {
+                    // randomly pick an enemy to attach a spline
+                    let enemy = enemyGetRandom();
+                    // theres currently only 1 path, but this will eventually be randomised TODO
+                    let selectedPath = 'alpha';
+                    if (enemy.x>vars.canvas.cX) { selectedPath+='Reversed'; }
+                    let fireTimings = vars.enemies.enemyPatterns.splines[selectedPath].fireTimings;
+
+                    // build the spline attack pattern
+                    let path = vars.enemies.enemyPatterns.convertPatternToSpline(selectedPath,[enemy.x,enemy.y])
+                    let enemyXY = [enemy.x, enemy.y];
+                    let enemyName = enemy.name; // needed to re-enable the real enemy sprite
+                    let enemySpriteFrame = enemy.frame.name%vars.enemies.spriteCount;
+                    let attackingEnemy = scene.add.follower(path, enemyXY[0], enemyXY[1], 'enemies', enemySpriteFrame).setName('f_' + enemyName).setScale(vars.game.scale);
+                    enemyAttackingGroup.add(attackingEnemy);
+                    attackingEnemy.setData( { initialWait: fireTimings.initialWait, bulletCount: fireTimings.bulletCount, bulletSpacing: fireTimings.bulletSpacing, fireSpacing: fireTimings.fireSpacing } );
+
+                    attackingEnemy.startFollow({
+                        positionOnPath: true,
+                        duration: 6000,
+                        onComplete: enemyAttackerComplete,
+                    });
+                }
+            }
+        },
 
         bossFireRatesInit: function() {
             let eV = vars.enemies;
@@ -212,10 +244,12 @@ var vars = {
         },
 
         update: function() {
+            let eV = vars.enemies;
             //this function was becoming unweildy so its been moved to enemy.js
             enemiesMove();
             // now we check to see if the enemies should be shooting (only happens every few seconds)
-            vars.enemies.shootTimeoutDo();
+            eV.shootTimeoutDo();
+            eV.attackTimeoutDo();
         }
 
 
@@ -361,7 +395,8 @@ var vars = {
                         this.ready = false;
                         let damage = this.damage;
                         if (ssV.doubleDamageEnabled===true) { damage*=2; }
-                        new bullet(0, this.bulletOffset, this.bulletSpeed, damage, 'centre');
+                        let thisBullet = new bullet(0, this.bulletOffset, this.bulletSpeed, damage, 'centre');
+                        thisBullet.physicsObject.setVelocityY(-this.bulletSpeed);
                     },
 
                     update: function() {

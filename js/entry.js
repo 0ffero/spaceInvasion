@@ -111,11 +111,20 @@ function create() {
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
 
     // set up the colliders
-    bullets = scene.physics.add.staticGroup();
-    enemies = scene.physics.add.group();
-    sceneryGroup = scene.add.group();
+    // player
     shipUpgradeGroup = scene.add.group();
     shipPowerUpGroup = scene.add.group();
+    bullets = scene.physics.add.group();
+
+    // enemies
+    enemies = scene.physics.add.group();
+    enemyBossGroup = scene.physics.add.group();
+    enemyBullets = scene.physics.add.group();
+    enemyAttackingGroup = scene.physics.add.group();
+
+    // scenery
+    sceneryGroup = scene.add.group();
+    
     animationInit('upgrades');
     // add enemy count to the enemies var
     let note = '\n\nNOTES:\nAnother weird thing PHASER does... the frame total, for some inexplicable fukn\nreason is 1 more than the actual count. So we need a version check here :S\nIf we get an error on the count we know that this count CANNOT be trusted!';
@@ -127,12 +136,7 @@ function create() {
         if (vars.DEBUG===true) { alert(message); }
         debugger;
     }
-    enemyBossGroup = scene.physics.add.group();
     animationInit('enemies');
-    enemyBullets = scene.physics.add.group();
-
-    scene.physics.add.overlap(bullets, enemies, enemyHit, null, this);
-    scene.physics.add.overlap(bullets, enemyBossGroup, enemyBossHit, null, this);
 
     // draw the background
     bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false);
@@ -142,9 +146,14 @@ function create() {
     player = scene.physics.add.sprite(vars.canvas.cX, vars.canvas.height-75, 'player').setName('player').setVisible(false);//.setScale(vars.game.scale);
     player.setCollideWorldBounds(true);
     player.setSize(sV.bodyWidths[0][0], sV.bodyWidths[0][1]);
+
+    // physics overlaps
+    scene.physics.add.overlap(bullets, enemies, enemyHit, null, this);
+    scene.physics.add.overlap(bullets, enemyBossGroup, enemyBossHit, null, this);
     scene.physics.add.overlap(enemyBullets, player, playerHit, null, this);
     scene.physics.add.overlap(shipUpgradeGroup, player, shipUpgradePickUp, null, this);
     scene.physics.add.overlap(shipPowerUpGroup, player, shipPowerUpPickUp, null, this);
+    scene.physics.add.overlap(enemyAttackingGroup, bullets, enemyAttackingHit, null, this);
 
     inputInit();
     //animationInit('player');
