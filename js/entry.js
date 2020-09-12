@@ -92,9 +92,13 @@ function preload() {
     scene.load.bitmapFont('azo', 'fonts/azo-fire.png', 'fonts/azo-fire.xml');
 
     // SOUNDS
-    scene.load.audio('enemyHit', 'audio/enemyHit.ogg');
-    scene.load.audio('enemyBossHit', 'audio/enemyBossHit.ogg');
-    scene.load.audio('playerGun1', 'audio/blaster.ogg');
+    scene.load.audio('enemyHit',         'audio/enemyHit.ogg');
+    scene.load.audio('enemyBossHit',     'audio/enemyBossHit.ogg');
+    scene.load.audio('playerGun1',       'audio/blaster.ogg');
+    scene.load.audio('enemyExplode',     'audio/enemyExplode.ogg');
+    scene.load.audio('enemyBossExplode', 'audio/enemyBossExplode.ogg');
+    scene.load.audio('pickUpStandard',   'audio/pickup.ogg');
+    scene.load.audio('playerDeath',      'audio/playerDeath.ogg');
 }
 
 

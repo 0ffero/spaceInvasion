@@ -96,6 +96,15 @@ var vars = {
         deadSinceLastPowerup: 0,
 
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
+        colours: [
+            ['red', 0xFF0000],
+            ['green', 0x00FF00],
+            ['blue', 0x00BFFF],
+            ['purple', 0xC926FF],
+            ['yellow', 0xFFFF00],
+            ['purple2', 0xC926FF] // cthulhu's bullets
+        ]
+        ,
         list: [],
         isLanding: false,
         moveDirectionCurrent: 'right',
@@ -340,7 +349,7 @@ var vars = {
             eV.bossSpawnTimeout[0] = eV.bossSpawnTimeout[1]; // reset the timeout
 
             // create a boss enemy
-            let boss = new enemyBoss(5);
+            let boss = new enemyBoss();
         },
 
         update: function() {
@@ -432,6 +441,7 @@ var vars = {
         dead: function() {
             vars.player.hitpoints=0;
             vars.player.isDead=true;
+            scene.sound.play('playerDeath');
             player.disableBody(true,true);
             enemies.children.each( (c) => {
                 c.setVisible(true);

@@ -42,7 +42,10 @@ function debugTextDraw() {
         lcText += lcA[l] + ',';
     }
     lcText = lcText.substring(0,lcText.length-1);
-    debugArray.push('\n' + 'Previous Chance Array: ' + lcText);
+    debugArray.push('\n' + 'Previous Chance Array: ' + lcText + '\n');
+
+    debugArray.push('ENEMIES');
+    debugArray.push('EnemyBossSpawnTimout: ' + eV.bossSpawnTimeout);
     vars.DEBUGTEXT.setText(debugArray).setName('DEBUG_WINDOW');
     vars.DEBUGTEXT.setDepth(100);
 }

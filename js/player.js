@@ -172,6 +172,7 @@ function shipPowerUpPickUp(_upgrade) {
     let split = upgrade.split('_');
     let upgradeType=split[0];
     let upgradeValue=parseInt(split[1]);
+    scene.sound.play('pickUpStandard');
     if (upgradeType==='hp') {
         console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade);
         pV.hitpoints+=upgradeValue;

@@ -241,8 +241,9 @@ class enemy {
 
             default: this.colour = 0xffffff; break;
         }
-        
-        this.y = vars.game.rowStartY * this.row  + (row*30);
+
+        this.colourIndex = this.row-1;
+        this.y = vars.game.rowStartY * this.row + (row*30);
 
         this.addEnemy(this.enemyType);
     }
@@ -256,18 +257,17 @@ class enemy {
         this.points = this.hp * 10;
 
         this.sprite = this.row-1;
-        
-        
+
         let vgscale = vars.game.scale;
         let thisSprite = scene.physics.add.sprite(this.x * vgscale, this.y * vgscale, 'enemies', this.sprite).setScale(vgscale-0.1).setVisible(false).setName('boss_' + generateRandomID);
-        thisSprite.setData({ hp: this.hp, row: this.row, enemyType: this.enemyType, dead: false, points: this.points, attacking: false, colour: this.colour }).setName(this.name);
+        thisSprite.setData({ hp: this.hp, row: this.row, enemyType: this.enemyType, dead: false, points: this.points, attacking: false, colour: this.colour, colourIndex: this.colourIndex }).setName(this.name);
         thisSprite.anims.play('e.hover' + this.sprite);
         enemies.add(thisSprite);
     }
 }
 
 class enemyBoss {
-    constructor(enemyType) {
+    constructor() {
         let eV = vars.enemies;
         let cV = vars.canvas;
 
@@ -275,10 +275,13 @@ class enemyBoss {
         if (vars.levels.wave<3 && eV.bossNext===5) { // for the first 2 waves we dont show the real enemy (cthulhu)
             eV.bossNext=0;
         }
+        if (eV.bossNext===5) { // this is the cthulhu boss, he has his own special camera filter
+            shaderType('gray',1);
+        }
         this.sprite = eV.bossNext;
 
-        this.hp = 40 + (enemyType * 5);
-        this.points = 2000 * (enemyType+1);
+        this.hp = 40 + (this.sprite * 5);
+        this.points = 2000 * (this.sprite+1);
         this.scale = vars.game.scale*3;
         this.startPosition = [cV.cX, cV.cY];
         let firerate = eV.bossFireRateGetRandom();
@@ -286,22 +289,25 @@ class enemyBoss {
         this.fireratepattern = firerate[1];
 
         let selectedPath = Phaser.Math.RND.between(0,eV.bossPaths.length-1);
-        console.log('Selected boss path = ' + eV.bossPaths[selectedPath][0]);
+        //console.log('Selected boss path = ' + eV.bossPaths[selectedPath][0]);
         let boss = scene.add.follower(eV.bossPaths[selectedPath][1],0,0, 'enemies', this.sprite).setScale(this.scale);
         var thisSprite = scene.physics.add.sprite(this.startPosition[0], this.startPosition[1], 'enemies', this.sprite).setScale(this.scale).setAlpha(0);
-        thisSprite.setData({ hp: this.hp, enemyType: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
+        thisSprite.setData({ hp: this.hp, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
         let thisSpriteBody = thisSprite.body;
         enemyBossGroup.add(boss);
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
         boss.data = thisSprite.data; // and data after adding it to the group.. because Phaser :S
         scene.tweens.add({ // this doesnt fire for some reason, so TODO
-            targets: boss,
+            targets: thisSprite,
             alpha: 1,
             //ease: 'linear',
             duration: 50,
             repeat: 8,
             yoyo: true,
-        }, this);
+            onComplete: enemyBossShow,
+            onCompleteParams: [boss],
+        });
+        boss.setVisible(false);
         boss.startFollow({
             positionOnPath: true,
             duration: 5000,
@@ -314,12 +320,16 @@ class enemyBoss {
 }
 
 function enemyBossHit(_bullet, _boss) {
+    let eV = vars.enemies;
     let bossPosition = [_boss.x, _boss.y];
     bulletHitEnemy.emitParticleAt(_bullet.x, _bullet.y-20);
     scene.sound.play('enemyBossHit');
     let bulletStrength = _bullet.getData('hp');
+    let colourIndex = _boss.getData('colourIndex');
+    let tint = eV.colours[colourIndex];
     _bullet.destroy();
-    for (let d=0; d<5; d++) {
+    for (let d=0; d<3; d++) {
+        enemyPieceParticle.setTint(tint[1]);
         enemyPieceParticle.emitParticleAt(bossPosition[0], bossPosition[1]);
     }
     let hp = _boss.getData('hp');
@@ -331,8 +341,8 @@ function enemyBossHit(_bullet, _boss) {
         pV.increaseScore(bulletStrength*50);
     } else {
         let lV = vars.levels;
-        let eV = vars.enemies;
         console.log('The boss is dead! Make him to explody things...');
+        scene.sound.play('enemyBossExplode');
         let points = _boss.getData('points');
         pV.increaseScore(points);
         if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
@@ -346,6 +356,10 @@ function enemyBossHit(_bullet, _boss) {
         new shipUpgrade(bossPosition); // player.js
         _boss.destroy();
     }
+}
+
+function enemyBossShow(_tween, _target, _boss) {
+    _boss.setVisible(true);
 }
 
 function enemyBossUpdate(_boss) {
@@ -403,8 +417,6 @@ function enemyAttackingHit(_enemy, _bullet) {
     console.log('Enemy attacker has been hit. Pausing...');
     let enemyName = _enemy.name.replace('f_','');
     let enemyPhaser = scene.children.getByName(enemyName);
-    console.log(enemyPhaser);
-    console.log(_bullet);
     enemyHit(_bullet, enemyPhaser);
     if (enemyPhaser===null) {
         _enemy.destroy();
@@ -415,6 +427,7 @@ function enemyDeath(enemy) {
     //console.log('Enemy has died, creating death tween...');
     enemy.disableBody(); // disable interaction with bullets
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
+    scene.sound.play('enemyExplode');
     let xMove = Phaser.Math.RND.between(30,60);
     if (enemy.x>vars.canvas.cX) { xMove = -xMove; }
     xMove = enemy.x + xMove;
@@ -437,11 +450,12 @@ function enemyDeath(enemy) {
 
     // check to see if we should spawn a boss yet
     eV.bossSpawnTimeout[0]--;
-    if (eV.bossSpawnTimeout[0]===0) {
+    if (eV.bossSpawnTimeout[0]<=0) {
         if (enemyBossGroup.children.size<eV.bossLimit) {
+            console.log('Spawning a Boss');
             vars.enemies.spawnBoss();
         } else {
-            eV.bossSpawnTimeout[0]++;
+            eV.bossSpawnTimeout[0]=1;
         }
     }
 }
@@ -492,6 +506,9 @@ function enemyHit(bullet, enemy) {
     // destroy the bullet and remove it from the bullets array
     bullet.destroy();
     if (enemy!==null) {
+        let enemyType = enemy.getData('colourIndex');
+        let tint = vars.enemies.colours[enemyType];
+        enemyPieceParticle.setTint(tint[1]);
         enemyPieceParticle.emitParticleAt(enemy.x, enemy.y)
         scene.sound.play('enemyHit');
 

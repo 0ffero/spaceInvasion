@@ -47,7 +47,6 @@ function enableIntroSkip() {
         })
         vars.game.storyVisible = false;
         scene.sys.canvas.style.cursor = 'none';
-        console.clear();
     }
 }
 
