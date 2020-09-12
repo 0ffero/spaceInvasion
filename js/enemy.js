@@ -324,11 +324,12 @@ function enemyBossHit(_bullet, _boss) {
     }
     let hp = _boss.getData('hp');
     let bossHP = hp-bulletStrength;
+    let pV = vars.player;
     if (bossHP>0) {
         _boss.setData('hp', bossHP);
         console.log('Boss HP: ' + bossHP);
+        pV.increaseScore(bulletStrength*50);
     } else {
-        let pV = vars.player;
         let lV = vars.levels;
         let eV = vars.enemies;
         console.log('The boss is dead! Make him to explody things...');
@@ -357,7 +358,6 @@ function enemyBossUpdate(_boss) {
         let bCount = firerate.bulletcount;// 10
         let bPF = firerate.bulletsperframe;// 1
         let bTimeout = firerate.bullettimeout;// 2
-        let wave = vars.levels.wave;
 
         if (bCount>0) {
             if (bTimeout>0) {
@@ -370,7 +370,7 @@ function enemyBossUpdate(_boss) {
                 for (let b=0; b<bPF; b++) {
                     //console.log('Firing Bullet');
                     let bulletSprite = Phaser.Math.RND.between(0,vars.enemies.spriteCount-1); // basically the colour of the bullet
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage);
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, 900, false);
                 }
                 _boss.data.list.firerate.bulletcount--;
 
@@ -399,12 +399,6 @@ function enemyBossUpdate(_boss) {
    █████ █   █ █████ █ █ █   █      █     █████ █   █ █████   █   █████ █████ █   █ █████ 
 */
 
-function enemyAttackerComplete(_follower) {
-    console.log('Enemy has finished its attack pattern. Pausing...');
-    console.log(_follower);
-    debugger;
-}
-
 function enemyAttackingHit(_enemy, _bullet) {
     console.log('Enemy attacker has been hit. Pausing...');
     let enemyName = _enemy.name.replace('f_','');
@@ -419,7 +413,6 @@ function enemyAttackingHit(_enemy, _bullet) {
 
 function enemyDeath(enemy) {
     //console.log('Enemy has died, creating death tween...');
-    
     enemy.disableBody(); // disable interaction with bullets
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
     let xMove = Phaser.Math.RND.between(30,60);
@@ -437,7 +430,7 @@ function enemyDeath(enemy) {
     // check to see if we should spawn a power up
     let eV = vars.enemies;
     eV.deadSinceLastPowerup++;
-    if (eV.deadSinceLastPowerup===25) {
+    if (eV.deadSinceLastPowerup===10) {
         healthBulletUpgradeSpawn([enemy.x, enemy.y])
         eV.deadSinceLastPowerup=0;
     }
@@ -460,26 +453,7 @@ function enemyDestroy() {
     enemy.destroy(); // this = tween
     // check if there are any enemies left on screen
     if (enemies.children.entries.length===0) { // all enemies are dead!
-        vars.player.destroyAllBullets();
-        enemyBullets.children.each( (c)=> {
-            c.destroy();
-        })
-        // remove all bosses on the screen if wave is less than 10
-        if (vars.enemies.removeBosses===true) {
-            if (enemyBossGroup.children.size>0) {
-                enemyBossGroup.children.each( (c)=> {
-                    c.destroy();
-                })
-            }
-        }
-        // were moving on to a new wave, increase the bullet damage
-        setEnemyBulletDamage();
-
-        // generate the next wave
-        enemiesGenerate();
-
-        vars.game.pause();
-        wavePopUp(); // show the wave pop up
+        gameLevelNext();
     }
 }
 

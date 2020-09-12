@@ -94,7 +94,7 @@ function preload() {
     // SOUNDS
     scene.load.audio('enemyHit', 'audio/enemyHit.ogg');
     scene.load.audio('enemyBossHit', 'audio/enemyBossHit.ogg');
-    scene.load.audio('playerGun1', 'audio/primaryGun.ogg');
+    scene.load.audio('playerGun1', 'audio/blaster.ogg');
 }
 
 
@@ -107,10 +107,15 @@ function preload() {
 █████ █   █ █████ █   █   █   █████ 
 */
 function create() {
+    // SHADER PIPE LINES
+    scene.grayscalePipeline = scene.game.renderer.addPipeline('Grayscale', new GrayscalePipeline(scene.game));
+
     scene.sound.setVolume(0.5)
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
+    // set up the groups and colliders
+    // UI
+    scoreGroup = scene.add.group();
 
-    // set up the colliders
     // player
     shipUpgradeGroup = scene.add.group();
     shipPowerUpGroup = scene.add.group();
@@ -174,5 +179,9 @@ function create() {
         vars.DEBUGTEXT.setOrigin(0,0);
         vars.DEBUGTEXT.setStroke(0x000000,4)
     }
+
+    // set up the shader pipelines
+    scene.t = 0; // only needed for shaders that change over time (such as waves etc)
+    scene.tIncrement = 0.005; // see above + basic increment used in main() for shaders
 
 }

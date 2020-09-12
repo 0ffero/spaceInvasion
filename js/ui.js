@@ -47,4 +47,5 @@ function wavePopUp() {
         duration: 2500,
         onComplete: vars.audio.levelMusicStart,
     });
+    player.setDepth(1);
 }

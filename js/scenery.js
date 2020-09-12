@@ -50,6 +50,7 @@ class scenery {
 
             // add object to the scenery group
             sceneryGroup.add(this.sceneryObject);
+            cam2Ignore(this.sceneryObject);
 
             // add tween to this new scenery object
             scene.tweens.add({

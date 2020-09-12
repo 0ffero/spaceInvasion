@@ -1,7 +1,7 @@
 var fps = 60;
 var gameScale = 0.4;
 
-const consts = {
+const constsM = {
     mouse: {
         left: 1,
         right: 2,
@@ -13,6 +13,10 @@ const consts = {
 
 
 var vars = {
+    cameras: {
+        init: false,
+    },
+
     canvas: {
         width: 720,
         height: 1080,
@@ -82,7 +86,7 @@ var vars = {
 
     enemies: {
         attackTimeout: [10*fps,10*fps],
-        bossSpawnTimeout: [10,10], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
+        bossSpawnTimeout: [25,25], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
         bossSpawnCount: 0,
         bossFireRates: [],
         bossFireRatesResets: [],
@@ -116,14 +120,80 @@ var vars = {
         updateTimeout: 10, // in frames. We use this to update the enemies velocity
         updateTimeoutMax: 10,
 
+        attackersFireUpdate: function(_enemyCount) {
+            enemyAttackingGroup.children.each( (c)=> {
+                let progress = c.pathTween.totalProgress;
+                //console.log('Current Progress: ' + progress);
+
+                if (progress===1) {
+                    console.log('Enemy progress is 1. Deleting child');
+                    // get the original and re-enable it if it isnt dead
+                    let phaserObject = scene.children.getByName(c.name.replace('f_', ''));
+                    if (phaserObject!==null) {
+                        phaserObject.setData('attacking', false);
+                        if (phaserObject.getData('dead')!==true) {
+                            phaserObject.setVisible(true); // this needs fixing. it will do just now but I also need to disable its hitbox TODO
+                        }
+                    }
+                    c.destroy(); // this is the duplicate that is being destroyed here!
+                } else {
+                    //console.log('Updating fire timeouts');
+                    let initWait = c.getData('initialWait');
+                    if (initWait>0) {
+                        c.setData('initialWait', initWait-1);
+                    } else { // were past the initial wait time out
+                        let bulletSpacing = c.getData('bulletSpacing');
+                        // are we waiting for the bulletTimeout?
+                        if (bulletSpacing>0) { // yes update timeout
+                            c.setData('bulletSpacing', bulletSpacing-1);
+                        } else { // FIRE!
+                            // now test for firespacing
+                            let fireSpacing=c.getData('fireSpacing');
+                            if (fireSpacing>0) {
+                                c.setData('fireSpacing', fireSpacing-1);
+                            } else {
+                                console.log('Firing!');
+                                let resets = c.getData('resets'); // this is an array
+                                if (c.getData('bulletCount')>0) { // we still have bullets left, so fire it
+                                    // reduce the bullet count by 1
+                                    let bC = c.getData('bulletCount');
+                                    c.setData('bulletCount', bC-1);
+                                    //now fire
+                                    let xy = [c.x, c.y];
+                                    let name = c.name;
+                                    name = name.replace('f_','');
+                                    //debugger;
+                                    if (scene.children.getByName(name)!==null) { // make sure the player hasnt just destroyed the enemy
+                                        let bullet = scene.children.getByName(name).getData('row')-1;
+                                        let scale = vars.game.scale+0.1;
+                                        let strength = vars.enemies.bulletDamage * 1.2;
+                                        vars.enemies.bulletPhysicsObject(xy,bullet,scale,strength);
+                                    }
+                                } else { // weve fired the last bullet in the sequence, reset the bulletCount
+                                    let bulletCount = resets[0];
+                                    let fireSpacing = resets[2];
+                                    c.setData({ bulletCount: bulletCount, fireSpacing: fireSpacing });
+                                }
+                                // reset the bullet spacing
+                                c.setData('bulletSpacing', resets[1]);
+                            }
+                        }
+                    }
+                }
+            
+            })
+        },
+
         attackTimeoutDo: function() {
             let eV=vars.enemies;
             eV.attackTimeout[0]-=1;
             if (eV.attackTimeout[0]===0) {
                 eV.attackTimeout[0] = eV.attackTimeout[1];
-                for (let rE=0; rE<3; rE++) {
+                for (let rE=0; rE<1; rE++) { // spawn x enemies that will be attached to a spline. TODO 3 is too many anemies, see trello
                     // randomly pick an enemy to attach a spline
                     let enemy = enemyGetRandom();
+                    enemy.setVisible(false); // TODO this also requires the body to be disabled but will do for testing
+                    enemy.setData('attacking', true);
                     // theres currently only 1 path, but this will eventually be randomised TODO
                     let selectedPath = 'alpha';
                     if (enemy.x>vars.canvas.cX) { selectedPath+='Reversed'; }
@@ -136,12 +206,13 @@ var vars = {
                     let enemySpriteFrame = enemy.frame.name%vars.enemies.spriteCount;
                     let attackingEnemy = scene.add.follower(path, enemyXY[0], enemyXY[1], 'enemies', enemySpriteFrame).setName('f_' + enemyName).setScale(vars.game.scale);
                     enemyAttackingGroup.add(attackingEnemy);
-                    attackingEnemy.setData( { initialWait: fireTimings.initialWait, bulletCount: fireTimings.bulletCount, bulletSpacing: fireTimings.bulletSpacing, fireSpacing: fireTimings.fireSpacing } );
+                    cam2Ignore(attackingEnemy);
+                    let resets = [fireTimings.bulletCount, fireTimings.bulletSpacing, fireTimings.fireSpacing ];
+                    attackingEnemy.setData( { initialWait: fireTimings.initialWait, bulletCount: fireTimings.bulletCount, bulletSpacing: 0, fireSpacing: fireTimings.fireSpacing, resets: resets } );
 
                     attackingEnemy.startFollow({
                         positionOnPath: true,
                         duration: 6000,
-                        onComplete: enemyAttackerComplete,
                     });
                 }
             }
@@ -166,13 +237,20 @@ var vars = {
             return [returnData, randomShootPattern];
         },
 
-        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1) {
+        bulletGetStrength: function() {
+
+        },
+
+        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=600, _cam2Ignore=true) {
             if (_scale===0.4 && vars.game.scale!==0.4) { _scale = vars.game.scale; }
             let theBullet = scene.physics.add.sprite(_xy[0], _xy[1], 'bulletPrimaryEnemy', _bullet).setScale(_scale);
             theBullet.setName('bullet_' + generateRandomID());
             theBullet.setData('hp',_strength);
             enemyBullets.add(theBullet);
-            theBullet.setVelocityY(600);
+            if (_cam2Ignore===true) {
+                cam2Ignore(theBullet);
+            }
+            theBullet.setVelocityY(_speed);
         },
 
         debugBossPatterns: function() {
@@ -181,6 +259,20 @@ var vars = {
             let bP = vars.enemies.bossPaths;
             for (let path=0; path<bP.length; path++){
                 bP[path][1].draw(graphics, 128);
+            }
+        },
+
+        destroyAllBullets: function() {
+            enemyBullets.children.each( (c)=> {
+                c.destroy();
+            })
+        },
+
+        destroyAllBosses: function() {
+            if (enemyBossGroup.children.size>0) {
+                enemyBossGroup.children.each( (c)=> {
+                    c.destroy();
+                })
             }
         },
         
@@ -199,6 +291,14 @@ var vars = {
             eV.bounds.bottom *= 50;
             enemyBossPatternsCreate();
             eV.bossFireRatesInit();
+        },
+
+        setEnemyBulletDamage: function() {
+            let wave = vars.levels.wave;
+            let eV = vars.enemies;
+            if (eV.bulletDamage<2 && wave%2===0) {
+                eV.bulletDamage += (wave - 1) * 0.2; // add 20% to the damage
+            }
         },
 
         shootTimeoutDo: function() { // this is for standard enemies only! ie not bosses!
@@ -250,6 +350,9 @@ var vars = {
             // now we check to see if the enemies should be shooting (only happens every few seconds)
             eV.shootTimeoutDo();
             eV.attackTimeoutDo();
+            if (enemyAttackingGroup.children.size>0) {
+                eV.attackersFireUpdate(enemyAttackingGroup.children.size);
+            }
         }
 
 
@@ -357,7 +460,7 @@ var vars = {
             gV.scores.current += _score;
 
             //draw the score
-            scoreText = scene.children.getByName('scoreTextInt').setText(gV.scores.current);
+            let scoreText = scene.children.getByName('scoreTextInt').setText(gV.scores.current);
         },
 
         ship: {

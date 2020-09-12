@@ -1,4 +1,5 @@
 function main() {
+    this.t += this.tIncrement; // increment the shader timer
     if (vars.game.started===true && vars.game.paused===false) {
         // deal with the weapons
         let cannons = vars.player.ship.cannonSlots;
@@ -27,7 +28,7 @@ function main() {
 
         if (vars.player.isDead===false) {
             let mP = scene.input.mouse.manager.mousePointer;
-            if (mP.buttons===consts.mouse.left) {
+            if (mP.buttons===constsM.mouse.left) {
                 let cannons = vars.player.ship.cannonSlots;
                 for (c in cannons) { // loop thru each of the cannons
                     if (cannons[c].ready===true) { // is this cannon ready to fire?
@@ -81,10 +82,21 @@ function startGame() {
     // set up the score text
     scene.children.getByName('levelBG').setVisible(true);
     vars.game.started=true;
-    scene.add.bitmapText(10, 20, 'azo', 'Score:', 24).setOrigin(0);
-    scene.add.bitmapText(120, 20, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
+    let scoreTitle = scene.add.bitmapText(10, 20, 'azo', 'Score:', 24).setOrigin(0);
+    let score = scene.add.bitmapText(120, 20, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
+    scoreGroup.addMultiple([scoreTitle, score]);
 
     vars.enemies.spawn();
-
     wavePopUp();
+
+    // CAMERAS
+    scene.cameras.main.ignore([ scoreGroup ]);
+    cam1 = scene.cameras.main;
+    cam2 = scene.cameras.add(0, 0, vars.canvas.width, vars.canvas.height); // used for shaders
+    // theres no point in adding these yet as there are no bodies at the start of the game
+    // shipUpgradeGroup, shipPowerUpGroup, bullets, enemyBossGroup, enemyBullets, enemyAttackingGroup, sceneryGroup
+    // basically when each of these are created (each bullet, each tree etc) you have to specifically tell phaser that cam2 cant see them
+    // due to the way this works theres now a function called cam2Ignore() in game.js
+    cam2.ignore([ bG, enemies ]); // player needs to be 
+    //cam1.setRenderToTexture(scene.grayscalePipeline);
 }

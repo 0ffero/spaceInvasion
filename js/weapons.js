@@ -36,15 +36,8 @@ class bullet {
         this.physicsObject.setData({ name: this.name, hp: this.bulletStrength, weaponSlot: this.weaponSlot, weaponSlotName: this.weaponSlotName })
         bullets.add(this.physicsObject);
         playerMuzzleFlash.emitParticleAt(player.x,player.y-27);
+        cam2Ignore(this.physicsObject);
         scene.sound.play('playerGun1');
-    }
-}
-
-function setEnemyBulletDamage() {
-    let wave = vars.levels.wave;
-    let eV = vars.enemies;
-    if (eV.bulletDamage<2 && wave%2===0) {
-        eV.bulletDamage += (wave - 1) * 0.2;
     }
 }
 
