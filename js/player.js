@@ -118,7 +118,8 @@ function playerHit(_player, _bullet) {
     // have no upgrades
     if (pV.hitpoints-(_bulletStrength*5)>_bulletStrength*5) {
         pV.hitpoints-=_bulletStrength*5;
-        console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
+        vars.cameras.flash('red', 100);
+        //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
         // first, we reset the upgrades if the player has less than 100 hp
         if (pV.hitpoints<=115 && pV.hitpoints>=100 && pV.ship.upgrades!==1) {
             console.log('Dropping upgrades to 1');

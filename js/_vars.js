@@ -15,6 +15,19 @@ const constsM = {
 var vars = {
     cameras: {
         init: false,
+
+        flash: function(_flashColour='white', duration=100) {
+            let r,g,b;
+            if (_flashColour==='white') {
+                r=g=b=255;
+            } else if (_flashColour==='red') {
+                r=255; g=b=0;
+            } else if (_flashColour==='green') {
+                g=255; r=b=0;
+            }
+
+            cam1.flash(duration,r,g,b);
+        }
     },
 
     canvas: {
@@ -41,15 +54,21 @@ var vars = {
     DEBUG: false,
     VERBOSE: false,
 
-    DEBUGHIDE: false,
+    DEBUGHIDE: true,
     DEBUGTEXT: '',
 
     audio: {
         currentTrack: 0,
         gameTracks: ['gamemusic1', 'gamemusic2'],
-        isEnabled: false,
+        isEnabled: true,
         getNext: function() {
             let aV = vars.audio;
+            // delete the current audio sprite
+            scene.sound.sounds.forEach( (c)=> {
+                c.destroy();
+            })
+
+            // then
             if (aV.isEnabled===true) {
                 aV.currentTrack<aV.gameTracks.length-1 ? aV.currentTrack++ : aV.currentTrack=0;
                 let gM = scene.sound.add(aV.gameTracks[aV.currentTrack]);
@@ -63,10 +82,12 @@ var vars = {
         levelMusicStart: function() {
             let aV = vars.audio;
             if (aV.isEnabled===true) {
-                aV.stop();
+                //aV.stop();
                 let currentTrack = aV.gameTracks[aV.currentTrack];
                 let gM = scene.sound.add(currentTrack);
-                gM.play();
+                if (scene.sound.sounds.length===1) {
+                    gM.play();
+                }
                 gM.once('complete', function() {
                     aV.getNext();
                 })
@@ -447,6 +468,7 @@ var vars = {
                 c.setVisible(true);
             })
             vars.player.destroyAllBullets();
+
         },
 
         destroyAllBullets: function() {

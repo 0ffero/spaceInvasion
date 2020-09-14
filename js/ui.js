@@ -17,9 +17,6 @@ function uiGameOver() {
 function wavePopUp() {
     vars.levels.waveIncrement();
     // stop the intro music
-    if (vars.audio.isEnabled===true) {
-        scene.sound.stopByKey('intro');
-    }
     let wave=vars.levels.wave;
     if (wave>1) {
         vars.player.increaseScore(5000);

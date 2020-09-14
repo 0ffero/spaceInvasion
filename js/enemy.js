@@ -343,6 +343,7 @@ function enemyBossHit(_bullet, _boss) {
         let lV = vars.levels;
         console.log('The boss is dead! Make him to explody things...');
         scene.sound.play('enemyBossExplode');
+        vars.cameras.flash('white', 2500);
         let points = _boss.getData('points');
         pV.increaseScore(points);
         if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
@@ -428,6 +429,7 @@ function enemyDeath(enemy) {
     enemy.disableBody(); // disable interaction with bullets
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
     scene.sound.play('enemyExplode');
+    vars.cameras.flash('white', 100);
     let xMove = Phaser.Math.RND.between(30,60);
     if (enemy.x>vars.canvas.cX) { xMove = -xMove; }
     xMove = enemy.x + xMove;
@@ -633,7 +635,7 @@ function enemiesMove() {
             }
         })
         if (lowest>800) {
-            console.log('DEAD!');
+            console.log('DEAD! Cause: Enemy boundary reached');
             vars.game.pause();
             vars.game.started=false; // this tells us that we have died
             vars.player.dead();
