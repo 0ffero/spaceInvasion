@@ -280,7 +280,7 @@ class enemyBoss {
         }
         this.sprite = eV.bossNext;
 
-        this.hp = 40 + (this.sprite * 5);
+        this.hp = 50 + (vars.levels.wave*5) + (this.sprite * 5);
         this.points = 2000 * (this.sprite+1);
         this.scale = vars.game.scale*3;
         this.startPosition = [cV.cX, cV.cY];
@@ -337,7 +337,7 @@ function enemyBossHit(_bullet, _boss) {
     let pV = vars.player;
     if (bossHP>0) {
         _boss.setData('hp', bossHP);
-        console.log('Boss HP: ' + bossHP);
+        //console.log('Boss HP: ' + bossHP);
         pV.increaseScore(bulletStrength*50);
     } else {
         let lV = vars.levels;

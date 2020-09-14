@@ -99,6 +99,14 @@ function preload() {
     scene.load.audio('enemyBossExplode', 'audio/enemyBossExplode.ogg');
     scene.load.audio('pickUpStandard',   'audio/pickup.ogg');
     scene.load.audio('playerDeath',      'audio/playerDeath.ogg');
+    
+    // SHADER PIPE LINES
+    // gs = grayscale
+    // gS = gray scanline
+    scene.gsPipeline = scene.game.renderer.addPipeline('Grayscale', new GrayscalePipeline(scene.game)); // <-- these are
+    scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
+    scene.gSPipeline.setFloat2('resolution', game.config.width, game.config.height);
+    scene.gSPipeline.setFloat2('mouse', 0.0, 0.0);
 }
 
 
@@ -111,10 +119,8 @@ function preload() {
 █████ █   █ █████ █   █   █   █████ 
 */
 function create() {
-    // SHADER PIPE LINES
-    scene.grayscalePipeline = scene.game.renderer.addPipeline('Grayscale', new GrayscalePipeline(scene.game));
-
-    scene.sound.setVolume(0.5)
+    scene.input.on('pointermove', function (pointer) { scene.gSPipeline.setFloat2('mouse', pointer.x, pointer.y); });
+    scene.sound.setVolume(0.5); // this volume is roughly equal to the volume of a standard youtube video.
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
     // set up the groups and colliders
     // UI
@@ -184,6 +190,8 @@ function create() {
         vars.DEBUGTEXT.setStroke(0x000000,4)
     }
 
+    // cameras
+    vars.cameras.init();
     // set up the shader pipelines
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
     scene.tIncrement = 0.005; // see above + basic increment used in main() for shaders

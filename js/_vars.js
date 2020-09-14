@@ -27,6 +27,21 @@ var vars = {
             }
 
             cam1.flash(duration,r,g,b);
+        },
+
+        init: function() {3
+            // CAMERAS
+            //scene.cameras.main.ignore([ scoreGroup ]);
+            cam1 = scene.cameras.main;
+            cam2 = scene.cameras.add(0, 0, vars.canvas.width, vars.canvas.height); // used for switching between shaders smoothly
+            cam2.setAlpha(0);
+            // theres no point in adding these yet as there are no bodies at the start of the game
+            // shipUpgradeGroup, shipPowerUpGroup, bullets, enemyBossGroup, enemyBullets, enemyAttackingGroup, sceneryGroup
+            // basically when each of these are created (each bullet, each tree etc) you have to specifically tell phaser that cam2 cant see them
+            // due to the way this works theres now a function called cam2Ignore() in game.js
+            cam2.ignore([ bG, enemies ]);
+
+            shaderType('scan',1)
         }
     },
 
@@ -44,6 +59,23 @@ var vars = {
         }
     },
 
+    cheats: {
+        annihilate: function() {
+            let first=true;
+            enemies.children.each( (c)=> {
+                console.log(c.name);
+                if (first===true) {
+                    first=false;;
+                } else {
+                    c.destroy();
+                }
+            })
+        },
+        bossSpawn: function() {
+            vars.enemies.spawnBoss();
+        }
+    },
+
     console: {
         callFrom: 'font-size: 12px; color: green',
         callTo: 'font-size: 14px; color: green',
@@ -54,7 +86,7 @@ var vars = {
     DEBUG: false,
     VERBOSE: false,
 
-    DEBUGHIDE: true,
+    DEBUGHIDE: false,
     DEBUGTEXT: '',
 
     audio: {
@@ -182,7 +214,7 @@ var vars = {
                             if (fireSpacing>0) {
                                 c.setData('fireSpacing', fireSpacing-1);
                             } else {
-                                console.log('Firing!');
+                                //console.log('Firing!');
                                 let resets = c.getData('resets'); // this is an array
                                 if (c.getData('bulletCount')>0) { // we still have bullets left, so fire it
                                     // reduce the bullet count by 1
