@@ -21,7 +21,7 @@ function storyInit() {
 
     // START THE STORY SCROLLER
     vars.game.storyVisible = true;
-    storyText = scene.add.bitmapText(0, vars.canvas.height, 'azo', vars.story.introText, 48).setCenterAlign().setAlpha(1).setMaxWidth(vars.canvas.width-20);
+    storyText = scene.add.bitmapText(0, vars.canvas.height, 'azo', vars.story.introText, 48).setCenterAlign().setAlpha(0.7).setMaxWidth(vars.canvas.width-20);
     storyText.x=10;
     let scrollHeight = storyText.height;
     let duration = scrollHeight*20;

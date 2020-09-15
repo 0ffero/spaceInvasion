@@ -194,6 +194,6 @@ function create() {
     vars.cameras.init();
     // set up the shader pipelines
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
-    scene.tIncrement = 0.005; // see above + basic increment used in main() for shaders
+    scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
 
 }
