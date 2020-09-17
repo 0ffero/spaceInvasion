@@ -35,8 +35,8 @@ class bullet {
         this.physicsObject = scene.physics.add.sprite(this.x1, player.y-40, 'bulletPrimary').setScale(vars.game.scale*this.bulletStrength).setName('bullet_' + this.name).setVelocityY(this.bulletSpeed);
         this.physicsObject.setData({ name: this.name, hp: this.bulletStrength, weaponSlot: this.weaponSlot, weaponSlotName: this.weaponSlotName })
         bullets.add(this.physicsObject);
+        vars.cameras.ignore(cam2, this.physicsObject);
         playerMuzzleFlash.emitParticleAt(player.x,player.y-27);
-        cam2Ignore(this.physicsObject);
         scene.sound.play('playerGun1');
     }
 }

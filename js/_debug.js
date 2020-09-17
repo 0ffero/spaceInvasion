@@ -16,8 +16,12 @@ function debugTextDraw() {
     let isDead =       '  Dead                     : ' + pV.isDead;
     debugArray.push(isDead);
     let hp     =       '  HP                       : ' + pV.hitpoints;
-    debugArray.push(hp + '\n');
-    
+    debugArray.push(hp);
+    let shield =       '  Shield                   : ' + pV.shield;
+    debugArray.push(shield);
+    let upgrades =     '  Ship Upgrades            : ' + pV.ship.upgrades;
+    debugArray.push(upgrades + '\n');
+
     debugArray.push('SHIP');
     let sV = vars.player.ship
     let bDD          = '  Bullets Double Damage    : ' + sV.special.doubleDamageEnabled;

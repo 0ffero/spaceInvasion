@@ -1,7 +1,3 @@
-function cam2Ignore(_object) {
-    //cam2.ignore(_object);
-}
-
 function gameLevelNext() {
     vars.player.destroyAllBullets();
     vars.enemies.destroyAllBullets();
@@ -27,12 +23,15 @@ function startGame() {
     let scoreTitle = scene.add.bitmapText(10, 20, 'azo', 'Score:', 24).setOrigin(0);
     let score = scene.add.bitmapText(120, 20, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
     scoreGroup.addMultiple([scoreTitle, score]);
-    
+    cam1.ignore(scoreGroup)
+
     // delete the intro music
     scene.sound.sounds.forEach( (c)=> {
         console.log(c.key);
         if (c.key==='intro') { c.destroy(); }
     })
+
+    shaderType('none',1)
 
     vars.enemies.spawn();
     wavePopUp();

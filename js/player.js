@@ -90,6 +90,7 @@ function healthBulletUpgradeSpawn(_spawnXY) {
 
     if (error===false) {
         shipPowerUpGroup.add(hpU);
+        vars.cameras.ignore(cam2, hpU);
         scene.tweens.add({
             targets: hpU,
             y: 1000,
@@ -107,15 +108,7 @@ function playerHit(_player, _bullet) {
         _bulletStrength = 0;
     }
     let pV = vars.player;
-    let sV = pV.ship;
 
-    // check for shield
-    // we used to allow the player ship to be upgraded but have something other than a green shield but
-    // to make the game more "fun" Ive decided that the upgrades are broken if you drop below the green
-    // shield. To help with this Ive given the player at least 115 hp when they pick up a ship upgrade
-    // note: every shield still takes into consideration what upgrades you currently have, however
-    // I have modified the code to reset the upgrades if the hp < 100. So shield changes automatically
-    // have no upgrades
     if (pV.hitpoints-(_bulletStrength*5)>_bulletStrength*5) {
         pV.hitpoints-=_bulletStrength*5;
         vars.cameras.flash('red', 500);
@@ -129,36 +122,12 @@ function playerHit(_player, _bullet) {
             pV.ship.upgrades=0;
         }
 
-        let upgrades = sV.upgrades;
         // now we set the shield colour
-        if (pV.hitpoints>=100) {        // green shield
-            if (pV.shield!==3) {
-                console.log('%cGreen Shield Enabled', 'color: green');
-                pV.shield=3;
-                player.setFrame(0+upgrades);
-            }
-        } else if (pV.hitpoints>75) {  // orange shield
-            if (pV.shield!==2) {
-                console.log('%cOrange Shield Enabled', 'color: orange');
-                pV.shield=2;
-                player.setFrame(3+upgrades);
-            }
-        } else if (pV.hitpoints>25) {  // red shield
-            if (pV.shield!==1) {
-                console.log('%cRed Shield Enabled', 'color: red');
-                pV.shield=1;
-                player.setFrame(6+upgrades);
-            }
-        } else if (pV.hitpoints>0) {   // no shield
-            if (pV.shield!==0) {
-                console.log('%cNO Shield!', 'color: white');
-                pV.shield=0;
-                player.setFrame(9+upgrades);
-            }
-        }
+        vars.player.shieldChange();
 
     } else { // player is dead
         console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
+        vars.cameras.shake(cam1, 750);
         /* vars.game.pause(); */
         vars.game.started=false; // this tells us that we have died, no using the variable pV.isDead
         vars.player.dead();
@@ -177,6 +146,7 @@ function shipPowerUpPickUp(_upgrade) {
     if (upgradeType==='hp') {
         console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade);
         pV.hitpoints+=upgradeValue;
+        pV.shieldChange();
         // upgrade the ship frame TODO
         // we can probably use player hit to set the shield colour
     } else if (upgradeType==='b') { // bullet upgrades last for 5 seconds
@@ -220,6 +190,7 @@ class shipUpgrade { // these are created when a boss is killed
             }
             let upgradeBox = scene.physics.add.image(this.spawnX,this.spawnY,'upgradeBox', frame).setScale(vars.game.scale).setData('upgrade', sV.upgrades);
             shipUpgradeGroup.add(upgradeBox);
+            vars.cameras.ignore(cam2, upgradeBox);
             scene.tweens.add({
                 targets: upgradeBox,
                 y: 1000,
@@ -240,4 +211,7 @@ function shipUpgradePickUp(_pickup) {
     } else if (vars.player.hitpoints<130 && upgradeTo===2) { // upgrade 2: does the player still have less than 130 hp?
         vars.player.hitpoints=130; // minimum upgrade takes us to 130 hp.
     }
+
+    let bW = vars.player.ship.bodyWidths;
+    player.setSize(bW[upgradeTo][0],bW[upgradeTo][1]);
 }

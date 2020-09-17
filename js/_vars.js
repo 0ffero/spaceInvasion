@@ -11,6 +11,13 @@ const constsM = {
     }
 }
 
+const constsPS = {
+    NO_SHIELD: 9,
+    RED_SHIELD: 6,
+    ORANGE_SHIELD: 3,
+    GREEN_SHIELD: 0,
+}
+
 
 var vars = {
     cameras: {
@@ -29,7 +36,11 @@ var vars = {
             cam1.flash(duration,r,g,b);
         },
 
-        init: function() {3
+        ignore: function(_cam=cam1, _objects) {
+            _cam.ignore(_objects);
+        },
+
+        init: function() {
             // CAMERAS
             //scene.cameras.main.ignore([ scoreGroup ]);
             cam1 = scene.cameras.main;
@@ -41,7 +52,11 @@ var vars = {
             // due to the way this works theres now a function called cam2Ignore() in game.js
             cam2.ignore([ bG, enemies ]);
 
-            shaderType('scan',1)
+            shaderType('green',1)
+        },
+
+        shake: function(_cam=cam1, _duration=200) {
+            _cam.shake(_duration);
         }
     },
 
@@ -83,7 +98,7 @@ var vars = {
         playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
-    DEBUG: false,
+    DEBUG: true,
     VERBOSE: false,
 
     DEBUGHIDE: false,
@@ -91,7 +106,7 @@ var vars = {
 
     audio: {
         currentTrack: 0,
-        gameTracks: ['gamemusic1', 'gamemusic2'],
+        gameTracks: ['gamemusic1'],
         isEnabled: true,
         getNext: function() {
             let aV = vars.audio;
@@ -268,7 +283,8 @@ var vars = {
                     let enemySpriteFrame = enemy.frame.name%vars.enemies.spriteCount;
                     let attackingEnemy = scene.add.follower(path, enemyXY[0], enemyXY[1], 'enemies', enemySpriteFrame).setName('f_' + enemyName).setScale(vars.game.scale);
                     enemyAttackingGroup.add(attackingEnemy);
-                    cam2Ignore(attackingEnemy);
+                    vars.cameras.ignore(cam2, attackingEnemy);
+
                     let resets = [fireTimings.bulletCount, fireTimings.bulletSpacing, fireTimings.fireSpacing ];
                     attackingEnemy.setData( { initialWait: fireTimings.initialWait, bulletCount: fireTimings.bulletCount, bulletSpacing: 0, fireSpacing: fireTimings.fireSpacing, resets: resets } );
 
@@ -310,7 +326,7 @@ var vars = {
             theBullet.setData('hp',_strength);
             enemyBullets.add(theBullet);
             if (_cam2Ignore===true) {
-                cam2Ignore(theBullet);
+                vars.cameras.ignore(cam2, theBullet);
             }
             theBullet.setVelocityY(_speed);
         },
@@ -462,6 +478,7 @@ var vars = {
             enemies.children.each( function(c) {
                 c.setVisible(true).setVelocityX(50);
             })
+            vars.cameras.ignore(cam2, enemies);
             vars.levels.wavePopupVisible=false;
             //player.anims.play('hover');
         }
@@ -527,12 +544,65 @@ var vars = {
             let scoreText = scene.children.getByName('scoreTextInt').setText(gV.scores.current);
         },
 
+        shieldChange: function() {
+            let pV = vars.player;
+            let sV = pV.ship;
+            let bW = sV.bodyWidths;
+            let upgrades = sV.upgrades;
+            let playerShields = constsPS;
+            let updateSize = false;
+            if (pV.hitpoints>=100) {        // green shield
+                if (pV.shield!==3) {
+                    console.log('%cGreen Shield Enabled', 'color: green');
+                    vars.cameras.shake();
+                    scene.sound.play('playerShieldDrop');
+                    pV.shield=3;
+                    player.setFrame(playerShields.GREEN_SHIELD + upgrades);
+                    // due to the speed you can lose health at, this next call is done every time the shield is dropped
+                    // this is mainly to protect against bosses that can destroy shields very easily.
+                    updateSize=true;
+                }
+            } else if (pV.hitpoints>=75) {  // orange shield
+                if (pV.shield!==2) {
+                    console.log('%cOrange Shield Enabled', 'color: orange');
+                    vars.cameras.shake();
+                    scene.sound.play('playerShieldDrop');
+                    pV.shield=2;
+                    player.setFrame(playerShields.ORANGE_SHIELD + upgrades);
+                    updateSize=true;
+                }
+            } else if (pV.hitpoints>=50) {  // red shield
+                if (pV.shield!==1) {
+                    console.log('%cRed Shield Enabled', 'color: red');
+                    vars.cameras.shake();
+                    scene.sound.play('playerShieldDrop');
+                    pV.shield=1;
+                    player.setFrame(playerShields.RED_SHIELD + upgrades);
+                    updateSize=true;
+                }
+            } else if (pV.hitpoints>0) {   // no shield
+                if (pV.shield!==0) {
+                    console.log('%cNO Shield!', 'color: white');
+                    scene.sound.play('playerShieldDrop');
+                    vars.cameras.shake();
+                    pV.shield=0;
+                    player.setFrame(playerShields.NO_SHIELD + upgrades);
+                    updateSize=true;
+                }
+            }
+            if (updateSize===true) {
+                player.setSize(bW[0][0],bW[0][1]);
+            }
+        },
+
         ship: {
             bodyWidths: [
                 [30,50],
                 [55,50],
                 [80,50],
             ],
+            upgrades: 0,
+
             cannonSlots: {
                 centre: {
 
@@ -638,8 +708,6 @@ var vars = {
                     ssV.upgradeOnScreen=false;
                 }
             },
-
-            upgrades: 0,
 
             init: function() {
                 console.log('      %c...init ship...', vars.console.doing);

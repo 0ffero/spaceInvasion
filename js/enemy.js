@@ -345,6 +345,7 @@ function enemyBossHit(_bullet, _boss) {
         scene.sound.play('enemyBossExplode');
         vars.cameras.flash('white', 2500);
         let points = _boss.getData('points');
+        shaderType('none',1);
         pV.increaseScore(points);
         if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
             eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1];
