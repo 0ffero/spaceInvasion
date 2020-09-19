@@ -345,7 +345,7 @@ function enemyBossHit(_bullet, _boss) {
         scene.sound.play('enemyBossExplode');
         vars.cameras.flash('white', 2500);
         let points = _boss.getData('points');
-        shaderType('none',1);
+        shaderType('default',1);
         pV.increaseScore(points);
         if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
             eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1];
@@ -395,12 +395,13 @@ function enemyBossUpdate(_boss) {
                 _boss.setData('currentSpeed', xSpeed); // update the xSpeed for the next bullet
                 //console.log('Bullet xSpeed ' + xSpeed);
 
-                let damage = vars.enemies.bulletDamage*2; // boss bullets hit 2 times harder than a normal one!
-                let bulletScale = vars.game.scale*2;
+                let damage = vars.enemies.bulletDamage*1.2; // boss bullets hit 1.2 times harder than a normal one
+                let bulletScale = vars.game.scale*1.5;
                 for (let b=0; b<bPF; b++) {
                     //console.log('Firing Bullet');
                     let bulletSprite = Phaser.Math.RND.between(0,vars.enemies.spriteCount-1); // basically the colour of the bullet
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, 900, false, xSpeed);
+                    let bulletSpeed = Phaser.Math.Clamp((vars.levels.wave-1)*10 + 600, 600, 800); // boss bullet speed is based on the wave (between 600 and 800)
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, bulletSpeed, false, xSpeed);
                 }
                 _boss.data.list.firerate.bulletcount--;
 

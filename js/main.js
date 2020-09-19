@@ -2,6 +2,7 @@ function main() {
     scene.t += scene.tIncrement; // increment the shader timer
     scene.gSPipeline.setFloat1('time', scene.t);
     scene.gSSPipeline.setFloat1('time', scene.t);
+    scene.cSPipeline.setFloat1('time', scene.t);
     scene.warpPipeline.setFloat1('time', scene.t);
     if (vars.game.started===true && vars.game.paused===false) {
         // deal with the weapons

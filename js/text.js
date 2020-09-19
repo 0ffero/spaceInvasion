@@ -24,7 +24,7 @@ function storyInit() {
     storyText = scene.add.bitmapText(0, vars.canvas.height, 'azo', vars.story.introText, 48).setCenterAlign().setAlpha(0.7).setMaxWidth(vars.canvas.width-20);
     storyText.x=10;
     let scrollHeight = storyText.height;
-    let duration = scrollHeight*20;
+    let duration = scrollHeight*15;
 
     scene.tweens.add({
         targets: storyText,

@@ -31,7 +31,7 @@ function startGame() {
         if (c.key==='intro') { c.destroy(); }
     })
 
-    shaderType('none',1)
+    //shaderType('none',1)
 
     vars.enemies.spawn();
     wavePopUp();

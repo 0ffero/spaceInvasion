@@ -109,10 +109,10 @@ function playerHit(_player, _bullet) {
     }
     let pV = vars.player;
 
-    if (pV.hitpoints-(_bulletStrength*5)>_bulletStrength*5) {
-        pV.hitpoints-=_bulletStrength*5;
+    if (pV.hitpoints-(_bulletStrength*3)>_bulletStrength*3) {
+        pV.hitpoints-=_bulletStrength*3;
         vars.cameras.flash('red', 500);
-        //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
+        console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
         // first, we reset the upgrades if the player has less than 100 hp
         if (pV.hitpoints<=115 && pV.hitpoints>=100 && pV.ship.upgrades!==1) {
             console.log('Dropping upgrades to 1');
@@ -123,7 +123,7 @@ function playerHit(_player, _bullet) {
         }
 
         // now we set the shield colour
-        vars.player.shieldChange();
+        vars.player.shieldChange(false);
 
     } else { // player is dead
         console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
@@ -142,19 +142,21 @@ function shipPowerUpPickUp(_upgrade) {
     let split = upgrade.split('_');
     let upgradeType=split[0];
     let upgradeValue=parseInt(split[1]);
-    scene.sound.play('pickUpStandard');
     if (upgradeType==='hp') {
         console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade);
+        scene.sound.play('speechHP');
         pV.hitpoints+=upgradeValue;
-        pV.shieldChange();
+        pV.shieldChange(true);
         // upgrade the ship frame TODO
         // we can probably use player hit to set the shield colour
     } else if (upgradeType==='b') { // bullet upgrades last for 5 seconds
         if (upgradeValue===0) { // double damage
             console.log('%cUpgrade Bullet: Double Damage', vars.console.playerUpgrade);
+            scene.sound.play('speechDoubleDamage');
             ssV.doubleDamageEnabled = true;
         } else if (upgradeValue===1) { // double fire rate
             console.log('%cUpgrade Bullet: Double Fire Rate. Setting Timeout to 5 seconds instead of 3', vars.console.playerUpgrade);
+            scene.sound.play('speechDoubleFireRate');
             ssV.doubleFireRate = true;
             ssV.upgradeTimeout[0] = 5*vars.game.fps;
         } else {
@@ -162,6 +164,7 @@ function shipPowerUpPickUp(_upgrade) {
         }
     }  else if (upgradeType==='score') { // points upgrade
         vars.player.increaseScore(upgradeValue);
+        scene.sound.play('speechBonusPoints');
     } else {
         console.warn('%cUnknown upgrade picked up: ' + upgrade, 'font-size: 24px;');
         error=true;
@@ -197,6 +200,7 @@ class shipUpgrade { // these are created when a boss is killed
 
 function shipUpgradePickUp(_pickup) {
     //console.log(_pickup);
+    scene.sound.play('pickUpStandard');
     let upgradeTo = _pickup.getData('upgrade');
     _pickup.destroy();
     player.setFrame(upgradeTo);

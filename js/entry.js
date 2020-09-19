@@ -98,21 +98,38 @@ function preload() {
     scene.load.bitmapFont('azo', 'fonts/azo-fire.png', 'fonts/azo-fire.xml');
 
     // SOUNDS
+    scene.load.audio('enemyShoot',       'audio/enemyBlaster.ogg');
     scene.load.audio('enemyHit',         'audio/enemyHit.ogg');
     scene.load.audio('enemyBossHit',     'audio/enemyBossHit.ogg');
-    scene.load.audio('playerGun1',       'audio/blaster.ogg');
-    scene.load.audio('enemyExplode',     'audio/enemyExplode.ogg');
     scene.load.audio('enemyBossExplode', 'audio/enemyBossExplode.ogg');
+    scene.load.audio('enemyExplode',     'audio/enemyExplode.ogg');
     scene.load.audio('pickUpStandard',   'audio/pickup.ogg');
     scene.load.audio('playerDeath',      'audio/playerDeath.ogg');
+    scene.load.audio('playerGun1',       'audio/blaster.ogg');
     scene.load.audio('playerShieldDrop', 'audio/playerLoseShield.ogg');
-    
+
+    // SPEECH (original voice from https://www.naturalreaders.com/online/ English UK Rachel -> Goldwave, mechanise (star wars droid low) -> echo (reverb))
+    scene.load.audio('speechBonusPoints',     'speech/bonusPoints.ogg');
+    scene.load.audio('speechHP',              'speech/hpUpgrade.ogg');
+    scene.load.audio('speechDoubleDamage',    'speech/doubleDamage.ogg');
+    scene.load.audio('speechDoubleFireRate',  'speech/doubleFireRate.ogg');
+    scene.load.audio('speechShield100',       'speech/shield100.ogg');
+    scene.load.audio('speechShield75',        'speech/shield75.ogg');
+    scene.load.audio('speechShield50',        'speech/shield50.ogg');
+    scene.load.audio('speechShield25',        'speech/shield25.ogg');
+    scene.load.audio('speechShieldDestroyed', 'speech/shieldDestroyed.ogg');
+    scene.load.audio('speechShieldUpgrade',   'speech/shieldUpgrade.ogg');
+
+
     // SHADER PIPE LINES
     // gS = grayscale scaline
     // gSS = greenscreen scanline
     scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
     scene.gSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.gSPipeline.setFloat2('mouse', 0.0, 0.0);
+    scene.cSPipeline = game.renderer.addPipeline('ColourScanline', new ColourScanlinePipeline(scene.game)); // <-- different variables!
+    scene.cSPipeline.setFloat2('resolution', game.config.width, game.config.height);
+    scene.cSPipeline.setFloat2('mouse', 0.0, 0.0);
     scene.gSSPipeline = game.renderer.addPipeline('GreenScreenScanline', new GreenScreenScanlinePipeline(scene.game)); // <-- different variables!
     scene.gSSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.gSSPipeline.setFloat2('mouse', 0.0, 0.0);

@@ -12,10 +12,11 @@ const constsM = {
 }
 
 const constsPS = {
-    NO_SHIELD: 9,
-    RED_SHIELD: 6,
+    NO_SHIELD:    12,
+    LOW_SHIELD:    9,
+    RED_SHIELD:    6,
     ORANGE_SHIELD: 3,
-    GREEN_SHIELD: 0,
+    GREEN_SHIELD:  0,
 }
 
 
@@ -52,7 +53,7 @@ var vars = {
             // due to the way this works theres now a function called cam2Ignore() in game.js
             cam2.ignore([ bG, enemies ]);
 
-            shaderType('green',1)
+            shaderType('colour',1)
         },
 
         shake: function(_cam=cam1, _duration=200) {
@@ -107,7 +108,7 @@ var vars = {
     audio: {
         currentTrack: 0,
         gameTracks: ['gamemusic1'],
-        isEnabled: false,
+        isEnabled: true,
 
         getNext: function() {
             let aV = vars.audio;
@@ -244,7 +245,7 @@ var vars = {
                                     if (scene.children.getByName(name)!==null) { // make sure the player hasnt just destroyed the enemy
                                         let bullet = scene.children.getByName(name).getData('row')-1;
                                         let scale = vars.game.scale+0.1;
-                                        let strength = vars.enemies.bulletDamage * 1.2;
+                                        let strength = vars.enemies.bulletDamage*1.05;
                                         vars.enemies.bulletPhysicsObject(xy,bullet,scale,strength);
                                     }
                                 } else { // weve fired the last bullet in the sequence, reset the bulletCount
@@ -308,10 +309,25 @@ var vars = {
                 } else if (pV.hitpoints>100) {
                     spread =  { min: 200, max: 400 };
                 } else if (pV.hitpoints>75) {
-                    spread =  { min: 100, max: 200 };
+                    spread =  { min: 150, max: 200 };
                 }
                 let bulletSpreadSpeed = Phaser.Math.RND.between(spread.min, spread.max);
-                bulletSpreadSpeed = ~~(bulletSpreadSpeed/10)*10;
+                
+                spreadLimit=0.1;
+                if (vars.levels.wave>15) {
+                    spreadLimit=1;
+                } else if (vars.levels.wave>=10) {
+                    spreadLimit=0.75;
+                } else if (vars.levels.wave>=6) {
+                    spreadLimit=0.5;
+                } else if (vars.levels.wave>=3) {
+                    spreadLimit=0.25;
+                }
+                console.log('Original Spread: ' + bulletSpreadSpeed + ', Spread Limit: ' + spreadLimit);
+                bulletSpreadSpeed*=spreadLimit; // reduce the spread at lower levels
+
+                bulletSpreadSpeed = ~~(bulletSpreadSpeed/5)*5; // drop the sread to the closest mult of 5
+                console.log('New Spread: ' + bulletSpreadSpeed);
                 let startSpeed = bulletSpreadSpeed;
                 let xI = ~~(startSpeed*2 / _bulletCount); // gives us the xVel increment
                 startSpeed*=-1;
@@ -356,11 +372,12 @@ var vars = {
 
         },
 
-        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=600, _cam2Ignore=true, _xSpeed=0) {
+        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=500, _cam2Ignore=true, _xSpeed=0) {
             if (_scale===0.4 && vars.game.scale!==0.4) { _scale = vars.game.scale; }
             let theBullet = scene.physics.add.sprite(_xy[0], _xy[1], 'bulletPrimaryEnemy', _bullet).setScale(_scale);
             theBullet.setName('bullet_' + generateRandomID());
             theBullet.setData('hp', _strength);
+            scene.sound.play('enemyShoot');
             enemyBullets.add(theBullet);
             if (_cam2Ignore===true) {
                 vars.cameras.ignore(cam2, theBullet);
@@ -541,7 +558,7 @@ var vars = {
         scale: 1.0,
         hitpoints: 125,
         hitpointsMinMax: [125, 200],
-        shield: 3,
+        shield: 4,
         startPosition: {
             x: -1,
             y: -1,
@@ -556,7 +573,6 @@ var vars = {
                 c.setVisible(true);
             })
             vars.player.destroyAllBullets();
-
         },
 
         destroyAllBullets: function() {
@@ -583,59 +599,85 @@ var vars = {
             let scoreText = scene.children.getByName('scoreTextInt').setText(gV.scores.current);
         },
 
-        shieldChange: function() {
+        shieldChange: function(_upgrade=false) {
             let pV = vars.player;
             let sV = pV.ship;
             let bW = sV.bodyWidths;
             let upgrades = sV.upgrades;
             let playerShields = constsPS;
             let updateSize = false;
-            if (pV.hitpoints>=100) {        // green shield
-                if (pV.shield!==3) {
-                    console.log('%cGreen Shield Enabled', 'color: green');
-                    vars.cameras.shake();
-                    scene.sound.play('playerShieldDrop');
-                    pV.shield=3;
+            let shieldChange = [false,0];
+
+            if (pV.hitpoints>=100) {  // green shield
+                if (pV.shield!==4) {
+                    console.log('%Green Shield Enabled', 'color: green');
+                    shieldChange = [true,100];
+                    pV.shield=4;
                     player.setFrame(playerShields.GREEN_SHIELD + upgrades);
-                    // due to the speed you can lose health at, this next call is done every time the shield is dropped
-                    // this is mainly to protect against bosses that can destroy shields very easily.
                     updateSize=true;
                 }
-            } else if (pV.hitpoints>=75) {  // orange shield
-                if (pV.shield!==2) {
-                    console.log('%cOrange Shield Enabled', 'color: orange');
-                    vars.cameras.shake();
-                    scene.sound.play('playerShieldDrop');
-                    pV.shield=2;
-                    player.setFrame(playerShields.ORANGE_SHIELD + upgrades);
-                    updateSize=true;
-                }
-            } else if (pV.hitpoints>=50) {  // red shield
-                if (pV.shield!==1) {
-                    console.log('%cRed Shield Enabled', 'color: red');
-                    vars.cameras.shake();
-                    scene.sound.play('playerShieldDrop');
-                    pV.shield=1;
-                    player.setFrame(playerShields.RED_SHIELD + upgrades);
-                    updateSize=true;
-                }
-            } else if (pV.hitpoints>0) {   // no shield
+            } else if (pV.hitpoints<=25) {  // no shield
                 if (pV.shield!==0) {
-                    console.log('%cNO Shield!', 'color: white');
-                    scene.sound.play('playerShieldDrop');
-                    vars.cameras.shake();
+                    console.log('%No Shield Enabled', 'color: white');
+                    shieldChange = [true,0];
                     pV.shield=0;
                     player.setFrame(playerShields.NO_SHIELD + upgrades);
                     updateSize=true;
                 }
+            } else if (pV.hitpoints<50) {  // low shield
+                if (pV.shield!==1) {
+                    console.log('%cLow Shield Enabled', 'color: pink');
+                    shieldChange = [true,25];
+                    pV.shield=1;
+                    player.setFrame(playerShields.LOW_SHIELD + upgrades);
+                    updateSize=true;
+                }
+            } else if (pV.hitpoints<75) {   // red shield
+                if (pV.shield!==2) {
+                    console.log('%cRed Shield Enabled', 'color: red');
+                    shieldChange = [true,50];
+                    pV.shield=2;
+                    player.setFrame(playerShields.RED_SHIELD + upgrades);
+                    updateSize=true;
+                }
+            } else if (pV.hitpoints<100) { // orange shield
+                if (pV.shield!==3) {
+                    console.log('%cOrange Shield!', 'color: orange');
+                    shieldChange = [true,75];
+                    pV.shield=3;
+                    player.setFrame(playerShields.ORANGE_SHIELD + upgrades);
+                    updateSize=true;
+                }
             }
+            
+            // do we need to modify the hit box of the player?
             if (updateSize===true) {
                 player.setSize(bW[0][0],bW[0][1]);
+            }
+
+            if (shieldChange[0]===true) { // the shield was changed. Fire sound effect for ...
+                if (_upgrade===true) {                                             // upgrades
+                    scene.sound.play('speechShieldUpgrade');
+                    setTimeout( function() {
+                        scene.sound.play('speechShield100'); // this always plays so we dont have to worry about stopping it on wave transition etc
+                    }, 1200);
+                } else {                                                           // drop in power
+                    switch (shieldChange[1]) {
+                        // case 100: scene.sound.play('speechShield100'); break; // removed because this shouldnt fire! You can only upgrade to full shields
+                        case  75: scene.sound.play('speechShield75'); break;
+                        case  50: scene.sound.play('speechShield50'); break;
+                        case  25: scene.sound.play('speechShield25'); break;
+                        case   0: scene.sound.play('speechShieldDestroyed'); break;
+                    }
+                    scene.sound.play('playerShieldDrop');
+                    vars.cameras.shake();
+                }
             }
         },
 
         ship: {
             bodyWidths: [
+                [30,50],
                 [30,50],
                 [55,50],
                 [80,50],
