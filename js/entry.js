@@ -49,6 +49,13 @@ var game = new Phaser.Game(config);
 function preload() {
     scene = this;
     scene.load.setPath('assets');
+
+    // LOADING PROGRESS UI STUFF
+    preloadText = scene.add.text(vars.canvas.cX, vars.canvas.cY, 'Loading...', { fontSize: 20, fontFamily: 'consolas', fill: '#444' }).setOrigin(0.5,0.5);
+
+    scene.load.on('fileprogress', function (file) { preloadText.setText('Loading asset: ' + file.key); }); // as external file loads
+    scene.load.on('complete', function () { preloadText.destroy(); preloadText=undefined; });
+
     // MUSIC
     scene.load.audio('intro', 'music/intro.ogg');
     scene.load.audio('gamemusic1', 'music/gameplayTrack1.ogg');
@@ -66,7 +73,7 @@ function preload() {
     // BULLET
     scene.load.image('bulletPrimary', 'player/bulletPrimary.png');
     // SHIP UPGRADE CRATES
-    scene.load.spritesheet( 'upgradeBox', 'player/upgradeBox.png', { frameWidth: 250, frameHeight: 100 });
+    scene.load.spritesheet( 'upgradeBox', 'player/upgradeBox.png', { frameWidth: 80, frameHeight: 35 });
 
     // ENEMIES
     scene.load.spritesheet( 'enemies', 'enemy/enemies-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
@@ -134,20 +141,22 @@ function create() {
     scoreGroup = scene.add.group();
 
     // player
-    shipUpgradeGroup = scene.add.group();
-    shipPowerUpGroup = scene.add.group();
-    bullets = scene.physics.add.group();
+    shipUpgradeGroup    = scene.add.group();
+    shipPowerUpGroup    = scene.add.group();
+    animationInit('shipUpgrades');
+    animationInit('upgrades');
+
+    bullets             = scene.physics.add.group();
 
     // enemies
-    enemies = scene.physics.add.group();
-    enemyBossGroup = scene.physics.add.group();
-    enemyBullets = scene.physics.add.group();
+    enemies             = scene.physics.add.group();
+    enemyBossGroup      = scene.physics.add.group();
+    enemyBullets        = scene.physics.add.group();
     enemyAttackingGroup = scene.physics.add.group();
 
     // scenery
     sceneryGroup = scene.add.group();
-    
-    animationInit('upgrades');
+
     // add enemy count to the enemies var
     let note = '\n\nNOTES:\nAnother weird thing PHASER does... the frame total, for some inexplicable fukn\nreason is 1 more than the actual count. So we need a version check here :S\nIf we get an error on the count we know that this count CANNOT be trusted!';
     vars.versionCheck();
@@ -178,7 +187,6 @@ function create() {
     scene.physics.add.overlap(enemyAttackingGroup, bullets, enemyAttackingHit, null, this);
 
     inputInit();
-    //animationInit('player');
 
     // set up the particles
     particles = scene.add.particles('particles');

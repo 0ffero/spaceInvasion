@@ -98,7 +98,7 @@ var vars = {
         playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
-    DEBUG: true,
+    DEBUG: false,
     VERBOSE: false,
 
     DEBUGHIDE: false,
@@ -107,7 +107,8 @@ var vars = {
     audio: {
         currentTrack: 0,
         gameTracks: ['gamemusic1'],
-        isEnabled: true,
+        isEnabled: false,
+
         getNext: function() {
             let aV = vars.audio;
             // delete the current audio sprite
@@ -296,21 +297,57 @@ var vars = {
             }
         },
 
+        bossBulletSpread: function(_bulletCount=0) {
+            let spread = { min: 0, max: 0 };
+            if (vars.levels.wave>1) {
+                // now, how wide a spread are we going with (based on player hp)
+                // obviously a higher spread speed (up to xVelocity(0)+600) would be more dangerous so we'll set the spread based on player hp
+                let pV = vars.player;
+                if (pV.hitpoints>125) {
+                    spread =  { min: 400, max: 600 };
+                } else if (pV.hitpoints>100) {
+                    spread =  { min: 200, max: 400 };
+                } else if (pV.hitpoints>75) {
+                    spread =  { min: 100, max: 200 };
+                }
+                let bulletSpreadSpeed = Phaser.Math.RND.between(spread.min, spread.max);
+                bulletSpreadSpeed = ~~(bulletSpreadSpeed/10)*10;
+                let startSpeed = bulletSpreadSpeed;
+                let xI = ~~(startSpeed*2 / _bulletCount); // gives us the xVel increment
+                startSpeed*=-1;
+                return [startSpeed, xI];
+            } else {
+                return [0, 0];
+            }
+        },
+
         bossFireRatesInit: function() {
             let eV = vars.enemies;
             // all values are in frames
             let fps = vars.game.fps;
-            eV.bossFireRates = [ {firetimeout: fps*2, bullettimeout: 1, bulletsperframe: 1, bulletcount: 10 }, {firetimeout: fps*2, bullettimeout: 2, bulletsperframe: 1, bulletcount: 10}, {firetimeout: fps*2, bullettimeout: 3, bulletsperframe: 1, bulletcount: 10}, {firetimeout: fps*3, bullettimeout: 2, bulletsperframe: 2, bulletcount: 15} ];
-            let tempResets = [];
+            eV.bossFireRates = [
+                { firetimeout: fps*2, bullettimeout: 1, bulletsperframe: 1, bulletcount: 10 },
+                { firetimeout: fps*2, bullettimeout: 2, bulletsperframe: 1, bulletcount: 10 },
+                { firetimeout: fps*2, bullettimeout: 3, bulletsperframe: 1, bulletcount: 10 },
+                { firetimeout: fps*2, bullettimeout: 3, bulletsperframe: 1, bulletcount: 15 },
+                { firetimeout: fps*2, bullettimeout: 2, bulletsperframe: 1, bulletcount: 15 },
+                { firetimeout: fps*2, bullettimeout: 1, bulletsperframe: 1, bulletcount: 15 },
+                { firetimeout: fps*3, bullettimeout: 2, bulletsperframe: 2, bulletcount: 15 } // this firerate is god damned dangerous! We really need to limit it to waves higher than maybe 5 or 7
+            ];
             for (let fr=0; fr<eV.bossFireRates.length; fr++) {
                 eV.bossFireRatesResets.push({firetimeout: eV.bossFireRates[fr].firetimeout, bullettimeout: eV.bossFireRates[fr].bullettimeout, bulletsperframe: eV.bossFireRates[fr].bulletsperframe, bulletcount: eV.bossFireRates[fr].bulletcount })
             }
-            //eV.bossFireRatesResets = [ {firetimeout: fps*2, bullettimeout: 1, bulletsperframe: 1, bulletcount: 10 }, {firetimeout: fps*2, bullettimeout: 2, bulletsperframe: 1, bulletcount: 10}, {firetimeout: fps*2, bullettimeout: 3, bulletsperframe: 1, bulletcount: 10}, {firetimeout: fps*3, bullettimeout: 2, bulletsperframe: 2, bulletcount: 15} ];
         },
 
         bossFireRateGetRandom: function() {
             let eV = vars.enemies;
-            let randomShootPattern = Phaser.Math.RND.between(0, eV.bossFireRates.length-1);
+            let fireratesMax = 2; // the max index
+            if (vars.levels.wave > 7) { // allow all fire rates... including the dangerous ones
+                fireratesMax=eV.bossFireRates.length-1;
+            } else if (vars.levels.wave>3) {
+                fireratesMax+=3;
+            }
+            let randomShootPattern = Phaser.Math.RND.between(0, fireratesMax);
             let returnData = eV.bossFireRates[randomShootPattern];
             return [returnData, randomShootPattern];
         },
@@ -319,16 +356,19 @@ var vars = {
 
         },
 
-        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=600, _cam2Ignore=true) {
+        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=600, _cam2Ignore=true, _xSpeed=0) {
             if (_scale===0.4 && vars.game.scale!==0.4) { _scale = vars.game.scale; }
             let theBullet = scene.physics.add.sprite(_xy[0], _xy[1], 'bulletPrimaryEnemy', _bullet).setScale(_scale);
             theBullet.setName('bullet_' + generateRandomID());
-            theBullet.setData('hp',_strength);
+            theBullet.setData('hp', _strength);
             enemyBullets.add(theBullet);
             if (_cam2Ignore===true) {
                 vars.cameras.ignore(cam2, theBullet);
             }
-            theBullet.setVelocityY(_speed);
+            if (_xSpeed!==0 && vars.DEBUG===true) { // if x speed isnt 0 - this is only used by bosses after wave 1
+                console.log('Boss Bullet - Setting xSpeed: ' + _xSpeed);
+            }
+            theBullet.setVelocity(_xSpeed, _speed);
         },
 
         debugBossPatterns: function() {
@@ -480,7 +520,6 @@ var vars = {
             })
             vars.cameras.ignore(cam2, enemies);
             vars.levels.wavePopupVisible=false;
-            //player.anims.play('hover');
         }
     },
 

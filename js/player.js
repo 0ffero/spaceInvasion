@@ -182,13 +182,8 @@ class shipUpgrade { // these are created when a boss is killed
         if (spawnHealth===true) { // player has fully upgraded ship, spawn them some health or better bullets instead
             healthBulletUpgradeSpawn(_spawnXY);
         } else { // the player hasnt fully upgraded their ship, spawn ship upgrade crate
-            let frame = -1;
-            if (sV.upgrades===1) {
-                frame = 0;
-            } else if (sV.upgrades===2) {
-                frame = 4;
-            }
-            let upgradeBox = scene.physics.add.image(this.spawnX,this.spawnY,'upgradeBox', frame).setScale(vars.game.scale).setData('upgrade', sV.upgrades);
+            let upgradeBox = scene.physics.add.sprite(this.spawnX, this.spawnY, 'upgradeBox', 0).setScale(1).setData('upgrade', sV.upgrades);
+            upgradeBox.anims.play('shipGrade' + sV.upgrades);
             shipUpgradeGroup.add(upgradeBox);
             vars.cameras.ignore(cam2, upgradeBox);
             scene.tweens.add({

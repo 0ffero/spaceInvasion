@@ -297,7 +297,7 @@ class enemyBoss {
         enemyBossGroup.add(boss);
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
         boss.data = thisSprite.data; // and data after adding it to the group.. because Phaser :S
-        scene.tweens.add({ // this doesnt fire for some reason, so TODO
+        scene.tweens.add({
             targets: thisSprite,
             alpha: 1,
             //ease: 'linear',
@@ -366,27 +366,41 @@ function enemyBossShow(_tween, _target, _boss) {
 
 function enemyBossUpdate(_boss) {
     let firerate = _boss.getData('firerate');
-    if (firerate.firetimeout>0) {
-        _boss.data.list.firerate.firetimeout--;
+    if (firerate.firetimeout>0) {  // is the countdown still happening?
+        firerate.firetimeout--;
         return;
-    } else {
-        // get the bulletcount
+    } else { // fire! (this is called several times based on the bCount (bullet count))
+        // get the bullet data
         let bCount = firerate.bulletcount;// 10
         let bPF = firerate.bulletsperframe;// 1
         let bTimeout = firerate.bullettimeout;// 2
+        
+        // first check to see if this is the first bullet by checking the enemies firespread var
+        if (_boss.getData('currentSpeed')===undefined) { // set up the bullet spread angle
+            let bulletSpreadObject = vars.enemies.bossBulletSpread(bCount);
+            let startSpeed = bulletSpreadObject[0];
+            let xI = bulletSpreadObject[1];
+            _boss.setData({ currentSpeed: startSpeed-xI, xSpeedIncrement: xI });
+        }
 
-        if (bCount>0) {
+        if (bCount > -1) {
             if (bTimeout>0) {
                 _boss.data.list.firerate.bullettimeout--;
                 return;
             } else {
                 // fire the bullet(s)
+                let xSpeed = _boss.getData('currentSpeed');
+                let xI = _boss.getData('xSpeedIncrement');
+                xSpeed += xI; // our initial speed has a offset of -xI so that we dont have to check if this is the first bullet
+                _boss.setData('currentSpeed', xSpeed); // update the xSpeed for the next bullet
+                //console.log('Bullet xSpeed ' + xSpeed);
+
                 let damage = vars.enemies.bulletDamage*2; // boss bullets hit 2 times harder than a normal one!
                 let bulletScale = vars.game.scale*2;
                 for (let b=0; b<bPF; b++) {
                     //console.log('Firing Bullet');
                     let bulletSprite = Phaser.Math.RND.between(0,vars.enemies.spriteCount-1); // basically the colour of the bullet
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, 900, false);
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, 900, false, xSpeed);
                 }
                 _boss.data.list.firerate.bulletcount--;
 
@@ -396,11 +410,11 @@ function enemyBossUpdate(_boss) {
                 _boss.data.list.firerate.bullettimeout = pattern.bullettimeout;
             }
         } else {
-            // boss has run out of bullets! reset the vars
+            // boss has run out of bullets! reset vars to defaults
             let defaults = vars.enemies.bossFireRatesResets[_boss.getData('fireratepattern')];
             // if we set the firerate data by using the selected firerate object it will be passed by reference. Any updates to the new object will filter to the original object IMPORTANT
             let defObject = { firetimeout: defaults.firetimeout, bullettimeout: defaults.bullettimeout, bulletsperframe: defaults.bulletsperframe, bulletcount: defaults.bulletcount };
-            _boss.setData('firerate', defObject);
+            _boss.setData({ firerate: defObject, currentSpeed: undefined, xSpeedIncrement: undefined });
             return;
         }
     }

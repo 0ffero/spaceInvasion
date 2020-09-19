@@ -1,14 +1,5 @@
-function animationInit(_spriteName='player') {
+function animationInit(_spriteName) {
     let selectedSprite = _spriteName;
-    /* if (selectedSprite==='player') {
-        console.log('Setting Up Player Animations');
-        scene.anims.create({
-            key: 'hover',
-            frames: scene.anims.generateFrameNumbers(selectedSprite, { start: 0, end: 0 }),
-            frameRate: 2,
-            repeat: -1
-        });
-    } */
 
     if (selectedSprite==='enemies') {
         console.log('Setting Up Player Animations');
@@ -21,6 +12,24 @@ function animationInit(_spriteName='player') {
                 repeat: -1
             });
         }
+    }
+
+    if (selectedSprite==='shipUpgrades') {
+        selectedSprite = 'upgradeBox';
+        console.log('Setting Up Ship Upgrade Animations');
+        let fC = 2;
+        scene.anims.create({
+            key: 'shipGrade1',
+            frames: scene.anims.generateFrameNumbers(selectedSprite, { start: 0, end: 1 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
+        scene.anims.create({
+            key: 'shipGrade2',
+            frames: scene.anims.generateFrameNumbers(selectedSprite, { start: 2, end: 3 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
     }
 
     if (selectedSprite==='upgrades') {
