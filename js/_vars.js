@@ -99,6 +99,13 @@ var vars = {
         playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
+    input: {
+        init: function() {
+            let musicKey = scene.input.keyboard.addKey('M');
+            musicKey.on('up', vars.audio.musicEnableDisable);
+        }
+    },
+
     DEBUG: false,
     VERBOSE: false,
 
@@ -109,6 +116,7 @@ var vars = {
         currentTrack: 0,
         gameTracks: ['gamemusic1'],
         isEnabled: true,
+        volume: 0.5,
 
         getNext: function() {
             let aV = vars.audio;
@@ -131,7 +139,6 @@ var vars = {
         levelMusicStart: function() {
             let aV = vars.audio;
             if (aV.isEnabled===true) {
-                //aV.stop();
                 let currentTrack = aV.gameTracks[aV.currentTrack];
                 let gM = scene.sound.add(currentTrack);
                 if (scene.sound.sounds.length===1) {
@@ -140,15 +147,33 @@ var vars = {
                 gM.once('complete', function() {
                     aV.getNext();
                 })
-                // unpause the game
             }
             vars.game.unpause();
         },
 
-        stop: function() {
+        musicEnableDisable: function() {
             let aV = vars.audio;
             if (aV.isEnabled===true) {
-                let currentTrack = aV.gameTracks[aV.currentTrack];
+                aV.isEnabled=false;
+                scene.sound.sounds.forEach( (c)=> {
+                    if (c.key==='intro' || c.key==='gamemusic1') {
+                        c.setVolume(0);
+                    }
+                })
+            } else {
+                aV.isEnabled=true;
+                scene.sound.sounds.forEach( (c)=> {
+                    if (c.key==='intro' || c.key==='gamemusic1') {
+                        c.setVolume(1);
+                    }
+                })
+            }
+        },
+
+        stop: function(_override=false) {
+            let aV = vars.audio;
+            let currentTrack = aV.gameTracks[aV.currentTrack];
+            if (aV.isEnabled===true || _override===true) {
                 scene.sound.stopByKey(currentTrack);
             }
         }
@@ -495,8 +520,8 @@ var vars = {
 
     game: {
         bulletCheckTimeout: [fps/2, fps/2],
-        bonusSpawnCount: [0,0,0,0,0,0,0,0], // basically used for debugging
-        upgradeNames: ['  Hit Points: +25 hp','  Hit Points: +50 hp','  Hit Points: +75 hp','  Bullets - Double Fire Rate','  Bullets - Double Damage','  Points: +2000','  Points: +3000','  Points: +5000'],
+        bonusSpawnCount: [0,0,0,0,0,0,0,0,0,0], // basically used for debugging
+        upgradeNames: ['  Hit Points: +25 hp','  Hit Points: +50 hp','  Hit Points: +75 hp','  Bullets - Double Fire Rate','  Bullets - Double Damage','  Points: +2000','  Points: +3000','  Points: +5000', 'Shade Field', 'Amstrad Defence Field'],
         lastChanceArray: [],
         fps: fps,
         paused: true,
@@ -872,7 +897,7 @@ var vars = {
     },
 
     story: {
-
+        // populated from text.js
     },
 
     versionCheck: function() {

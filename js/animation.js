@@ -81,5 +81,18 @@ function animationInit(_spriteName) {
             frameRate: fC*1.5,
             repeat: -1
         });
+        // fields
+        scene.anims.create({
+            key: 'amstradField',
+            frames: scene.anims.generateFrameNumbers('upgradesS', { start: 0, end: 1 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
+        scene.anims.create({
+            key: 'shadeField',
+            frames: scene.anims.generateFrameNumbers('upgradesS', { start: 2, end: 3 } ),
+            frameRate: fC*1.5,
+            repeat: -1
+        });
     }
 }

@@ -69,26 +69,27 @@ function preload() {
     })
 
     // PLAYER
-    scene.load.spritesheet( 'player', 'player/player.png', { frameWidth: 100, frameHeight: 75});
+    scene.load.spritesheet('player', 'player/player.png', { frameWidth: 100, frameHeight: 75});
     // BULLET
     scene.load.image('bulletPrimary', 'player/bulletPrimary.png');
     // SHIP UPGRADE CRATES
-    scene.load.spritesheet( 'upgradeBox', 'player/upgradeBox.png', { frameWidth: 80, frameHeight: 35 });
+    scene.load.spritesheet('upgradeBox', 'player/upgradeBox.png', { frameWidth: 80, frameHeight: 35 });
 
     // ENEMIES
-    scene.load.spritesheet( 'enemies', 'enemy/enemies-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
+    scene.load.spritesheet('enemies', 'enemy/enemies-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
     // BULLET
     scene.load.spritesheet('bulletPrimaryEnemy', 'enemy/bulletPrimary-ext.png', { frameWidth: 34, frameHeight: 42, margin: 1, spacing: 2 });
 
     // SCENERY
-    scene.load.spritesheet( 'trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
-    scene.load.spritesheet( 'barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
-    scene.load.spritesheet( 'barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
+    scene.load.spritesheet('trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
+    scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
+    scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
 
     // UPGRADES
-    scene.load.spritesheet( 'upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });
-    scene.load.spritesheet( 'upgradesH', 'upgrades/health-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
-    scene.load.spritesheet( 'upgradesP', 'upgrades/points-ext.png', { frameWidth: 200, frameHeight: 100, margin: 1, spacing: 2 });
+    scene.load.spritesheet('upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });
+    scene.load.spritesheet('upgradesH', 'upgrades/health-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
+    scene.load.spritesheet('upgradesP', 'upgrades/points-ext.png', { frameWidth: 200, frameHeight: 100, margin: 1, spacing: 2 });
+    scene.load.spritesheet('upgradesS', 'upgrades/fields-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
 
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');
@@ -106,6 +107,7 @@ function preload() {
     scene.load.audio('pickUpStandard',   'audio/pickup.ogg');
     scene.load.audio('playerDeath',      'audio/playerDeath.ogg');
     scene.load.audio('playerGun1',       'audio/blaster.ogg');
+    scene.load.audio('playerHit',        'audio/bulletBounce.ogg');
     scene.load.audio('playerShieldDrop', 'audio/playerLoseShield.ogg');
 
     // SPEECH (original voice from https://www.naturalreaders.com/online/ English UK Rachel -> Goldwave, mechanise (star wars droid low) -> echo (reverb))
@@ -113,6 +115,7 @@ function preload() {
     scene.load.audio('speechHP',              'speech/hpUpgrade.ogg');
     scene.load.audio('speechDoubleDamage',    'speech/doubleDamage.ogg');
     scene.load.audio('speechDoubleFireRate',  'speech/doubleFireRate.ogg');
+    scene.load.audio('speechIncomingBoss',    'speech/warningIncomingBoss.ogg');
     scene.load.audio('speechShield100',       'speech/shield100.ogg');
     scene.load.audio('speechShield75',        'speech/shield75.ogg');
     scene.load.audio('speechShield50',        'speech/shield50.ogg');
@@ -122,6 +125,7 @@ function preload() {
 
 
     // SHADER PIPE LINES
+    // cS = colour scaline
     // gS = grayscale scaline
     // gSS = greenscreen scanline
     scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
@@ -151,7 +155,12 @@ function create() {
         scene.gSPipeline.setFloat2('mouse', pointer.x, pointer.y);
         scene.gSSPipeline.setFloat2('mouse', pointer.x, pointer.y);
     });
-    scene.sound.setVolume(0.5); // this volume is roughly equal to the volume of a standard youtube video.
+    scene.sound.setVolume(vars.audio.volume); // this volume is roughly equal to the volume of a standard youtube video.
+
+    // INPUT
+    vars.input.init(); // keys that control the game config (music etc)
+    inputInit(); // game controls
+
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
     // set up the groups and colliders
     // UI
@@ -203,19 +212,18 @@ function create() {
     scene.physics.add.overlap(shipPowerUpGroup, player, shipPowerUpPickUp, null, this);
     scene.physics.add.overlap(enemyAttackingGroup, bullets, enemyAttackingHit, null, this);
 
-    inputInit();
-
     // set up the particles
     particles = scene.add.particles('particles');
     particlesInit();
 
+    // start the game
     if (vars.audio.isEnabled===true) {
         scene.sound.play('intro', { loop: true });
     }
     storyInit();
-
     player.setDepth(10);
 
+    // if debug is enabled add the debug overlay
     if (vars.DEBUGHIDE===false) {
         vars.DEBUGTEXT = this.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
         vars.DEBUGTEXT.setOrigin(0,0);
@@ -225,7 +233,8 @@ function create() {
     // cameras
     vars.cameras.init();
     vars.cameras.ignore(cam2, player);
-    // set up the shader pipelines
+
+    // set up the shader pipelines time variables
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
     scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
 

@@ -39,14 +39,16 @@ function storyInit() {
 
 function enableIntroSkip() {
     window.onmousedown = function(e) {
-        scene.tweens.add({
-            targets: storyText,
-            alpha: 0,
-            duration: 3000,
-            onComplete: storyTextSpeedUp,
-        })
-        vars.game.storyVisible = false;
-        scene.sys.canvas.style.cursor = 'none';
+        if (vars.game.storyVisible===true) {
+            scene.tweens.add({
+                targets: storyText,
+                alpha: 0,
+                duration: 3000,
+                onComplete: storyTextSpeedUp,
+            })
+            vars.game.storyVisible = false;
+            scene.sys.canvas.style.cursor = 'none';
+        }
     }
 }
 

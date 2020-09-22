@@ -110,9 +110,10 @@ function playerHit(_player, _bullet) {
     let pV = vars.player;
 
     if (pV.hitpoints-(_bulletStrength*3)>_bulletStrength*3) {
-        pV.hitpoints-=_bulletStrength*3;
+        pV.hitpoints=~~(pV.hitpoints - _bulletStrength*3);
         vars.cameras.flash('red', 500);
-        console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
+        scene.sound.play('playerHit');
+        //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
         // first, we reset the upgrades if the player has less than 100 hp
         if (pV.hitpoints<=115 && pV.hitpoints>=100 && pV.ship.upgrades!==1) {
             console.log('Dropping upgrades to 1');
@@ -129,7 +130,7 @@ function playerHit(_player, _bullet) {
         console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
         vars.cameras.shake(cam1, 750);
         /* vars.game.pause(); */
-        vars.game.started=false; // this tells us that we have died, no using the variable pV.isDead
+        vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
         vars.player.dead();
         enemiesLand();
     }

@@ -63,9 +63,9 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
             positions: [
                 ['canvasWidth-220', 30],
                 ['canvasWidth-30', 250],
-                [0+100, 'enemyStartY+300'],
-                [0+100, 'enemyStartY+500'],
-                ['canvasWidth+50', 'enemyStartY+400'],
+                [0+100, 0+400],
+                [0+100, 0+800],
+                [0+50, 0+500],
             ],
             fireTimings: {
                 initialWait: 60, // in frames
@@ -78,9 +78,9 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
             positions: [
                 [0+220, 30],
                 [0+30, 250],
-                ['canvasWidth-100', 'enemyStartY+300'],
-                ['canvasWidth-100', 'enemyStartY+500'],
-                [0-50, 'enemyStartY+400'],
+                ['canvasWidth-100', 0+400],
+                ['canvasWidth-100', 0+800],
+                [0-50, 0+500],
             ],
             fireTimings: {
                 initialWait: 60, // in frames
@@ -280,7 +280,7 @@ class enemyBoss {
         }
         this.sprite = eV.bossNext;
 
-        this.hp = 50 + (vars.levels.wave*5) + (this.sprite * 5);
+        this.hp = 40 + (vars.levels.wave*5) + (this.sprite * 5);
         this.points = 2000 * (this.sprite+1);
         this.scale = vars.game.scale*3;
         this.startPosition = [cV.cX, cV.cY];
@@ -361,6 +361,7 @@ function enemyBossHit(_bullet, _boss) {
 }
 
 function enemyBossShow(_tween, _target, _boss) {
+    shaderType('default',1);
     _boss.setVisible(true);
 }
 
@@ -468,9 +469,13 @@ function enemyDeath(enemy) {
 
     // check to see if we should spawn a boss yet
     eV.bossSpawnTimeout[0]--;
+    if (eV.bossSpawnTimeout[0]===2) { // warn that a boss is incoming
+        scene.sound.play('speechIncomingBoss');
+        shaderType('warp',1);
+    }
     if (eV.bossSpawnTimeout[0]<=0) {
         if (enemyBossGroup.children.size<eV.bossLimit) {
-            console.log('Spawning a Boss');
+            //console.log('Spawning a Boss');
             vars.enemies.spawnBoss();
         } else {
             eV.bossSpawnTimeout[0]=1;
