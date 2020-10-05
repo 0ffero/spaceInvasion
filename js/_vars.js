@@ -99,6 +99,12 @@ var vars = {
         playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
+    DEBUG: false,
+    VERBOSE: false,
+
+    DEBUGHIDE: false,
+    DEBUGTEXT: '',
+
     input: {
         init: function() {
             let musicKey = scene.input.keyboard.addKey('M');
@@ -106,11 +112,6 @@ var vars = {
         }
     },
 
-    DEBUG: false,
-    VERBOSE: false,
-
-    DEBUGHIDE: false,
-    DEBUGTEXT: '',
 
     audio: {
         currentTrack: 0,
@@ -180,7 +181,7 @@ var vars = {
     },
 
     enemies: {
-        attackTimeout: [10*fps,10*fps],
+        attackTimeout: [8*fps,12*fps],
         bossSpawnTimeout: [25,25], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
         bossSpawnCount: 0,
         bossFireRates: [],
@@ -298,13 +299,26 @@ var vars = {
                     let enemy = enemyGetRandom();
                     enemy.setVisible(false); // TODO this also requires the body to be disabled but will do for testing
                     enemy.setData('attacking', true);
-                    // theres currently only 1 path, but this will eventually be randomised TODO
-                    let selectedPath = 'alpha';
+
+                    // get a random path and reverse it if needed
+                    let available = eV.enemyPatterns.splines.available;
+                    let randomAP = Phaser.Math.RND.between(0, available.length-1);
+                    let selectedPath = available[randomAP];
+                    let duration=0;
+                    if (selectedPath==='alpha') {
+                        duration=6000;
+                    } else if (selectedPath==='beta') {
+                        duration=9000;
+                    }
                     if (enemy.x>vars.canvas.cX) { selectedPath+='Reversed'; }
-                    let fireTimings = vars.enemies.enemyPatterns.splines[selectedPath].fireTimings;
+                    console.log('Selected Path: ' + selectedPath);
+
+                    // get the fire timings for the attack type
+                    let fireTimings = eV.enemyPatterns.splines.fireTimings;
+                    fireTimings = eV.enemyPatterns.modifyFireTimings(fireTimings);
 
                     // build the spline attack pattern
-                    let path = vars.enemies.enemyPatterns.convertPatternToSpline(selectedPath,[enemy.x,enemy.y])
+                    let path = eV.enemyPatterns.convertPatternToSpline(selectedPath,[enemy.x,enemy.y])
                     let enemyXY = [enemy.x, enemy.y];
                     let enemyName = enemy.name; // needed to re-enable the real enemy sprite
                     let enemySpriteFrame = enemy.frame.name%vars.enemies.spriteCount;
@@ -315,10 +329,14 @@ var vars = {
                     let resets = [fireTimings.bulletCount, fireTimings.bulletSpacing, fireTimings.fireSpacing ];
                     attackingEnemy.setData( { initialWait: fireTimings.initialWait, bulletCount: fireTimings.bulletCount, bulletSpacing: 0, fireSpacing: fireTimings.fireSpacing, resets: resets } );
 
-                    attackingEnemy.startFollow({
-                        positionOnPath: true,
-                        duration: 6000,
-                    });
+                    if (duration!==0) {
+                        attackingEnemy.startFollow({
+                            positionOnPath: true,
+                            duration: duration,
+                        });
+                    } else {
+                        console.error('The duration is 0! Attack pattern failed. THIS IS A PROBLEM!');
+                    }
                 }
             }
         },
@@ -339,7 +357,7 @@ var vars = {
                 let bulletSpreadSpeed = Phaser.Math.RND.between(spread.min, spread.max);
                 
                 spreadLimit=0.1;
-                if (vars.levels.wave>15) {
+                if (vars.levels.wave>=15) {
                     spreadLimit=1;
                 } else if (vars.levels.wave>=10) {
                     spreadLimit=0.75;
@@ -519,12 +537,17 @@ var vars = {
     },
 
     game: {
+        graphics: null,
+
+        awaitingInput: false,
         bulletCheckTimeout: [fps/2, fps/2],
         bonusSpawnCount: [0,0,0,0,0,0,0,0,0,0], // basically used for debugging
         upgradeNames: ['  Hit Points: +25 hp','  Hit Points: +50 hp','  Hit Points: +75 hp','  Bullets - Double Fire Rate','  Bullets - Double Damage','  Points: +2000','  Points: +3000','  Points: +5000', 'Shade Field', 'Amstrad Defence Field'],
         lastChanceArray: [],
         fps: fps,
         paused: true,
+        pausedReason: 'intro',
+        pauseReasons: ['intro', 'betweenLevels', 'highlight'],
         started: false,
         storyVisible: false,
         rowStartY: 100,
@@ -549,7 +572,21 @@ var vars = {
                     c.destroy();
                 })
             }
-            //player.anims.stop();
+            //player.anims.stop(); // player is no longer animated
+        },
+
+        pauseForHighlightedObject: function() {
+            scene.physics.pause(); // this will pause player bullets, enemy bullets, standard enemies
+            // doesnt stop: "attacking enemies", upgrades, bosses (as they are tweens). So lets do that now
+            allTweens = scene.tweens.getAllTweens();
+            allTweens.forEach( (c)=> {
+                c.timeScale=0;
+            })
+            // setting the following variables modifies how main() works. Basically were stopping everything apart from the stars
+            let gV = vars.game;
+            gV.paused=true;
+            gV.pausedReason = 'highlight';
+            gV.awaitingInput=true;
         },
 
         unpause: function() {
@@ -587,6 +624,16 @@ var vars = {
         startPosition: {
             x: -1,
             y: -1,
+        },
+
+        bulletCheck: function() {
+            bullets.children.each( function(c) {
+                if (c.y<=-100) {
+                    let bulletName = c.getData('name');
+                    if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('%cBullet with name: ' + bulletName + ' is off the screen, destroying it', vars.console.doing); }
+                    c.destroy();
+                }
+            })
         },
 
         dead: function() {
@@ -711,7 +758,6 @@ var vars = {
 
             cannonSlots: {
                 centre: {
-
                     bulletSpeed: 1200,
                     currentWait: -1,
                     currentWaitMax: -1,
@@ -722,24 +768,13 @@ var vars = {
                     bulletOffset: 0,
                     ready: false,
 
-                    bulletCheck: function() {
-                        bullets.children.each( function(c) {
-                            if (c.y<=-100) {
-                                let bulletName = c.getData('name');
-                                if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('%cBullet with name: ' + bulletName + ' is off the screen, destroying it', vars.console.doing); }
-                                c.destroy();
-                            }
-                        })
-                    },
-
                     fire: function() {
                         let ssV = vars.player.ship.special;
                         this.currentWait = this.currentWaitMax;
                         this.ready = false;
                         let damage = this.damage;
                         if (ssV.doubleDamageEnabled===true) { damage*=2; }
-                        let thisBullet = new bullet(0, this.bulletOffset, this.bulletSpeed, damage, 'centre');
-                        thisBullet.physicsObject.setVelocityY(-this.bulletSpeed);
+                        new bullet(0, this.bulletOffset, this.bulletSpeed, damage, 'centre');
                     },
 
                     update: function() {
@@ -757,45 +792,67 @@ var vars = {
                     }
                 },
                 l1r1: {
+                    bulletSpeed: 1200,
                     currentWait: -1,
                     currentWaitMax: -1,
-                    firespeed: 5,
+                    firespeed: 10,
                     enabled: false,
                     bulletCount: -1,
-                    damage: 2,
-                    bulletOffset: [60 * gameScale],
-
-                    bulletCheck: function() {
-
-                    },
+                    damage: 0.6, // this is basically doubled as we have two of these cannons
+                    bulletOffset: 60 * gameScale,
+                    ready: false,
 
                     fire: function() {
-
+                        this.currentWait = this.currentWaitMax;
+                        this.ready = false;
+                        let damage = this.damage;
+                        new bullet(1, this.bulletOffset, this.bulletSpeed, damage, 'l1r1');
                     },
 
                     update: function() {
-
+                        if (this.enabled===true) {
+                            // first, update the bullet wait time
+                            let reductio=1;
+                            if (this.currentWait>0) {
+                                this.currentWait-=reductio;
+                            } else if (this.currentWait<=0 && this.ready===false) {
+                                // allow the gun to fire
+                                if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('%cL1R1 cannon is ready to fire!', vars.console.doing); }
+                                this.ready=true;
+                            }
+                        }
                     }
                 },
                 l2r2: {
+                    bulletSpeed: 300,
                     currentWait: -1,
                     currentWaitMax: -1,
                     firespeed: 0.25,
                     enabled: false,
                     bulletCount: -1,
-                    damage: 50,
-                    bulletOffset: [96*gameScale],
-
-                    bulletCheck: function() {
-
-                    },
+                    damage: 10,
+                    bulletOffset: 96*gameScale,
+                    ready: false,
 
                     fire: function() {
-
+                        this.currentWait = this.currentWaitMax;
+                        this.ready = false;
+                        let damage = this.damage;
+                        new bullet(2, this.bulletOffset, this.bulletSpeed, damage, 'l2r2');
                     },
 
                     update: function() {
-
+                        if (this.enabled===true) {
+                            // first, update the bullet wait time
+                            let reductio=1;
+                            if (this.currentWait>0) {
+                                this.currentWait-=reductio;
+                            } else if (this.currentWait<=0 && this.ready===false) {
+                                // allow the gun to fire
+                                if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('%cL2R2 cannon is ready to fire!', vars.console.doing); }
+                                this.ready=true;
+                            }
+                        }
                     }
                 },
             },
@@ -803,8 +860,115 @@ var vars = {
             special: {
                 doubleDamageEnabled: false,
                 doubleFireRate: false,
-                upgradeOnScreen: false,
+                ADIUpgrade: false,
+                SHADEUpgrade: false,
+                ADI: {
+                    onScreen: false,
+                    collected: false,
+                    timeOut: 5*fps,
+                    timeOutMax: 5*fps,
+
+                    seenBefore: false,
+                },
+                SHADE: {
+                    onScreen: false,
+                    collected: false,
+                    timeOut: 5*fps,
+                    timeOutMax: 5*fps,
+
+                    seenBefore: false,
+                },
+                upgradeOnScreen: false, // these are standard upgrades
                 upgradeTimeout: [3*fps, 3*fps],
+
+                ADISpawn: function(_xy) {
+                    let ssV = vars.player.ship.special;
+                    ssV.ADIUpgrade=true;
+                    ssV.ADI.onScreen = true;
+                    ssV.ADI.collected = false;
+                    let x = _xy[0]; let y = _xy[1];
+                    let upG = scene.physics.add.sprite(x,y,'upgradesS').setScale(0.4).anims.play('amstradField');
+                    upG.setData('upgrade', 'fx_ADI');
+                    shipPowerUpGroup.add(upG);
+                        if (ssV.ADI.seenBefore===false) {
+                            ssV.ADI.seenBefore = true;
+                            // highlight the bonus
+                            vars.UI.highlightObject(upG);
+                            debugger;
+                        }
+                    scene.tweens.add({
+                        targets: upG,
+                        y: 1000,
+                        duration: 2000,
+                    })
+                },
+                ADIPickUp: function() {
+                    let ssV = vars.player.ship.special;
+                    if (ssV.ADI.collected===false) { // first time weve entered the loop
+                        ssV.ADI.collected=true;
+                        ssV.ADI.onScreen=false;
+                        // enable the green screen effect
+                        shaderType('green',1);
+                    } else {
+                        // reduce the counter
+                        if (ssV.ADI.timeOut>0) {
+                            // reduce it by 1 and leave
+                            ssV.ADI.timeOut-=1;
+                            return false;
+                        } else { // the ADI counter has hit 0
+                            // set default vars back to false and reset counter
+                            ssV.ADIUpgrade=false;
+                            ssV.ADI.collected=false;
+                            ssV.ADI.timeOut = ssV.ADI.timeOutMax;
+                            // disable the shader
+                            shaderType('default',1);
+                        }
+                    }
+                },
+                SHADESpawn: function(_xy) {
+                    let ssV = vars.player.ship.special;
+                    ssV.SHADEUpgrade=true;
+                    ssV.SHADE.onScreen = true;
+                    ssV.SHADE.collected = false;
+                    let x = _xy[0]; let y = _xy[1];
+                    let upG = scene.physics.add.sprite(x,y,'upgradesS').setScale(0.4).anims.play('shadeField');
+                    upG.setData('upgrade', 'fx_SHADE');
+                    shipPowerUpGroup.add(upG);
+                    if (ssV.SHADE.seenBefore===false) {
+                        ssV.SHADE.seenBefore = true;
+                        // highlight the bonus
+                        vars.UI.highlightObject(upG);
+                        debugger;
+                    }
+                    scene.tweens.add({
+                        targets: upG,
+                        y: 1000,
+                        duration: 2000,
+                    })
+                },
+                SHADEPickUp: function() {
+                    let ssV = vars.player.ship.special;
+                    if (ssV.SHADE.collected===false) { // first time weve entered the loop
+                        ssV.SHADE.collected=true;
+                        ssV.SHADE.onScreen=false;
+                        // enable the green screen effect
+                        shaderType('gray',1);
+                    } else {
+                        // reduce the counter
+                        if (ssV.SHADE.timeOut>0) {
+                            // reduce it by 1 and leave
+                            ssV.SHADE.timeOut-=1;
+                            return false;
+                        } else { // the ADI counter has hit 0
+                            // set default vars back to false and reset counter
+                            ssV.SHADEUpgrade=false;
+                            ssV.SHADE.collected=false;
+                            ssV.SHADE.timeOut = ssV.SHADE.timeOutMax;
+                            // disable the shader
+                            shaderType('default',1);
+                        }
+                    }
+                },
 
                 resetVars: function() {
                     let ssV = vars.player.ship.special;
@@ -898,6 +1062,20 @@ var vars = {
 
     story: {
         // populated from text.js
+    },
+
+    UI: {
+        highlightObject: function(_upgrade) {
+            let w = _upgrade.width;
+            let h = _upgrade.height;
+            let x = _upgrade.x;
+            let y = _upgrade.y;
+            let scale = _upgrade.scale + 0.2;
+            let gV = vars.game;
+            gV.graphics = scene.add.graphics();
+            gV.graphics.lineStyle(2, 0xffffff, 1);
+            gV.graphics.strokeRoundedRect(x-(w/2*scale), y-(h/2*scale), w*scale, h*scale, 10);
+        }
     },
 
     versionCheck: function() {

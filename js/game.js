@@ -15,6 +15,16 @@ function gameLevelNext() {
     wavePopUp(); // show the wave pop up
 }
 
+function powerUpUpdate() {
+    // check to see if we should spawn a power up
+    let eV = vars.enemies;
+    eV.deadSinceLastPowerup++;
+    if (eV.deadSinceLastPowerup===10) {
+        healthBulletUpgradeSpawn([enemy.x, enemy.y],'');
+        eV.deadSinceLastPowerup=0;
+    }
+}
+
 
 function startGame() {
     // set up the score text

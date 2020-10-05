@@ -72,6 +72,8 @@ function preload() {
     scene.load.spritesheet('player', 'player/player.png', { frameWidth: 100, frameHeight: 75});
     // BULLET
     scene.load.image('bulletPrimary', 'player/bulletPrimary.png');
+    // ROCKETS
+    scene.load.spritesheet('rocket', 'player/rocket.png', { frameWidth: 40, frameHeight: 120 });
     // SHIP UPGRADE CRATES
     scene.load.spritesheet('upgradeBox', 'player/upgradeBox.png', { frameWidth: 80, frameHeight: 35 });
 

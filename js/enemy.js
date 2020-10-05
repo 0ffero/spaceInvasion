@@ -59,20 +59,16 @@ function enemyBossPatternsCreate() { // these are built at runtime as they are s
 
 vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on the selected enemies xy start position
     splines: {
+        available: [ 'alpha', 'beta' ],
+
         alpha: {
             positions: [
                 ['canvasWidth-220', 30],
                 ['canvasWidth-30', 250],
                 [0+100, 0+400],
                 [0+100, 0+800],
-                [0+50, 0+500],
+                ['canvasWidth+50', 0+500],
             ],
-            fireTimings: {
-                initialWait: 60, // in frames
-                bulletCount: 5,
-                bulletSpacing: 4, // frames
-                fireSpacing: 30,
-            },
         },
         alphaReversed: {
             positions: [
@@ -82,12 +78,40 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
                 ['canvasWidth-100', 0+800],
                 [0-50, 0+500],
             ],
-            fireTimings: {
-                initialWait: 60, // in frames
-                bulletCount: 5,
-                bulletSpacing: 4, // frames
-                fireSpacing: 30,
-            },
+        },
+        beta: {
+            positions: [
+                [500, 200],
+                ['canvasWidth-100', 350],
+                ['canvasWidth-100', 500],
+                [100, 500],
+                [100, 600],
+                ['canvasWidth-100', 600],
+                ['canvasWidth-100', 700],
+                [100, 800],
+                [100, 900],
+                ['canvasWidth+50', 0+800],
+            ],
+        },
+        betaReversed: {
+            positions: [
+                [220, 200],
+                [100, 350],
+                [100, 500],
+                ['canvasWidth-100', 500],
+                ['canvasWidth-100', 600],
+                [100, 600],
+                [100, 700],
+                ['canvasWidth-100', 800],
+                ['canvasWidth-100', 900],
+                [-50, 0+800],
+            ]
+        },
+        fireTimings: {
+            initialWait: 60, // in frames
+            bulletCount: 5,
+            bulletSpacing: 4, // frames
+            fireSpacing: 30,
         },
     },
 
@@ -128,14 +152,25 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
         // create the path
         let path1 = new Phaser.Curves.Path(_enemyPos[0], _enemyPos[1]).splineTo(splineArray);
         // DEBUG
-        if (vars.DEBUG===true) {
-            // draw it so we can make sure it looks ok
+        if (vars.DEBUG===true) { // draw the spline so we can make sure it looks ok
             graphics = scene.add.graphics();
             graphics.lineStyle(1, 0xffffff, 1);
             path1.draw(graphics, 128);
         }
         // END
         return path1;
+    },
+
+    modifyFireTimings: function(_timings) {
+        if (vars.levels.wave<=3) {
+            _timings.fireSpacing=60;
+            _timings.bulletCount=3;
+            _timings.bulletSpacing=2; // this makes the bullet group spread less
+        } else if (vars.levels.wave>=7) {
+            _timings.bulletCount=7;
+            _timings.bulletSpacing=6; // this makes the bullet group spread more making it harder to dodge
+        }
+        return _timings;
     },
 
     patternStringToInt: function(_positionAsText,_enemyXY) {
@@ -339,12 +374,13 @@ function enemyBossHit(_bullet, _boss) {
         _boss.setData('hp', bossHP);
         //console.log('Boss HP: ' + bossHP);
         pV.increaseScore(bulletStrength*50);
-    } else {
+    } else { // the boss is dead, long live the... oh wait
         let lV = vars.levels;
         console.log('The boss is dead! Make him to explody things...');
         scene.sound.play('enemyBossExplode');
         vars.cameras.flash('white', 2500);
         let points = _boss.getData('points');
+        let enemyType = _boss.getData('enemyType'); // 5 is the cthulhu boss
         shaderType('default',1);
         pV.increaseScore(points);
         if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
@@ -355,7 +391,7 @@ function enemyBossHit(_bullet, _boss) {
             eV.bossSpawnTimeout[0];
         }
         // then spawn a ship upgrade
-        new shipUpgrade(bossPosition); // player.js
+        new shipUpgrade(bossPosition, enemyType); // player.js
         _boss.destroy();
     }
 }
@@ -432,10 +468,11 @@ function enemyBossUpdate(_boss) {
 */
 
 function enemyAttackingHit(_enemy, _bullet) {
-    console.log('Enemy attacker has been hit. Pausing...');
+    console.log('Enemy attacker has been hit.');
     let enemyName = _enemy.name.replace('f_','');
     let enemyPhaser = scene.children.getByName(enemyName);
-    enemyHit(_bullet, enemyPhaser);
+    //enemyHit(_bullet, enemyPhaser); TODO THIS ISNT WORKING
+    console.warn(' CONTINUE FROM HERE!!');
     if (enemyPhaser===null) {
         _enemy.destroy();
     }
@@ -463,7 +500,7 @@ function enemyDeath(enemy) {
     let eV = vars.enemies;
     eV.deadSinceLastPowerup++;
     if (eV.deadSinceLastPowerup===10) {
-        healthBulletUpgradeSpawn([enemy.x, enemy.y])
+        healthBulletUpgradeSpawn([enemy.x, enemy.y],'')
         eV.deadSinceLastPowerup=0;
     }
 
@@ -520,10 +557,19 @@ function enemyGetRandom() {
 
 function enemyHit(bullet, enemy) {
     if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('Hit!'); }
+
     let strength = bullet.getData('hp');
     if (strength===undefined) {
         if (vars.DEBUG===true && vars.VERBOSE===true) { console.warn('Invalid bullet strength, its probably being destroyed. This is due to the speed of our bullets'); }
         return false;
+    }
+
+    // first we need to check that this enemy is attacking
+    // if it is we will have to set the explosion particle where the attacking version is, not the original
+    let attacking = false;
+    let position = [-1,-1];
+    if (enemy.getData('attacking')===true) {
+        attacking = true;
     }
 
     // destroy the bullet and remove it from the bullets array
@@ -532,11 +578,17 @@ function enemyHit(bullet, enemy) {
         let enemyType = enemy.getData('colourIndex');
         let tint = vars.enemies.colours[enemyType];
         enemyPieceParticle.setTint(tint[1]);
-        enemyPieceParticle.emitParticleAt(enemy.x, enemy.y)
-        scene.sound.play('enemyHit');
-
+        if (attacking===true) {
+            let aE = enemyAttackingGroup.children.get('name', 'f_' + enemy.name);
+            position = [aE.x, aE.y];
+        } else {
+            position = [enemy.x, enemy.y];
+        }
+        // ship part particle
+        enemyPieceParticle.emitParticleAt(position[0], position[1]);
         // single explosion
-        bulletHitEnemy.emitParticleAt(enemy.x, enemy.y);
+        bulletHitEnemy.emitParticleAt(position[0], position[1]);
+        scene.sound.play('enemyHit');
 
         // increase the players score
         let scoreTotal = 0;
@@ -550,6 +602,11 @@ function enemyHit(bullet, enemy) {
         // check for enemy death
         if (enemyHP<=0) { // enemy is dead
             scoreTotal += enemy.getData('points'); // give the player the points for this enemy
+            /* if (attacking===true) {
+                enemyDeath(enemy);
+            } else {
+                enemyDeath(enemy);
+            } */
             enemyDeath(enemy);
         } else {
             enemy.setData('hp', enemyHP); // enemy is fine, update its HP
@@ -560,7 +617,6 @@ function enemyHit(bullet, enemy) {
     }
 
     // enemy destroy has been moved to after its death animation: fn enemyDestroy
-
 }
 
 function enemiesLand() {
