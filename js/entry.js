@@ -93,6 +93,10 @@ function preload() {
     scene.load.spritesheet('upgradesP', 'upgrades/points-ext.png', { frameWidth: 200, frameHeight: 100, margin: 1, spacing: 2 });
     scene.load.spritesheet('upgradesS', 'upgrades/fields-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
 
+    // HIGHLIGHTS
+    scene.load.spritesheet('highlights', 'UI/highlights.png', { frameWidth: 350, frameHeight: 350 });
+    scene.load.spritesheet('highlightsConnector', 'UI/connectors-ext.png', { frameWidth: 59, frameHeight: 80, margin: 1, spacing: 2 });
+
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');
     //scene.load.text('enemyPieceJSON', 'particles/enemyPieces.json'); <--- this is the actual config for the enemy piece but implementing it is a dick, so ive faked it... Should probably implement it properly at some point TODO

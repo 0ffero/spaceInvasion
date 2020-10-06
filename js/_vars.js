@@ -934,13 +934,15 @@ var vars = {
                     let upG = scene.physics.add.sprite(x,y,'upgradesS').setScale(0.4).anims.play('shadeField');
                     upG.setData('upgrade', 'fx_SHADE');
                     shipPowerUpGroup.add(upG);
+                    let paused = false;
                     if (ssV.SHADE.seenBefore===false) {
                         ssV.SHADE.seenBefore = true;
+                        paused=true;
                         // highlight the bonus
                         vars.UI.highlightObject(upG);
-                        debugger;
                     }
                     scene.tweens.add({
+                        paused: paused,
                         targets: upG,
                         y: 1000,
                         duration: 2000,
@@ -1074,7 +1076,17 @@ var vars = {
             let gV = vars.game;
             gV.graphics = scene.add.graphics();
             gV.graphics.lineStyle(2, 0xffffff, 1);
+
+            // the box containing the upgrade
             gV.graphics.strokeRoundedRect(x-(w/2*scale), y-(h/2*scale), w*scale, h*scale, 10);
+
+            // the line coming from the box to the info container
+            scale = vars.game.scale;
+            scene.add.image(x-60,y+35, 'highlightsConnector').setName('highlightConnector');
+            // info container
+            scene.add.image(x+55,y+(180+50*scale),'highlights',1).setScale(vars.game.scale*2).setOrigin(1,0.5).setName('highlighted');
+
+            vars.game.pauseForHighlightedObject(); // pause all the things (except stars, coz that would be weird)
         }
     },
 
