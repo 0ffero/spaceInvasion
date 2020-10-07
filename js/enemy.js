@@ -399,7 +399,7 @@ function enemyBossHit(_bullet, _boss) {
 function enemyBossShow(_tween, _target, _boss) {
     shaderType('default',1);
     _boss.setVisible(true);
-    if (vars.enemies.cthulhuSpotted===false) { // is this the first time cthulhu was spotted ?
+    if (vars.enemies.cthulhuSpotted===false && _target[0].getData('enemyType')===5) { // is this the first time cthulhu was spotted ?
         vars.enemies.cthulhuSpotted = true;
         // highlight the boss
         vars.UI.highlightObject(_boss, 1);
@@ -547,15 +547,12 @@ function enemyGetRandom() {
     if (enemyChildCount===1) {
         selectedEnemy = enemyArray[0];
     } else {
-        selectedEnemy = Phaser.Utils.Array.GetRandom(enemyArray);
-        if (selectedEnemy.getData('attacking')===false) {
-            //selectedEnemy.setData('attacking',true); TODO - reenable this
-        } else {
-            // TODO 
-            // It would be better to search the array for the closest enemy thats not attacking
-            // instead of just calling this function again.
-            console.warn('...we randomly picked an enemy thats currently attacking :S'); // this will give me a decent idea how many times this is called
-            enemyGetRandom();
+        let exit = false;
+        while (exit===false) {
+            selectedEnemy = Phaser.Utils.Array.GetRandom(enemyArray);
+            if (selectedEnemy.getData('attacking')===false) {
+                exit=true;
+            }
         }
     }
     return selectedEnemy;

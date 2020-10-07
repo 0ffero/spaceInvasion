@@ -89,6 +89,12 @@ var vars = {
         },
         bossSpawn: function() {
             vars.enemies.spawnBoss();
+        },
+        
+        bossSpawnCthulhu: function() {
+            vars.levels.wave=3
+            vars.enemies.bossNext=4
+            vars.cheats.bossSpawn()
         }
     },
 
@@ -1116,15 +1122,15 @@ var vars = {
 
             if (x<=vars.canvas.cX) { // spawn the highlight to the right of the upgrade
                 // the line coming from the box to the info container
-                scene.add.image(x+60, y+35, 'highlightsConnector', 1).setName('highlightConnector');
+                scene.add.image(x, y, 'highlightsConnector', 1).setName('highlightConnector').setOrigin(-0.5,0);
                 // info container
-                let clickable = scene.add.image(x-55, y+(180+50*gameScale), 'highlights', _frame).setScale(gameScale*2).setOrigin(0,0.5).setName('highlighted').setInteractive();
+                let clickable = scene.add.image(x-w, y+h+10, 'highlights', _frame).setScale(gameScale*2).setOrigin(-0.16,0.16).setName('highlighted').setInteractive();
                 clickable.on('pointerdown', vars.UI.highlightRemove);
             } else { // spawn the highlight to the left of the upgrade
                 // the line coming from the box to the info container
-                scene.add.image(x-60, y+35, 'highlightsConnector', 0).setName('highlightConnector');
+                scene.add.image(x, y, 'highlightsConnector', 0).setName('highlightConnector').setOrigin(1.5,0);
                 // info container
-                let clickable = scene.add.image(x+55, y+(180+50*gameScale), 'highlights', _frame).setScale(gameScale*2).setOrigin(1,0.5).setName('highlighted').setInteractive();
+                let clickable = scene.add.image(x+w, y+h+10, 'highlights', _frame).setScale(gameScale*2).setOrigin(1.16,0.16).setName('highlighted').setInteractive();
                 clickable.on('pointerdown', vars.UI.highlightRemove);
             }
 
@@ -1132,7 +1138,6 @@ var vars = {
         },
 
         highlightRemove: function() {
-            console.error('Continue from here...');
             let gV = vars.game;
             gV.graphics.clear();
             scene.children.getByName('highlighted').destroy();
