@@ -129,6 +129,9 @@ function preload() {
     scene.load.audio('speechShieldDestroyed', 'speech/shieldDestroyed.ogg');
     scene.load.audio('speechShieldUpgrade',   'speech/shieldUpgrade.ogg');
 
+    // VIDEO
+    scene.load.video('introVideo', 'video/spaceinvaders.mp4');
+
 
     // SHADER PIPE LINES
     // cS = colour scaline
@@ -226,6 +229,7 @@ function create() {
     if (vars.audio.isEnabled===true) {
         scene.sound.play('intro', { loop: true });
     }
+    vars.video.play();
     storyInit();
     player.setDepth(10);
 

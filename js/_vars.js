@@ -629,6 +629,7 @@ var vars = {
             gV.awaitingInput=false;
             scene.sys.canvas.style.cursor = 'none';
         }
+
     },
 
     levels: {
@@ -1146,6 +1147,20 @@ var vars = {
             scene.children.getByName('highlightConnector').destroy();
             // unpause all the things
             vars.game.unpauseAfterHighlight();
+        }
+    },
+
+    video: {
+        play: function() {
+            let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(33*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0.07).setName('introVideo').setLoop(true).play();
+            scene.tweens.add({
+                targets: video,
+                rotation: -33*(Math.PI/180),
+                y: -300,
+                ease: 'linear',
+                duration: 35000,
+                repeat: -1,
+            })
         }
     },
 

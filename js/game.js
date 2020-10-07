@@ -27,6 +27,8 @@ function powerUpUpdate() {
 
 
 function startGame() {
+    // stop the intro video
+    scene.children.getByName('introVideo').destroy();
     // set up the score text
     scene.children.getByName('levelBG').setVisible(true);
     vars.game.started=true;
