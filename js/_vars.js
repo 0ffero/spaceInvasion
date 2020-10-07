@@ -189,6 +189,7 @@ var vars = {
         bossLimit: 1,
         bossNext: -1,
         bulletDamage: 1,
+        cthulhuSpotted: false,
         deadSinceLastPowerup: 0,
 
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
@@ -415,11 +416,11 @@ var vars = {
 
         },
 
-        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=500, _cam2Ignore=true, _xSpeed=0) {
+        bulletPhysicsObject: function(_xy, _bullet=0, _scale=0.4, _strength=1, _speed=500, _cam2Ignore=true, _xSpeed=0, _boss=false) {
             if (_scale===0.4 && vars.game.scale!==0.4) { _scale = vars.game.scale; }
             let theBullet = scene.physics.add.sprite(_xy[0], _xy[1], 'bulletPrimaryEnemy', _bullet).setScale(_scale);
             theBullet.setName('bullet_' + generateRandomID());
-            theBullet.setData('hp', _strength);
+            theBullet.setData({ hp: _strength, boss: _boss });
             scene.sound.play('enemyShoot');
             enemyBullets.add(theBullet);
             if (_cam2Ignore===true) {
@@ -599,6 +600,26 @@ var vars = {
             })
             vars.cameras.ignore(cam2, enemies);
             vars.levels.wavePopupVisible=false;
+        },
+
+        unpauseAfterHighlight: function() {
+            // enable physics
+            scene.physics.resume();
+            // enable tweens
+            allTweens = scene.tweens.getAllTweens();
+            allTweens.forEach( (c)=> {
+                c.timeScale=1;
+            })
+            if (scene.tweens._pending.length>0) { // check for pending tweens (tweens created in the same frame as the paused setting set to true)
+                scene.tweens._pending.forEach( (c)=> {
+                    c.resume();
+                })
+            }
+            // enable game vars
+            let gV = vars.game;
+            gV.paused=false;
+            gV.pausedReason = '';
+            gV.awaitingInput=false;
         }
     },
 
@@ -672,6 +693,7 @@ var vars = {
         },
 
         shieldChange: function(_upgrade=false) {
+            console.log('%c - Check for shield change', vars.console.callTo);
             let pV = vars.player;
             let sV = pV.ship;
             let bW = sV.bodyWidths;
@@ -890,13 +912,17 @@ var vars = {
                     let upG = scene.physics.add.sprite(x,y,'upgradesS').setScale(0.4).anims.play('amstradField');
                     upG.setData('upgrade', 'fx_ADI');
                     shipPowerUpGroup.add(upG);
-                        if (ssV.ADI.seenBefore===false) {
-                            ssV.ADI.seenBefore = true;
-                            // highlight the bonus
-                            vars.UI.highlightObject(upG);
-                            debugger;
-                        }
+                    let paused = false;
+                    console.log('ADDING TWEEN');
+                    if (ssV.ADI.seenBefore===false) {
+                        ssV.ADI.seenBefore = true;
+                        paused = true;
+                        // highlight the bonus
+                        vars.UI.highlightEnabled = true;
+                        vars.UI.highlightObject(upG,0);
+                    }
                     scene.tweens.add({
+                        paused: paused,
                         targets: upG,
                         y: 1000,
                         duration: 2000,
@@ -939,7 +965,7 @@ var vars = {
                         ssV.SHADE.seenBefore = true;
                         paused=true;
                         // highlight the bonus
-                        vars.UI.highlightObject(upG);
+                        vars.UI.highlightObject(upG,2);
                     }
                     scene.tweens.add({
                         paused: paused,
@@ -1067,26 +1093,52 @@ var vars = {
     },
 
     UI: {
-        highlightObject: function(_upgrade) {
-            let w = _upgrade.width;
-            let h = _upgrade.height;
-            let x = _upgrade.x;
-            let y = _upgrade.y;
-            let scale = _upgrade.scale + 0.2;
+        highlightEnabled: false,
+
+        highlightObject: function(_phaserObject, _frame=-1) {
+            let w = _phaserObject.width;
+            let h = _phaserObject.height;
+            let x = _phaserObject.x;
+            let y = _phaserObject.y;
+            let scale = _phaserObject.scale + 0.2;
+            let gameScale = vars.game.scale;
             let gV = vars.game;
             gV.graphics = scene.add.graphics();
             gV.graphics.lineStyle(2, 0xffffff, 1);
 
+            // sanity check
+            if (_frame===-1) {
+                console.error('INVALID FRAME NUMBER when highlighting the object.');
+            }
+
             // the box containing the upgrade
             gV.graphics.strokeRoundedRect(x-(w/2*scale), y-(h/2*scale), w*scale, h*scale, 10);
 
-            // the line coming from the box to the info container
-            scale = vars.game.scale;
-            scene.add.image(x-60,y+35, 'highlightsConnector').setName('highlightConnector');
-            // info container
-            scene.add.image(x+55,y+(180+50*scale),'highlights',1).setScale(vars.game.scale*2).setOrigin(1,0.5).setName('highlighted');
+            if (x<=vars.canvas.cX) { // spawn the highlight to the right of the upgrade
+                // the line coming from the box to the info container
+                scene.add.image(x+60, y+35, 'highlightsConnector', 1).setName('highlightConnector');
+                // info container
+                let clickable = scene.add.image(x-55, y+(180+50*gameScale), 'highlights', _frame).setScale(gameScale*2).setOrigin(0,0.5).setName('highlighted').setInteractive();
+                clickable.on('pointerdown', vars.UI.highlightRemove);
+            } else { // spawn the highlight to the left of the upgrade
+                // the line coming from the box to the info container
+                scene.add.image(x-60, y+35, 'highlightsConnector', 0).setName('highlightConnector');
+                // info container
+                let clickable = scene.add.image(x+55, y+(180+50*gameScale), 'highlights', _frame).setScale(gameScale*2).setOrigin(1,0.5).setName('highlighted').setInteractive();
+                clickable.on('pointerdown', vars.UI.highlightRemove);
+            }
 
             vars.game.pauseForHighlightedObject(); // pause all the things (except stars, coz that would be weird)
+        },
+
+        highlightRemove: function() {
+            console.error('Continue from here...');
+            let gV = vars.game;
+            gV.graphics.clear();
+            scene.children.getByName('highlighted').destroy();
+            scene.children.getByName('highlightConnector').destroy();
+            // unpause all the things
+            vars.game.unpauseAfterHighlight();
         }
     },
 

@@ -399,6 +399,11 @@ function enemyBossHit(_bullet, _boss) {
 function enemyBossShow(_tween, _target, _boss) {
     shaderType('default',1);
     _boss.setVisible(true);
+    if (vars.enemies.cthulhuSpotted===false) { // is this the first time cthulhu was spotted ?
+        vars.enemies.cthulhuSpotted = true;
+        // highlight the boss
+        vars.UI.highlightObject(_boss, 1);
+    }
 }
 
 function enemyBossUpdate(_boss) {
@@ -438,7 +443,8 @@ function enemyBossUpdate(_boss) {
                     //console.log('Firing Bullet');
                     let bulletSprite = Phaser.Math.RND.between(0,vars.enemies.spriteCount-1); // basically the colour of the bullet
                     let bulletSpeed = Phaser.Math.Clamp((vars.levels.wave-1)*10 + 600, 600, 800); // boss bullet speed is based on the wave (between 600 and 800)
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, bulletSpeed, false, xSpeed);
+                    let boss=true;
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, bulletSpeed, false, xSpeed, boss);
                 }
                 _boss.data.list.firerate.bulletcount--;
 

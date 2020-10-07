@@ -106,45 +106,70 @@ function healthBulletUpgradeSpawn(_spawnXY,_fU='') {
 }
 
 function playerHit(_player, _bullet) {
+    let pV = vars.player;
+    let cV = pV.ship.cannonSlots;
+    let ssV = vars.player.ship.special;
+
     let _bulletStrength;
+    let _boss = false;
     if (_bullet!==0) {
         _bulletStrength = _bullet.getData('hp');
+        _boss = _bullet.getData('boss');
         _bullet.destroy();
     } else {
         _bulletStrength = 0;
     }
-    let pV = vars.player;
-    let cV = pV.ship.cannonSlots;
 
-    if (pV.hitpoints-(_bulletStrength*3)>_bulletStrength*3) {
-        pV.hitpoints=~~(pV.hitpoints - _bulletStrength*3);
-        vars.cameras.flash('red', 500);
-        scene.sound.play('playerHit');
-        //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
-        // first, we reset the upgrades if the player has less than 100 hp
-        if (pV.hitpoints<=115 && pV.hitpoints>=100 && pV.ship.upgrades!==1) {
-            console.log('Dropping upgrades to 1');
-            pV.ship.upgrades=1;
-            cV.l2r2.enabled=false;
-        } else if (pV.hitpoints > 0 && pV.hitpoints<100 && pV.ship.upgrades!==0) {
-            console.log('Dropping upgrades to 0');
-            pV.ship.upgrades=0;
-            cV.l1r1.enabled=false;
-            cV.l2r2.enabled=false;
-        }
-
-        // now we set the shield colour
-        console.log('Setting the shield colour');
-        vars.player.shieldChange(false);
-
-    } else { // player is dead
-        console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
-        vars.cameras.shake(cam1, 750);
-        /* vars.game.pause(); */
-        vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
-        vars.player.dead();
-        enemiesLand();
+    if (_boss!==false && _boss!==true) {
+        console.error('BOSS VAR ISNT TRUE OR FALSE!');
     }
+
+    // SET UP THE BULLET DAMAGE MULTIPLIER
+    let mult = 1;
+    if (_boss===true) { // boss bullet?
+        mult += 0.2;
+    }
+    if (vars.levels.wave>=7) { // wave 7 or above, bullets increase in damage
+        mult += 0.1 + ((vars.levels.wave-7)*0.05); // I cant be bothered to make sure that js will always use PE/BOMDAS so Im using brackets
+    } // wave is < 7 (we dont add any extra damage)
+    
+    if (ssV.SHADE.collected===true) { // first, check if the SHADE effect is running. if it is the bullet damage and mul are set to 1
+        console.log('SHADE field active. Reducing damage and multiplier to 1.');
+        mult=1;
+        _bulletStrength=1;
+    }
+
+    if (ssV.ADI.collected===false) { // if the ADI field ISNT active the player WILL take damage
+        if (pV.hitpoints-(_bulletStrength*mult)>0) {
+            pV.hitpoints=~~(pV.hitpoints - _bulletStrength*mult);
+            vars.cameras.flash('red', 1000);
+            scene.sound.play('playerHit');
+            //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
+            // first, we reset the upgrades if the player has between 0 and 115 hp
+            if (pV.hitpoints<=115 && pV.hitpoints>=100 && pV.ship.upgrades!==1) {
+                console.log('%cPLAYER >> Dropping upgrades to 1', vars.console.doing);
+                pV.ship.upgrades=1;
+                cV.l2r2.enabled=false;
+            } else if (pV.hitpoints > 0 && pV.hitpoints<100 && pV.ship.upgrades!==0) {
+                console.log('%cPLAYER >> Dropping upgrades to 0', vars.console.doing);
+                pV.ship.upgrades=0;
+                cV.l1r1.enabled=false;
+                cV.l2r2.enabled=false;
+            }
+
+            // now we set the shield colour
+            console.log('%cPLAYER >> Setting the shield colour', vars.console.callFrom);
+            vars.player.shieldChange(false);
+
+        } else { // player is dead
+            console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
+            vars.cameras.shake(cam1, 750);
+            /* vars.game.pause(); */
+            vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
+            vars.player.dead();
+            enemiesLand();
+        }
+    } // else the ADI field is in effect, player takes no damage.
 }
 
 function shipPowerUpPickUp(_upgrade) {
