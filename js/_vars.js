@@ -594,6 +594,7 @@ var vars = {
             gV.paused=true;
             gV.pausedReason = 'highlight';
             gV.awaitingInput=true;
+            scene.sys.canvas.style.cursor = 'default';
         },
 
         unpause: function() {
@@ -626,6 +627,7 @@ var vars = {
             gV.paused=false;
             gV.pausedReason = '';
             gV.awaitingInput=false;
+            scene.sys.canvas.style.cursor = 'none';
         }
     },
 
