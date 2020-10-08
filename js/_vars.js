@@ -213,6 +213,21 @@ var vars = {
         moveDirectionCurrent: 'right',
         moveDirectionPrevious: 'down',
         removeBosses: true,
+
+        replaceArrays: {
+            method1: {
+                replaceArray: [
+                    [3,4,5,12,13,14,21,22,23]
+                ],
+            },
+            method2: {
+                replaceArray: [
+                    [0,1,2,9,10,11,18,19,20],
+                    [6,7,8,15,16,17,24,25,26]
+                ]
+            }
+        },
+
         shootTimeout: [fps*0.5, fps*0.5],
         speed: 50,
         speeds: {
@@ -447,6 +462,14 @@ var vars = {
             }
         },
 
+        destroyAllAttackers: function() {
+            if (enemyAttackingGroup.children.size>0) {
+                enemyAttackingGroup.children.each( (c)=> {
+                    c.destroy();
+                })
+            }
+        },
+
         destroyAllBullets: function() {
             enemyBullets.children.each( (c)=> {
                 c.destroy();
@@ -517,7 +540,34 @@ var vars = {
                     this.list.push(new enemy(0, row, col * xPos, col));
                 }
             }
-            
+            // if wave isnt 1 we modify the spawn positions of the enemies
+            if (vars.levels.wave>1) {
+                eV.spawnPositionsModify();
+            }
+        },
+
+        spawnPositionsModify: function() {
+            let cut = 9;
+            let waveMod = vars.enemies.replaceArrays;
+            let method = waveMod.method2.replaceArray;
+            let counter = -1;
+            let lL = this.list.length;
+
+            method.forEach( (a)=> {
+                counter++;
+                let cutA = lL - (cut * (counter+1));
+                let cutB = lL - 1 - (cut * (counter));
+                console.log('Cutting from ' + cutA + ' to ' + cutB);
+                let originalArray = this.list.slice(cutA, cutB); // grab the last row
+                for (let id=0; id<originalArray.length; id++) {
+                    let replaceWith = a[id];
+                    let swapping = enemies.children.getArray()[replaceWith];
+                    console.log('Replacing ' + originalArray[id].name + ' with ' + swapping.name + ' (position ' + replaceWith + ')' );
+                    console.error('Continue from here! We need to swap the sprite frames');
+                }
+                console.log('-------------- METHOD END --------------');
+            })
+            console.error('Continue from here');
         },
 
         spawnBoss: function() {
@@ -1097,6 +1147,10 @@ var vars = {
         }
     },
 
+    shader: {
+        current: 'default',
+    },
+
     story: {
         // populated from text.js
     },
@@ -1152,10 +1206,11 @@ var vars = {
 
     video: {
         play: function() {
-            let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(33*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0.07).setName('introVideo').setLoop(true).play();
+            let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(21*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0.07).setName('introVideo').setLoop(true);
+            video.playWhenUnlocked=true;
             scene.tweens.add({
                 targets: video,
-                rotation: -33*(Math.PI/180),
+                rotation: -21*(Math.PI/180),
                 y: -300,
                 ease: 'linear',
                 duration: 35000,

@@ -397,7 +397,12 @@ function enemyBossHit(_bullet, _boss) {
 }
 
 function enemyBossShow(_tween, _target, _boss) {
-    shaderType('default',1);
+    let bossType = _boss.getData('enemyType');
+    if (bossType===5) { // chtulhu has his own shader which is only stopped upon his death
+
+    } else {
+        shaderType('default',1);
+    }
     _boss.setVisible(true);
     if (vars.enemies.cthulhuSpotted===false && _target[0].getData('enemyType')===5) { // is this the first time cthulhu was spotted ?
         vars.enemies.cthulhuSpotted = true;

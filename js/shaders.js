@@ -197,6 +197,7 @@ var EnemyBossWarpPipeline = new Phaser.Class({
 
 // FUNCTIONS
 function shaderType(_shaderName='scan', _cam=1) {
+    vars.shader.current = 'default';
     switch (_shaderName) {
         case 'warp':
             if (_cam===2) {
@@ -209,12 +210,16 @@ function shaderType(_shaderName='scan', _cam=1) {
         break;
 
         case 'colour': case 'colourscan': case 'default':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.cSPipeline);
-            } else {
-                cam1.setRenderToTexture(scene.cSPipeline);
-                cam2.setAlpha(1);
-                cam2.ignore(storyText);
+            // ignore request for default if adi/shade is running
+            let ssV = vars.player.ship.special;
+            if (ssV.ADI.collected===false && ssV.SHADE.collected===false) {
+                if (_cam===2) {
+                    cam2.setRenderToTexture(scene.cSPipeline);
+                } else {
+                    cam1.setRenderToTexture(scene.cSPipeline);
+                    cam2.setAlpha(1);
+                    cam2.ignore(storyText);
+                }
             }
         break;
 
