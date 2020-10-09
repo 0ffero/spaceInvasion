@@ -480,10 +480,19 @@ function enemyBossUpdate(_boss) {
 
 function enemyAttackingHit(_enemy, _bullet) {
     console.log('Enemy attacker has been hit.');
+    // get the original enemy (the one thats hidden)
     let enemyName = _enemy.name.replace('f_','');
     let enemyPhaser = scene.children.getByName(enemyName);
-    //enemyHit(_bullet, enemyPhaser); TODO THIS ISNT WORKING
-    console.warn(' CONTINUE FROM HERE!!');
+    let dead = enemyHit(_bullet, enemyPhaser);
+
+    // ship part particle
+    enemyPieceParticle.emitParticleAt(_enemy.x, _enemy.y);
+    // single explosion
+    bulletHitEnemy.emitParticleAt(_enemy.x, _enemy.y);
+    scene.sound.play('enemyHit');
+
+    if (dead===true) { _enemy.destroy(); }
+    // if the original enemy (not this one) has already died, just destroy the dupe
     if (enemyPhaser===null) {
         _enemy.destroy();
     }
@@ -560,7 +569,11 @@ function enemyGetRandom() {
             }
         }
     }
-    return selectedEnemy;
+    if (selectedEnemy.getData('attacking')===false) { // this test runs if theres only one enemy left as they might be attacking
+        return selectedEnemy;
+    } else {
+        return false;
+    }
 }
 
 function enemyHit(bullet, enemy) {
@@ -576,13 +589,13 @@ function enemyHit(bullet, enemy) {
     // if it is we will have to set the explosion particle where the attacking version is, not the original
     let attacking = false;
     let position = [-1,-1];
-    if (enemy.getData('attacking')===true) {
-        attacking = true;
-    }
-
+    
     // destroy the bullet and remove it from the bullets array
     bullet.destroy();
     if (enemy!==null) {
+        if (enemy.getData('attacking')===true) { // check to see if this enemy is attacking
+            attacking = true;
+        }
         let enemyType = enemy.getData('colourIndex');
         let tint = vars.enemies.colours[enemyType];
         enemyPieceParticle.setTint(tint[1]);
@@ -592,11 +605,14 @@ function enemyHit(bullet, enemy) {
         } else {
             position = [enemy.x, enemy.y];
         }
-        // ship part particle
-        enemyPieceParticle.emitParticleAt(position[0], position[1]);
-        // single explosion
-        bulletHitEnemy.emitParticleAt(position[0], position[1]);
-        scene.sound.play('enemyHit');
+
+        if (attacking===false) { // if the enemy is attacking we need to show the explosion at its position, no this position
+            // ship part particle
+            enemyPieceParticle.emitParticleAt(position[0], position[1]);
+            // single explosion
+            bulletHitEnemy.emitParticleAt(position[0], position[1]);
+            scene.sound.play('enemyHit');
+        }
 
         // increase the players score
         let scoreTotal = 0;
@@ -607,21 +623,23 @@ function enemyHit(bullet, enemy) {
         if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('hp: ' + enemyHP + ', bullet strength: ' + strength); }
         enemyHP -= strength;
 
+        // increase score
+        vars.player.increaseScore(scoreTotal);
+
         // check for enemy death
+        let retValue = false;
         if (enemyHP<=0) { // enemy is dead
             scoreTotal += enemy.getData('points'); // give the player the points for this enemy
-            /* if (attacking===true) {
-                enemyDeath(enemy);
-            } else {
-                enemyDeath(enemy);
-            } */
             enemyDeath(enemy);
+            retValue = true;
         } else {
             enemy.setData('hp', enemyHP); // enemy is fine, update its HP
             //console.log('enemy hp: ' + enemyHP);
         }
+        if (attacking===true) { //
+            return retValue;
+        }
 
-        vars.player.increaseScore(scoreTotal);
     }
 
     // enemy destroy has been moved to after its death animation: fn enemyDestroy

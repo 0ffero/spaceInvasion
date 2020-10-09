@@ -517,15 +517,16 @@ var vars = {
                 } else {
                     // reset the timeout
                     eV.shootTimeout[0] = eV.shootTimeout[1];
-                    //console.log('Getting a random enemy...');
                     // get random enemy
                     let randomEnemy = enemyGetRandom();
-                    let xy = [parseInt(randomEnemy.x), parseInt(randomEnemy.y+25)];
-                    let bullet = randomEnemy.getData('row')-1;
-                    let scale = vars.game.scale+0.1;
-                    let strength = vars.enemies.bulletDamage;
-                    //console.log('    Spawning bullet for enemy: ' + randomEnemy.name + ' at ' + xy[0] + ',' + xy[1]);
-                    eV.bulletPhysicsObject(xy,bullet,scale,strength);
+                    if (randomEnemy!==false) { // there may be no enemies to choose from is only 1 enemy is on screen AND its attacking, in which case the above function returns false
+                        let xy = [parseInt(randomEnemy.x), parseInt(randomEnemy.y+25)];
+                        let bullet = randomEnemy.getData('row')-1;
+                        let scale = vars.game.scale+0.1;
+                        let strength = vars.enemies.bulletDamage;
+                        //console.log('    Spawning bullet for enemy: ' + randomEnemy.name + ' at ' + xy[0] + ',' + xy[1]);
+                        eV.bulletPhysicsObject(xy,bullet,scale,strength);
+                    }
                 }
             }
         },
