@@ -40,7 +40,9 @@ function startGame() {
     vars.game.started=true;
     let scoreTitle = scene.add.bitmapText(10, 20, 'azo', 'Score:', 24).setOrigin(0);
     let score = scene.add.bitmapText(120, 20, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
-    scoreGroup.addMultiple([scoreTitle, score]);
+    let waveTitle = scene.add.bitmapText(vars.canvas.width*0.69, 20, 'azo', 'Wave:', 24).setOrigin(0);
+    let wave = scene.add.bitmapText(vars.canvas.width*0.69+105, 20, 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextInt');
+    scoreGroup.addMultiple([scoreTitle, score, waveTitle, wave]);
     cam1.ignore(scoreGroup);
 
     // delete the intro music
@@ -48,8 +50,6 @@ function startGame() {
         console.log(c.key);
         if (c.key==='intro') { c.destroy(); }
     })
-
-    //shaderType('none',1)
 
     vars.enemies.spawn();
     wavePopUp();

@@ -47,7 +47,7 @@ function enableIntroSkip() {
                 onComplete: storyTextSpeedUp,
             })
             vars.game.storyVisible = false;
-            scene.sys.canvas.style.cursor = 'none';
+            scene.sys.canvas.style.cursor = 'crosshair';
         }
     }
 }

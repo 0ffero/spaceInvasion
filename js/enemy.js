@@ -601,7 +601,11 @@ function enemyHit(bullet, enemy) {
         enemyPieceParticle.setTint(tint[1]);
         if (attacking===true) {
             let aE = enemyAttackingGroup.children.get('name', 'f_' + enemy.name);
-            position = [aE.x, aE.y];
+            if (aE!==undefined) {
+                position = [aE.x, aE.y];
+            } else {
+                position = [vars.canvas.cX, vars.canvas.cY];
+            }
         } else {
             position = [enemy.x, enemy.y];
         }

@@ -645,7 +645,7 @@ var vars = {
             gV.paused=true;
             gV.pausedReason = 'highlight';
             gV.awaitingInput=true;
-            scene.sys.canvas.style.cursor = 'default';
+            //scene.sys.canvas.style.cursor = 'default';
         },
 
         unpause: function() {
@@ -678,7 +678,7 @@ var vars = {
             gV.paused=false;
             gV.pausedReason = '';
             gV.awaitingInput=false;
-            scene.sys.canvas.style.cursor = 'none';
+            //scene.sys.canvas.style.cursor = 'none';
         }
 
     },
@@ -688,7 +688,10 @@ var vars = {
         wavePopupVisible: false,
 
         waveIncrement: function() {
-            vars.levels.wave++;
+            let lV = vars.levels;
+            lV.wave++;
+            // update the overlay
+            let waveText = scene.children.getByName('waveTextInt').setText(lV.wave);
             vars.levels.wavePopupVisible=true;
             if (vars.levels.wave===10) {
                 vars.enemies.removeBosses=false;
@@ -909,7 +912,7 @@ var vars = {
                     bulletSpeed: 300,
                     currentWait: -1,
                     currentWaitMax: -1,
-                    firespeed: 0.25,
+                    firespeed: 0.66,
                     enabled: false,
                     bulletCount: -1,
                     damage: 10,
@@ -988,6 +991,7 @@ var vars = {
                         duration: 2000,
                     })
                 },
+
                 ADIPickUp: function() {
                     let ssV = vars.player.ship.special;
                     if (ssV.ADI.collected===false) { // first time weve entered the loop
@@ -1011,6 +1015,7 @@ var vars = {
                         }
                     }
                 },
+
                 SHADESpawn: function(_xy) {
                     let ssV = vars.player.ship.special;
                     ssV.SHADEUpgrade=true;
@@ -1034,6 +1039,7 @@ var vars = {
                         duration: 2000,
                     })
                 },
+
                 SHADEPickUp: function() {
                     let ssV = vars.player.ship.special;
                     if (ssV.SHADE.collected===false) { // first time weve entered the loop
