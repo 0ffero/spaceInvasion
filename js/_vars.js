@@ -246,6 +246,7 @@ var vars = {
         },
         updateTimeout: 10, // in frames. We use this to update the enemies velocity
         updateTimeoutMax: 10,
+        width: -1,
 
         attackersFireUpdate: function(_enemyCount) {
             enemyAttackingGroup.children.each( (c)=> {
@@ -557,14 +558,24 @@ var vars = {
             method.forEach( (a)=> {
                 counter++;
                 let cutA = lL - (cut * (counter+1));
-                let cutB = lL - 1 - (cut * (counter));
+                let cutB = lL - (cut * (counter));
                 console.log('Cutting from ' + cutA + ' to ' + cutB);
                 let originalArray = this.list.slice(cutA, cutB); // grab the last row
                 for (let id=0; id<originalArray.length; id++) {
                     let replaceWith = a[id];
                     let swapping = enemies.children.getArray()[replaceWith];
                     console.log('Replacing ' + originalArray[id].name + ' with ' + swapping.name + ' (position ' + replaceWith + ')' );
-                    console.error('Continue from here! We need to swap the sprite frames');
+                    // get the current frames for the enemies
+                    let scale = vars.game.scale;
+                    let original = [originalArray[id].x * scale + 20, originalArray[id].y * scale];
+                    let swap = [swapping.x, swapping.y];
+                    // now swap them over
+                    swapping.setPosition(original[0],original[1]);
+                    // find the actual sprite that were moving
+                    let lookingFor = originalArray[id].name;
+                    let phaserObject = scene.children.getByName(lookingFor);
+                    phaserObject.setPosition(swap[0], swap[1]);
+                    // do we need to update any data?
                 }
                 console.log('-------------- METHOD END --------------');
             })
