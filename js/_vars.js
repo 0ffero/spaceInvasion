@@ -19,7 +19,7 @@ const constsPS = { // player shields frames
     GREEN_SHIELD:  0,
 }
 
-const constsD = { // depth mof sprite groups
+const constsD = { // depth of sprite groups
     BG: 1,
     SCENERY: 20,
     MAIN: 50
@@ -59,7 +59,7 @@ var vars = {
             // due to the way this works theres now a function called cam2Ignore() in game.js
             cam2.ignore([ bG, enemies, wavesGroup ]);
 
-            shaderType('colour',1)
+            shaderType('colour',1);
         },
 
         shake: function(_cam=cam1, _duration=200) {
@@ -583,9 +583,8 @@ var vars = {
                     phaserObject.setPosition(swap[0], swap[1]);
                     // do we need to update any data?
                 }
-                console.log('-------------- METHOD END --------------');
+                //console.log('-------------- METHOD END --------------');
             })
-            console.error('Continue from here');
         },
 
         spawnBoss: function() {
@@ -647,7 +646,6 @@ var vars = {
                     repeat: -1
                 });
             })
-            console.error('Continue from here. Depths are needing fixed. Player/ bullets / enemies etc are under the water depth.');
         },
 
         generateWaterWaves: function() {
@@ -747,7 +745,28 @@ var vars = {
                 break;
 
                 case 'space':
+                    // fade out the waves and background image
+                    wavesGroup.children.each( (c)=> {
+                        scene.tweens.add({
+                            paused: false,
+                            targets: c,
+                            alpha: 0,
+                            duration: 1000,
+                            ease: 'Quad.easeInOut',
+                        });
+                    })
+                    let bg = scene.children.getByName('levelBG');
+                    scene.tweens.add({
+                        paused: false,
+                        targets: bg,
+                        alpha: 0,
+                        duration: 1000,
+                        ease: 'Quad.easeInOut',
+                    });
 
+                    // increase the stars max y position
+                    let sV = vars.scenery;
+                    sV.starsMaxY = sV.starsMaxYOptions[1];
                 break;
             }
         },
@@ -1179,6 +1198,8 @@ var vars = {
         spawnMinMax: [],
         spawnScale: 0.01,
         spawnTypes: ['trees','barns'],
+        starsMaxY: 725,
+        starsMaxYOptions: [725, 1070],
         tweenDurations: [2500,750],
         yPosition: 800,
         barns: {

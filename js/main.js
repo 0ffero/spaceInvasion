@@ -74,7 +74,7 @@ function main() {
     // create a random star
     if (vars.game.started===true) { // basically runs after the intro and cant be stopped
         let x = Phaser.Math.RND.between(5, vars.canvas.width-10);
-        let y = Phaser.Math.RND.between(55, 725);
+        let y = Phaser.Math.RND.between(55, vars.scenery.starsMaxY);
         starEmitter.emitParticleAt(x,y);
     }
 
