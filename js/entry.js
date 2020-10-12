@@ -86,6 +86,7 @@ function preload() {
     scene.load.spritesheet('trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
     scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
+    scene.load.image('waterGradient', 'level/waterStripe.png'); // 16x400
 
     // UPGRADES
     scene.load.spritesheet('upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });
@@ -191,6 +192,7 @@ function create() {
 
     // scenery
     sceneryGroup = scene.add.group();
+    wavesGroup = scene.add.group();
 
     // add enemy count to the enemies var
     let note = '\n\nNOTES:\nAnother weird thing PHASER does... the frame total, for some inexplicable fukn\nreason is 1 more than the actual count. So we need a version check here :S\nIf we get an error on the count we know that this count CANNOT be trusted!';
@@ -204,8 +206,9 @@ function create() {
     }
     animationInit('enemies');
 
-    // draw the background
-    bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false);
+    // draw the background(s)
+    bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false).setDepth(0);
+    vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
 
     // draw the player
     let sV = vars.player.ship;

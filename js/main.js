@@ -65,7 +65,9 @@ function main() {
     if (vars.player.isDead===false && vars.game.started===true) {
         let pausedReason = vars.game.pausedReason;
         if (pausedReason!=='highlight') { // if we ARENT highlighting something, we let the scenery work as normal
-            vars.scenery.update();
+            if (vars.levels.currentWaveBG==='grass') { // the grass has scenery (barns, trees)
+                vars.scenery.update();
+            }
         }
     }
 

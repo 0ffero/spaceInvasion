@@ -1,7 +1,7 @@
 var fps = 60;
 var gameScale = 0.4;
 
-const constsM = {
+const constsM = { // mouse buttons
     mouse: {
         left: 1,
         right: 2,
@@ -11,12 +11,18 @@ const constsM = {
     }
 }
 
-const constsPS = {
+const constsPS = { // player shields frames
     NO_SHIELD:    12,
     LOW_SHIELD:    9,
     RED_SHIELD:    6,
     ORANGE_SHIELD: 3,
     GREEN_SHIELD:  0,
+}
+
+const constsD = { // depth mof sprite groups
+    BG: 1,
+    SCENERY: 20,
+    MAIN: 50
 }
 
 
@@ -51,7 +57,7 @@ var vars = {
             // shipUpgradeGroup, shipPowerUpGroup, bullets, enemyBossGroup, enemyBullets, enemyAttackingGroup, sceneryGroup
             // basically when each of these are created (each bullet, each tree etc) you have to specifically tell phaser that cam2 cant see them
             // due to the way this works theres now a function called cam2Ignore() in game.js
-            cam2.ignore([ bG, enemies ]);
+            cam2.ignore([ bG, enemies, wavesGroup ]);
 
             shaderType('colour',1)
         },
@@ -627,6 +633,32 @@ var vars = {
             best: 0,
         },
 
+        createWaterTweens: function() {
+            // create the tweens in paused state (also invisible) as they arent used until wave 10
+            wavesGroup.children.each( (c, i)=> {
+                scene.tweens.add({
+                    paused: false,
+                    targets: c,
+                    y: 960,
+                    duration: 1000,
+                    ease: 'Quad.easeInOut',
+                    delay: i * 62.5,
+                    yoyo: true,
+                    repeat: -1
+                });
+            })
+            console.error('Continue from here. Depths are needing fixed. Player/ bullets / enemies etc are under the water depth.');
+        },
+
+        generateWaterWaves: function() {
+            // create the waves (tweens are created when we reach wave 10)
+            let yOffset = 940
+            for (let i = 0; i < 45; i++) {
+                let waterimage = scene.add.image(8 + i * 16, yOffset, 'waterGradient').setVisible(false);
+                wavesGroup.add(waterimage);
+            }
+        },
+
         pause: function() {
             scene.physics.pause();
             let vG = vars.game;
@@ -695,17 +727,51 @@ var vars = {
     },
 
     levels: {
+        currentWaveBG: 'grass',
+        waveBGs: {
+            0: 'grass',
+            10: 'water',
+            20: 'space',
+        },
         wave: 0,
+        
         wavePopupVisible: false,
+
+        changeBackground(_bgtype='grass') {
+            switch (_bgtype) {
+                case 'water':
+                    vars.game.createWaterTweens();
+                    wavesGroup.children.each( (c)=> {
+                        c.setVisible(true);
+                    });
+                break;
+
+                case 'space':
+
+                break;
+            }
+        },
 
         waveIncrement: function() {
             let lV = vars.levels;
             lV.wave++;
             // update the overlay
             let waveText = scene.children.getByName('waveTextInt').setText(lV.wave);
-            vars.levels.wavePopupVisible=true;
-            if (vars.levels.wave===10) {
+            lV.wavePopupVisible=true;
+            let changeBackground = false;
+            let BG = lV.currentWaveBG;
+            if (lV.wave===10) { // level 10 stops bosses being destroyed between waves AND changes the scenery to waves
                 vars.enemies.removeBosses=false;
+                lV.currentWaveBG = lV.waveBGs[lV.wave];
+                changeBackground = true;
+            } else if (lV.wave===20) {
+                lV.currentWaveBG = lV.waveBGs[lV.wave];
+                changeBackground = true;
+            }
+
+            if (changeBackground === true) {
+                let newBG = lV.currentWaveBG;
+                lV.changeBackground(newBG);
             }
         }
     },
