@@ -87,6 +87,8 @@ function preload() {
     scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.image('waterGradient', 'level/waterStripe.png'); // 16x400
+    scene.load.spritesheet('galaxies', 'level/galaxies.png', { frameWidth: 300, frameHeight: 200 });
+    scene.load.spritesheet('nebulae', 'level/nebula-ext.jpg', { frameWidth: 720, frameHeight: 2160 });
 
     // UPGRADES
     scene.load.spritesheet('upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });

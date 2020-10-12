@@ -512,7 +512,7 @@ var vars = {
             let wave = vars.levels.wave;
             let eV = vars.enemies;
             if (eV.bulletDamage<2 && wave%2===0) {
-                eV.bulletDamage += (wave - 1) * 0.2; // add 20% to the damage
+                eV.bulletDamage += 0.2;
             }
         },
 
@@ -767,6 +767,10 @@ var vars = {
                     // increase the stars max y position
                     let sV = vars.scenery;
                     sV.starsMaxY = sV.starsMaxYOptions[1];
+
+                    // generate a few galaxies
+                    sV.generateNewGalaxy(null,null,8);
+                    sV.generateNewNebula(null,null,true);
                 break;
             }
         },
@@ -1216,6 +1220,86 @@ var vars = {
             },
         },
 
+        generateNewGalaxy: function(_tween=null, _object=null, _count=1) {
+            if (_tween!==null) {
+                _object[0].destroy();
+            }
+            let delay = 0;
+            for (let g=0; g<_count; g++) {
+                if (_count!==1) {
+                    delay = Phaser.Math.RND.between(5, 15) * 1000; // ie between 15s and 25s
+                }
+                let duration = Phaser.Math.RND.between(55,75) * 1000;
+                let scaleOffset = Phaser.Math.RND.between(0,3);
+                let speed = (scaleOffset + 1) * 0.3;
+                scaleOffset /= 10;
+
+                // the galaxy rotates 5 degrees during its tween
+                let angle = Phaser.Math.DegToRad(Phaser.Math.RND.between(0,35)*10);
+                rotation = 20;
+                angleChange = Phaser.Math.RND.between(0,1) === 0 ? -1 : 1;
+                rotation *= angleChange;
+                finalAngle = angle + rotation;
+
+                let x = Phaser.Math.RND.between(1, 7) * 100;
+                let frame = Phaser.Math.RND.between(0,2);
+                let a = scene.add.image(x, -100, 'galaxies', frame).setScale(0.4+scaleOffset).setAlpha(0.2).setRotation(angle).setDepth(-1);
+                scene.tweens.add({
+                    targets: a,
+                    delay: g*delay,
+                    y: 1180,
+                    angle: finalAngle,
+                    ease: 'linear',
+                    duration: duration/speed, // larger galaxies move faster to emulate distance from camera
+                    onComplete: vars.scenery.generateNewGalaxy,
+                })
+            }
+        },
+
+        generateNewNebula: function(_tween=null, _image=null, _init=false) {
+            let x = vars.canvas.cX;
+            let y = 0;
+            let duration = 75000;
+
+            if (_init===false) {
+                _image[0].destroy(); // destroy the old nebula sprite
+                // and replace it with a new one
+                let frame = Phaser.Math.RND.between(0,5);
+                let nO0 = scene.add.image(x, -1080, 'nebulae', frame).setAlpha(0.75).setDepth(-1);
+                vars.cameras.ignore(cam2, nO0);
+
+                scene.tweens.add({
+                    delay: duration/2,
+                    targets: nO0,
+                    ease: 'linear',
+                    y: vars.canvas.height+1080,
+                    duration: duration*1.5,
+                    onComplete: vars.scenery.generateNewNebula,
+                })
+            } else {
+                // we need to join two nebulae together
+                let frames = [Phaser.Math.RND.between(0,5),Phaser.Math.RND.between(0,5)];
+                let nO0 = scene.add.image(x, y, 'nebulae', frames[0]).setAlpha(0.75).setDepth(-1);
+                let nO1 = scene.add.image(x, y-1080, 'nebulae', frames[1]).setAlpha(0.75).setDepth(-1);
+                vars.cameras.ignore(cam2, nO0); vars.cameras.ignore(cam2, nO1);
+
+                scene.tweens.add({
+                    targets: nO0,
+                    y: vars.canvas.height+1080,
+                    ease: 'linear',
+                    duration: duration,
+                    onComplete: vars.scenery.generateNewNebula,
+                })
+                scene.tweens.add({
+                    delay: duration/2,
+                    targets: nO1,
+                    ease: 'linear',
+                    y: vars.canvas.height+1080,
+                    duration: duration*1.5,
+                    onComplete: vars.scenery.generateNewNebula,
+                })
+            }
+        },
 
         init: function() {
             console.log('      %c...scenery', vars.console.doing);

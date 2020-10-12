@@ -120,14 +120,16 @@ function playerHit(_player, _bullet) {
         _bulletStrength = 0;
     }
 
-    if (_boss!==false && _boss!==true) {
+    if (_boss!==false && _boss!==true) { // sanity check
         console.error('BOSS VAR ISNT TRUE OR FALSE!');
     }
 
     // SET UP THE BULLET DAMAGE MULTIPLIER
     let mult = 1;
+    let max = 3;
     if (_boss===true) { // boss bullet?
         mult += 0.2;
+        max=5;
     }
     if (vars.levels.wave>=7) { // wave 7 or above, bullets increase in damage
         mult += 0.1 + ((vars.levels.wave-7)*0.05); // I cant be bothered to make sure that js will always use PE/BOMDAS so Im using brackets
@@ -140,8 +142,10 @@ function playerHit(_player, _bullet) {
     }
 
     if (ssV.ADI.collected===false) { // if the ADI field ISNT active the player WILL take damage
-        if (pV.hitpoints-(_bulletStrength*mult)>0) {
-            pV.hitpoints=~~(pV.hitpoints - _bulletStrength*mult);
+        // fix the bullet damage.. nothing should do more than 5 damage per hit (Ive tested this.. by level 20 the bullet damage was 9 and was way too strong)
+        _bulletStrength =  Phaser.Math.Clamp(_bulletStrength*mult,1,max);
+        if (pV.hitpoints-(_bulletStrength)>0) {
+            pV.hitpoints=~~(pV.hitpoints - _bulletStrength);
             vars.cameras.flash('red', 1000);
             scene.sound.play('playerHit');
             //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
