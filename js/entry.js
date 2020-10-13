@@ -32,7 +32,12 @@ var config = {
     scene: {
         preload: preload,
         create: create,
-        update: main
+        update: main,
+        pack: {
+            files: [
+                { type: 'image', key: 'loading', url: 'assets/level/loading.jpg' }
+            ]
+        }
     }
 };
 
@@ -48,6 +53,7 @@ var game = new Phaser.Game(config);
 */
 function preload() {
     scene = this;
+    scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loading');
     scene.load.setPath('assets');
 
     // LOADING PROGRESS UI STUFF
