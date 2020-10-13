@@ -57,7 +57,8 @@ var vars = {
             // shipUpgradeGroup, shipPowerUpGroup, bullets, enemyBossGroup, enemyBullets, enemyAttackingGroup, sceneryGroup
             // basically when each of these are created (each bullet, each tree etc) you have to specifically tell phaser that cam2 cant see them
             // due to the way this works theres now a function called cam2Ignore() in game.js
-            cam2.ignore([ bG, enemies, wavesGroup ]);
+            let nightTimeMask = scene.children.getByName('nightTimeMask');
+            cam2.ignore([ bG, enemies, wavesGroup, nightTimeMask ]);
 
             shaderType('colour',1);
         },
@@ -114,7 +115,7 @@ var vars = {
     DEBUG: false,
     VERBOSE: false,
 
-    DEBUGHIDE: false,
+    DEBUGHIDE: true,
     DEBUGTEXT: '',
 
     input: {
@@ -641,7 +642,7 @@ var vars = {
                     y: 960,
                     duration: 1000,
                     ease: 'Quad.easeInOut',
-                    delay: i * 62.5,
+                    delay: i * 69,
                     yoyo: true,
                     repeat: -1
                 });
@@ -657,11 +658,58 @@ var vars = {
             }
         },
 
+        introStart: function() {
+            if (vars.game.awaitingInput===false) {
+                vars.game.awaitingInput=true;
+                // fade out the loading screen
+                let loadingImage = scene.children.getByName('loadingImage');
+                let loaded = scene.children.getByName('loaded');
+                scene.children.getByName('version').destroy();
+                scene.tweens.add({
+                    targets: loadingImage,
+                    alpha: 0,
+                    ease: 'linear',
+                    duration: 1000,
+                })
+                scene.tweens.add({
+                    targets: loaded,
+                    alpha: 0,
+                    ease: 'linear',
+                    duration: 1000,
+                    onComplete: vars.game.loadingImageDestroy,
+                })
+
+                // start the game
+                if (vars.audio.isEnabled===true) {
+                    scene.sound.play('intro', { loop: true });
+                }
+
+                vars.video.play();
+                storyInit();
+                player.setDepth(10);
+
+                // cameras
+                vars.cameras.init();
+                vars.cameras.ignore(cam2, player);
+                
+                // if debug is enabled add the debug overlay
+                if (vars.DEBUGHIDE===false) {
+                    vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
+                    vars.DEBUGTEXT.setOrigin(0,0);
+                    vars.DEBUGTEXT.setStroke(0x000000,4)
+                }
+            }
+        },
+
+        loadingImageDestroy: function() {
+            scene.children.getByName('loadingImage').destroy();
+            scene.children.getByName('loaded').destroy();
+        },
+
         pause: function() {
             scene.physics.pause();
             let vG = vars.game;
             vG.paused=true;
-            player.setVisible(false);
             enemies.children.each( function(c) {
                 c.setVisible(false);
             })
@@ -693,7 +741,6 @@ var vars = {
             scene.physics.resume();
             let vG = vars.game;
             vG.paused=false;
-            player.setVisible(true); //.setFrame(0);
             enemies.children.each( function(c) {
                 c.setVisible(true).setVelocityX(50);
             })
@@ -719,7 +766,6 @@ var vars = {
             gV.paused=false;
             gV.pausedReason = '';
             gV.awaitingInput=false;
-            //scene.sys.canvas.style.cursor = 'none';
         }
 
     },
@@ -775,11 +821,25 @@ var vars = {
             }
         },
 
+        nightTimeFade: function(_inout='in') {
+            let nightTimeMask = scene.children.getByName('nightTimeMask');
+            let alpha = 0;
+            if (_inout==='in') {
+                alpha = 1;
+            }
+            scene.tweens.add({
+                targets: nightTimeMask,
+                alpha: alpha,
+                ease: 'linear',
+                duration: 10000,
+            })
+        },
+
         waveIncrement: function() {
             let lV = vars.levels;
             lV.wave++;
             // update the overlay
-            let waveText = scene.children.getByName('waveTextInt').setText(lV.wave);
+            scene.children.getByName('waveTextInt').setText(lV.wave);
             lV.wavePopupVisible=true;
             let changeBackground = false;
             let BG = lV.currentWaveBG;
@@ -790,6 +850,10 @@ var vars = {
             } else if (lV.wave===20) {
                 lV.currentWaveBG = lV.waveBGs[lV.wave];
                 changeBackground = true;
+            } else if (lV.wave===5) {
+                vars.levels.nightTimeFade('in');
+            } else if (lV.wave===15) {
+                vars.levels.nightTimeFade('out');
             }
 
             if (changeBackground === true) {

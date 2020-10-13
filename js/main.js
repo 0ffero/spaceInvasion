@@ -95,7 +95,7 @@ function main() {
         }
     }
 
-    if (vars.DEBUGHIDE===false) {
+    if (vars.DEBUGHIDE===false && vars.game.started===true) {
         debugTextDraw();
     }
 }

@@ -20,7 +20,7 @@ function wavePopUp() {
     let wave=vars.levels.wave;
     if (wave>1) {
         vars.player.increaseScore(5000);
-        if (wave%3===0) { // every 3rd wave
+        if (wave%7===0) { // every 7th wave
             // allow one more boss on screen at a time
             vars.enemies.bossLimit++;
         }
@@ -36,6 +36,8 @@ function wavePopUp() {
     // The check below will let me know if the phaser version has changed
     // (in case I move to a newer version for whatever reason)
     vars.versionCheck();
+
+    // tween the wave popup
     scene.tweens.add({
         targets: myText,
         scale: 9,

@@ -51,6 +51,8 @@ function startGame() {
         if (c.key==='intro') { c.destroy(); }
     })
 
+    //show the player
+    player.setVisible(true);
     vars.enemies.spawn();
     wavePopUp();
 }

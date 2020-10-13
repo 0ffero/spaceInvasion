@@ -34,14 +34,16 @@ function storyInit() {
         onComplete: startGame,
     })
 
-    enableIntroSkip();
+    // we fade out the loading image on click, so we need to set up a slight pause (3s) before enabling the intro skip
+    setTimeout( function() { enableIntroSkip(); }, 1000)
 }
 
 function enableIntroSkip() {
     window.onmousedown = function(e) {
         if (vars.game.storyVisible===true) {
+            let iV = scene.children.getByName('introVideo');
             scene.tweens.add({
-                targets: storyText,
+                targets: [storyText, iV],
                 alpha: 0,
                 duration: 3000,
                 onComplete: storyTextSpeedUp,

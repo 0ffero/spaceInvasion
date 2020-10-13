@@ -35,7 +35,8 @@ var config = {
         update: main,
         pack: {
             files: [
-                { type: 'image', key: 'loading', url: 'assets/level/loading.jpg' }
+                { type: 'image', key: 'loadingImage', url: 'assets/UI/loading.jpg' },
+                { type: 'image', key: 'loadingText', url: 'assets/UI/loadingText.png' }
             ]
         }
     }
@@ -53,11 +54,13 @@ var game = new Phaser.Game(config);
 */
 function preload() {
     scene = this;
-    scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loading');
+    scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loadingImage').setName('loadingImage');
+    scene.add.image(vars.canvas.cX, vars.canvas.height-100, 'loadingText').setName('loadingText');
     scene.load.setPath('assets');
 
     // LOADING PROGRESS UI STUFF
-    preloadText = scene.add.text(vars.canvas.cX, vars.canvas.cY, 'Loading...', { fontSize: 20, fontFamily: 'consolas', fill: '#444' }).setOrigin(0.5,0.5);
+    preloadText = scene.add.text(vars.canvas.cX, vars.canvas.height-65, 'Loading...', { fontSize: 20, fontFamily: 'consolas', fill: '#444' }).setOrigin(0.5,0.5);
+    versionText = scene.add.text(200, vars.canvas.height-20, 'VERSION 0.908 beta', { fontSize: 20, fontFamily: 'consolas', fill: '#F00' }).setOrigin(1,0.5).setName('version');
 
     scene.load.on('fileprogress', function (file) { preloadText.setText('Loading asset: ' + file.key); }); // as external file loads
     scene.load.on('complete', function () { preloadText.destroy(); preloadText=undefined; });
@@ -89,12 +92,13 @@ function preload() {
     scene.load.spritesheet('bulletPrimaryEnemy', 'enemy/bulletPrimary-ext.png', { frameWidth: 34, frameHeight: 42, margin: 1, spacing: 2 });
 
     // SCENERY
-    scene.load.spritesheet('trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
     scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
-    scene.load.image('waterGradient', 'level/waterStripe.png'); // 16x400
     scene.load.spritesheet('galaxies', 'level/galaxies.png', { frameWidth: 300, frameHeight: 200 });
     scene.load.spritesheet('nebulae', 'level/nebula-ext.jpg', { frameWidth: 720, frameHeight: 2160 });
+    scene.load.image('nightTimeMask', 'level/nightTimeMask.png');
+    scene.load.spritesheet('trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
+    scene.load.image('waterGradient', 'level/waterStripe.png'); // 16x400
 
     // UPGRADES
     scene.load.spritesheet('upgradesB', 'upgrades/bulletUpgrades-ext.png', { frameWidth: 50, frameHeight: 60, margin: 1, spacing: 2 });
@@ -141,11 +145,15 @@ function preload() {
     // VIDEO
     scene.load.video('introVideo', 'video/spaceinvaders.mp4');
 
+    // UI
+    scene.load.image('loaded', 'UI/loaded.png');
+    scene.load.image('loadedImage', 'UI/loadedImage.png');
 
     // SHADER PIPE LINES
     // cS = colour scaline
     // gS = grayscale scaline
     // gSS = greenscreen scanline
+    // warp = Incoming boss distortion
     scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
     scene.gSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.gSPipeline.setFloat2('mouse', 0.0, 0.0);
@@ -157,6 +165,10 @@ function preload() {
     scene.gSSPipeline.setFloat2('mouse', 0.0, 0.0);
     scene.warpPipeline = game.renderer.addPipeline('EnemyBossWarpPipeline', new EnemyBossWarpPipeline(scene.game));
     scene.warpPipeline.setFloat2('resolution', game.config.width, game.config.height);
+
+    // set up the shader pipelines time variables
+    scene.t = 0; // only needed for shaders that change over time (such as waves etc)
+    scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
 }
 
 
@@ -173,6 +185,16 @@ function create() {
         scene.gSPipeline.setFloat2('mouse', pointer.x, pointer.y);
         scene.gSSPipeline.setFloat2('mouse', pointer.x, pointer.y);
     });
+    scene.children.getByName('loadingText').destroy();
+    let loaded = scene.add.image(vars.canvas.cX, vars.canvas.height-95, 'loaded').setName('loaded');
+    scene.tweens.add({
+        targets: loaded,
+        scale: 0.7,
+        ease: 'Bounce',
+        duration: 3000,
+        repeat: -1,
+        yoyo: true
+    })
     scene.sound.setVolume(vars.audio.volume); // this volume is roughly equal to the volume of a standard youtube video.
 
     // INPUT
@@ -217,6 +239,8 @@ function create() {
     // draw the background(s)
     bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false).setDepth(0);
     vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
+    // night time mask used on level 5 - 15
+    scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
 
     // draw the player
     let sV = vars.player.ship;
@@ -236,27 +260,8 @@ function create() {
     particles = scene.add.particles('particles');
     particlesInit();
 
-    // start the game
-    if (vars.audio.isEnabled===true) {
-        scene.sound.play('intro', { loop: true });
-    }
-    vars.video.play();
-    storyInit();
-    player.setDepth(10);
-
-    // if debug is enabled add the debug overlay
-    if (vars.DEBUGHIDE===false) {
-        vars.DEBUGTEXT = this.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
-        vars.DEBUGTEXT.setOrigin(0,0);
-        vars.DEBUGTEXT.setStroke(0x000000,4)
-    }
-
-    // cameras
-    vars.cameras.init();
-    vars.cameras.ignore(cam2, player);
-
-    // set up the shader pipelines time variables
-    scene.t = 0; // only needed for shaders that change over time (such as waves etc)
-    scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
-
+    // everything has loaded, swap the loading image
+    scene.children.getByName('loadingImage').destroy();
+    let loadingImage = scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loadedImage').setName('loadingImage').setInteractive();
+    loadingImage.on('pointerdown', vars.game.introStart);
 }
