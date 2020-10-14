@@ -71,7 +71,7 @@ function preload() {
     // BACKGROUND
     let bgList = [
         ['levelBackground', 'level/background_grass.png'],
-        ['levelBackground2', 'level/background_water.png'],
+        ['levelBackground2', 'level/background_water.png'], // this 2nd image isnt used any more as the animated water waves cover the lower part of the screen
     ]
     bgList.forEach( (bgData)=> {
         scene.load.image(bgData[0], bgData[1]);
@@ -97,6 +97,7 @@ function preload() {
     scene.load.spritesheet('galaxies', 'level/galaxies.png', { frameWidth: 300, frameHeight: 200 });
     scene.load.spritesheet('nebulae', 'level/nebula-ext.jpg', { frameWidth: 720, frameHeight: 2160 });
     scene.load.image('nightTimeMask', 'level/nightTimeMask.png');
+    scene.load.image('nightTimeMaskWater', 'level/nightTimeMaskWaterOnly.png');
     scene.load.spritesheet('trees', 'level/trees.png', { frameWidth: 150, frameHeight: 250 });
     scene.load.image('waterGradient', 'level/waterStripe.png'); // 16x400
 
@@ -112,7 +113,7 @@ function preload() {
 
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');
-    //scene.load.text('enemyPieceJSON', 'particles/enemyPieces.json'); <--- this is the actual config for the enemy piece but implementing it is a dick, so ive faked it... Should probably implement it properly at some point TODO
+    scene.load.image('fire', 'particles/fire.png');
 
     // FONT
     scene.load.bitmapFont('azo', 'fonts/azo-fire.png', 'fonts/azo-fire.xml');
@@ -240,7 +241,7 @@ function create() {
     bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false).setDepth(0);
     vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
     // night time mask used on level 5 - 15
-    scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
+    let nTM = scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
 
     // draw the player
     let sV = vars.player.ship;

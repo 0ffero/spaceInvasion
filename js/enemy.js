@@ -355,55 +355,57 @@ class enemyBoss {
 }
 
 function enemyBossHit(_bullet, _boss) {
-    let eV = vars.enemies;
-    let bossPosition = [_boss.x, _boss.y];
-    bulletHitEnemy.emitParticleAt(_bullet.x, _bullet.y-20);
-    scene.sound.play('enemyBossHit');
-    let bulletStrength = _bullet.getData('hp');
-    let colourIndex = _boss.getData('colourIndex');
-    let tint = eV.colours[colourIndex];
-    _bullet.destroy();
-    for (let d=0; d<3; d++) {
-        enemyPieceParticle.setTint(tint[1]);
-        enemyPieceParticle.emitParticleAt(bossPosition[0], bossPosition[1]);
-    }
-    let hp = _boss.getData('hp');
-    let bossHP = hp-bulletStrength;
-    let pV = vars.player;
-    if (bossHP>0) {
-        _boss.setData('hp', bossHP);
-        //console.log('Boss HP: ' + bossHP);
-        pV.increaseScore(bulletStrength*50);
-    } else { // the boss is dead, long live the... oh wait
-        let lV = vars.levels;
-        console.log('The boss is dead! Make him to explody things...');
-        scene.sound.play('enemyBossExplode');
-        vars.cameras.flash('white', 2500);
-        let points = _boss.getData('points');
-        let enemyType = _boss.getData('enemyType'); // 5 is the cthulhu boss
-        shaderType('default',1);
-        pV.increaseScore(points);
-        if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
-            eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1];
-        } else if (lV.wave===2) { // wave 2 sets the spawn timeout back to 5 giving the player a short time before the next boss
-            eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1]/2;
-        } else { // for waves 3 and up we only allow a maximum of 2 enemy deaths before spawning the next boss
-            eV.bossSpawnTimeout[0];
+    if (_boss.visible===true) { // this stops the boss being hit when enternig the stage
+        let eV = vars.enemies;
+        let bossPosition = [_boss.x, _boss.y];
+        bulletHitEnemy.emitParticleAt(_bullet.x, _bullet.y-20);
+        scene.sound.play('enemyBossHit');
+        let bulletStrength = _bullet.getData('hp');
+        let colourIndex = _boss.getData('colourIndex');
+        let tint = eV.colours[colourIndex];
+        _bullet.destroy();
+        for (let d=0; d<3; d++) {
+            enemyPieceParticle.setTint(tint[1]);
+            enemyPieceParticle.emitParticleAt(bossPosition[0], bossPosition[1]);
         }
-        // then spawn a ship upgrade
-        new shipUpgrade(bossPosition, enemyType); // player.js
-        _boss.destroy();
+        let hp = _boss.getData('hp');
+        let bossHP = hp-bulletStrength;
+        let pV = vars.player;
+        if (bossHP>0) {
+            _boss.setData('hp', bossHP);
+            //console.log('Boss HP: ' + bossHP);
+            pV.increaseScore(bulletStrength*50);
+        } else { // the boss is dead, long live the... oh wait
+            let lV = vars.levels;
+            console.log('The boss is dead! Make him to explody things...');
+            scene.sound.play('enemyBossExplode');
+            vars.cameras.flash('white', 2500);
+            let points = _boss.getData('points');
+            let enemyType = _boss.getData('enemyType'); // 5 is the cthulhu boss
+            shaderType('default',1);
+            pV.increaseScore(points);
+            if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
+                eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1];
+            } else if (lV.wave===2) { // wave 2 sets the spawn timeout back to 5 giving the player a short time before the next boss
+                eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1]/2;
+            } else { // for waves 3 and up we only allow a maximum of 2 enemy deaths before spawning the next boss
+                eV.bossSpawnTimeout[0];
+            }
+            // then spawn a ship upgrade
+            new shipUpgrade(bossPosition, enemyType); // player.js
+            _boss.destroy();
+        }
     }
 }
 
 function enemyBossShow(_tween, _target, _boss) {
+    _boss.setVisible(true);
     let bossType = _boss.getData('enemyType');
-    if (bossType===5) { // chtulhu has his own shader which is only stopped upon his death
+    if (bossType===5) { // cthulhu has his own shader which is only stopped upon his death
 
     } else {
         shaderType('default',1);
     }
-    _boss.setVisible(true);
     if (vars.enemies.cthulhuSpotted===false && _target[0].getData('enemyType')===5) { // is this the first time cthulhu was spotted ?
         vars.enemies.cthulhuSpotted = true;
         // highlight the boss
@@ -504,9 +506,12 @@ function enemyDeath(enemy) {
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
     scene.sound.play('enemyExplode');
     vars.cameras.flash('white', 100);
-    let xMove = Phaser.Math.RND.between(30,60);
+    let xMove = Phaser.Math.RND.between(30,100);
     if (enemy.x>vars.canvas.cX) { xMove = -xMove; }
     xMove = enemy.x + xMove;
+    if (enemy.getData('attacking')===false) { // ignore attacking enemies
+        vars.particles.generateFireEmitter(enemy);
+    }
     scene.tweens.add({
         targets: enemy,
         y: 900,
@@ -543,6 +548,12 @@ function enemyDeath(enemy) {
 function enemyDestroy() {
     //console.log('Enemy Destroyed.');
     let enemy = this.targets[0];
+    let enemyName = enemy.name;
+    let thisEmitter = vars.particles.currentEmitters['fE_' + enemyName];
+    if (thisEmitter!==undefined) { // looks like this emitter is already dead?
+        thisEmitter.remove(); // destroy the fire emitter
+        vars.particles.currentEmitters['fE_' + enemyName] = undefined;
+    }
     bulletHitEnemy.emitParticleAt(enemy.x, enemy.y); // explosion particle
     enemy.destroy(); // this = tween
     // check if there are any enemies left on screen

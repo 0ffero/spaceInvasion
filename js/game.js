@@ -2,9 +2,10 @@ function gameLevelNext() {
     // remove all player bullets
     vars.player.destroyAllBullets();
 
-    // remove all enemy bullets and attackers
+    // remove all enemy bullets, attackers and fire particles
     vars.enemies.destroyAllAttackers();
     vars.enemies.destroyAllBullets();
+    vars.particles.destroyFireEmitters();
 
     // remove all bosses on the screen if wave is less than 10
     if (vars.enemies.removeBosses===true) {

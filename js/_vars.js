@@ -846,6 +846,10 @@ var vars = {
             if (lV.wave===10) { // level 10 stops bosses being destroyed between waves AND changes the scenery to waves
                 vars.enemies.removeBosses=false;
                 lV.currentWaveBG = lV.waveBGs[lV.wave];
+                // change the nighttime mask to the water one
+                scene.children.getByName('nightTimeMask').destroy();
+                let nTMW = scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMaskWater').setOrigin(0.5,1).setAlpha(1).setName('nightTimeMask');
+                vars.cameras.ignore(cam2, nTMW);
                 changeBackground = true;
             } else if (lV.wave===20) {
                 lV.currentWaveBG = lV.waveBGs[lV.wave];
@@ -859,6 +863,45 @@ var vars = {
             if (changeBackground === true) {
                 let newBG = lV.currentWaveBG;
                 lV.changeBackground(newBG);
+            }
+        }
+    },
+
+    particles: {
+        currentEmitters: {},
+
+        destroyFireEmitters: function() {
+            // remove any lingering emitters
+            let emitters = vars.particles.currentEmitters;
+            for (emitterName in emitters) {
+                let thisEmitter = emitters[emitterName];
+                if (thisEmitter!==undefined) {
+                    thisEmitter.remove();
+                }
+            }
+            // empty the object
+            vars.particles.currentEmitters = {};
+        },
+
+        generateFireEmitter: function(_enemy=null) {
+            if (_enemy!==null) {
+                let fire = scene.add.particles('fire').createEmitter({
+                    x: enemy.x,
+                    y: enemy.y,
+                    speed: { min: 100, max: 200 },
+                    angle: { min: -85, max: -95 },
+                    scale: { start: 0.2, end: 0.4, ease: 'Back.easeOut' },
+                    alpha: { start: 0.4, end: 0, ease: 'Quart.easeOut' },
+                    blendMode: 'SCREEN',
+                    lifespan: 1000,
+                    follow: _enemy,
+                });
+                fire.name = 'fE_' + _enemy.name;
+                //fire.reserve(100);
+                vars.cameras.ignore(cam2, fire);
+
+                _enemy.setDepth(1);
+                vars.particles.currentEmitters[fire.name] = fire;
             }
         }
     },
