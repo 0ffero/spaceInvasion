@@ -487,7 +487,7 @@ function enemyAttackingHit(_enemy, _bullet) {
     // get the original enemy (the one thats hidden)
     let enemyName = _enemy.name.replace('f_','');
     let enemyPhaser = scene.children.getByName(enemyName);
-    let dead = enemyHit(_bullet, enemyPhaser);
+    let dead = enemyHit(_bullet, enemyPhaser, true);
 
     // ship part particle
     enemyPieceParticle.emitParticleAt(_enemy.x, _enemy.y);
@@ -590,7 +590,14 @@ function enemyGetRandom() {
     }
 }
 
-function enemyHit(bullet, enemy) {
+function enemyHit(bullet, enemy, attacker=false) {
+    if (enemy.visible===false && attacker===false) { // if the enemy isnt visible then we cant do damage to it
+        // This is the invisible copy of the attacking enemy! Ignore the hit.
+        return false;
+    } else if (enemy.visible===false && attacker===true) {
+        // this is an attacking enemy
+    }
+
     if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('Hit!'); }
 
     let strength = bullet.getData('hp');
@@ -601,19 +608,15 @@ function enemyHit(bullet, enemy) {
 
     // first we need to check that this enemy is attacking
     // if it is we will have to set the explosion particle where the attacking version is, not the original
-    let attacking = false;
     let position = [-1,-1];
     
     // destroy the bullet and remove it from the bullets array
     bullet.destroy();
     if (enemy!==null) {
-        if (enemy.getData('attacking')===true) { // check to see if this enemy is attacking
-            attacking = true;
-        }
         let enemyType = enemy.getData('colourIndex');
         let tint = vars.enemies.colours[enemyType];
         enemyPieceParticle.setTint(tint[1]);
-        if (attacking===true) {
+        if (attacker===true) {
             let aE = enemyAttackingGroup.children.get('name', 'f_' + enemy.name);
             if (aE!==undefined) {
                 position = [aE.x, aE.y];
@@ -624,7 +627,7 @@ function enemyHit(bullet, enemy) {
             position = [enemy.x, enemy.y];
         }
 
-        if (attacking===false) { // if the enemy is attacking we need to show the explosion at its position, no this position
+        if (attacker===false) { // if the enemy is attacking we need to show the explosion at its position, no this position
             // ship part particle
             enemyPieceParticle.emitParticleAt(position[0], position[1]);
             // single explosion
@@ -654,7 +657,7 @@ function enemyHit(bullet, enemy) {
             enemy.setData('hp', enemyHP); // enemy is fine, update its HP
             //console.log('enemy hp: ' + enemyHP);
         }
-        if (attacking===true) { //
+        if (attacker===true) { //
             return retValue;
         }
 

@@ -98,7 +98,6 @@ var vars = {
         annihilate: function() {
             let first=true;
             enemies.children.each( (c)=> {
-                console.log(c.name);
                 if (first===true) {
                     first=false;;
                 } else {
@@ -237,18 +236,33 @@ var vars = {
         removeBosses: true,
 
         replaceArrays: {
-            method1: {
-                replaceArray: [
-                    [3,4,5,12,13,14,21,22,23]
-                ],
+            counter: -1,
+            methods: {
+                1: {
+                    replaceArray: [
+                        [3,4,5,12,13,14,21,22,23]
+                    ],
+                },
+                2: {
+                    replaceArray: [
+                        [0,1,2,9,10,11,18,19,20],
+                        [6,7,8,15,16,17,24,25,26]
+                    ]
+                },
             },
-            method2: {
-                replaceArray: [
-                    [0,1,2,9,10,11,18,19,20],
-                    [6,7,8,15,16,17,24,25,26]
-                ]
+
+            init: function() {
+                let eRV = vars.enemies.replaceArrays
+                let methods = eRV.methods;
+                let counter=0;
+                for (m in methods) {
+                    counter++;
+                }
+                vars.enemies.replaceArrays.counter=counter;
             }
         },
+
+        replaceMethodSelected: 1,
 
         shootTimeout: [fps*0.5, fps*0.5],
         speed: 50,
@@ -530,6 +544,7 @@ var vars = {
             eV.bounds.bottom *= 50;
             enemyBossPatternsCreate();
             eV.bossFireRatesInit();
+            eV.replaceArrays.init();
         },
 
         setEnemyBulletDamage: function() {
@@ -579,9 +594,20 @@ var vars = {
         },
 
         spawnPositionsModify: function() {
+            let mapChange=3;
+            let eV = vars.enemies;
+            let rA = eV.replaceArrays.counter;
+            if (vars.levels.wave%(mapChange*rA)===3) {
+                // do first map change
+                eV.replaceMethodSelected = 1;
+            } else if (vars.levels.wave%(mapChange*rA)===0) {
+                // do 2nd map change
+                eV.replaceMethodSelected = 2;
+            }
+            
             let cut = 9;
-            let waveMod = vars.enemies.replaceArrays;
-            let method = waveMod.method2.replaceArray;
+            let waveMod = eV.replaceArrays.methods;
+            let method = waveMod[eV.replaceMethodSelected].replaceArray;
             let counter = -1;
             let lL = this.list.length;
 
