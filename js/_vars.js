@@ -79,6 +79,18 @@ var vars = {
             let vC = vars.canvas;
             vC.cX = vC.width/2;
             vC.cY = vC.height/2;
+        },
+
+        setCursor: function(_type='none') {
+            if (_type==='none') {
+                scene.sys.canvas.style.cursor = 'none';
+            } else if (_type==='cross' || _type==='default') {
+                scene.sys.canvas.style.cursor = 'crosshair';
+            } else if (_type==='def') {
+                scene.sys.canvas.style.cursor = 'default';
+            } else {
+                console.log('Unknown Cursor Type');
+            }
         }
     },
 
@@ -112,18 +124,20 @@ var vars = {
         playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
-    DEBUG: false,
-    VERBOSE: false,
-
-    DEBUGHIDE: true,
-    DEBUGTEXT: '',
-
     input: {
         init: function() {
             let musicKey = scene.input.keyboard.addKey('M');
             musicKey.on('up', vars.audio.musicEnableDisable);
         }
     },
+
+    DEBUG: false,
+    VERBOSE: false,
+
+    DEBUGHIDE: true,
+    DEBUGTEXT: '',
+    version : '0.914ᵦ',
+
 
 
     audio: {
@@ -204,6 +218,7 @@ var vars = {
         bulletDamage: 1,
         cthulhuSpotted: false,
         deadSinceLastPowerup: 0,
+        deathTotal: 0,
 
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
         colours: [
@@ -461,6 +476,14 @@ var vars = {
             theBullet.setVelocity(_xSpeed, _speed);
         },
 
+        deathCountIncrease: function() {
+            let eV = vars.enemies;
+            eV.deathTotal+=1;
+            // update the dead total text
+            let deaths = scene.children.getByName('deathTextInt');
+            deaths.setText(eV.deathTotal);
+        },
+
         debugBossPatterns: function() {
             let graphics = scene.add.graphics();
             graphics.lineStyle(1, 0xffffff, 1);
@@ -566,15 +589,15 @@ var vars = {
                 counter++;
                 let cutA = lL - (cut * (counter+1));
                 let cutB = lL - (cut * (counter));
-                console.log('Cutting from ' + cutA + ' to ' + cutB);
+                //console.log('Cutting from ' + cutA + ' to ' + cutB);
                 let originalArray = this.list.slice(cutA, cutB); // grab the last row
                 for (let id=0; id<originalArray.length; id++) {
                     let replaceWith = a[id];
                     let swapping = enemies.children.getArray()[replaceWith];
-                    console.log('Replacing ' + originalArray[id].name + ' with ' + swapping.name + ' (position ' + replaceWith + ')' );
+                    //console.log('Replacing ' + originalArray[id].name + ' with ' + swapping.name + ' (position ' + replaceWith + ')' );
                     // get the current frames for the enemies
                     let scale = vars.game.scale;
-                    let original = [originalArray[id].x * scale + 20, originalArray[id].y * scale];
+                    let original = [originalArray[id].x * scale, originalArray[id].y * scale];
                     let swap = [swapping.x, swapping.y];
                     // now swap them over
                     swapping.setPosition(original[0],original[1]);
@@ -691,7 +714,7 @@ var vars = {
                 // cameras
                 vars.cameras.init();
                 vars.cameras.ignore(cam2, player);
-                
+
                 // if debug is enabled add the debug overlay
                 if (vars.DEBUGHIDE===false) {
                     vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
@@ -719,6 +742,7 @@ var vars = {
                     c.destroy();
                 })
             }
+            vars.canvas.setCursor('none');
             //player.anims.stop(); // player is no longer animated
         },
 
@@ -746,6 +770,7 @@ var vars = {
             })
             vars.cameras.ignore(cam2, enemies);
             vars.levels.wavePopupVisible=false;
+            vars.canvas.setCursor('cross');
         },
 
         unpauseAfterHighlight: function() {
@@ -1497,6 +1522,10 @@ var vars = {
             scene.children.getByName('highlightConnector').destroy();
             // unpause all the things
             vars.game.unpauseAfterHighlight();
+        },
+
+        hpUpdate: function() {
+            scene.children.getByName('hpTextInt').setText(vars.player.hitpoints);
         }
     },
 

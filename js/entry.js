@@ -60,7 +60,7 @@ function preload() {
 
     // LOADING PROGRESS UI STUFF
     preloadText = scene.add.text(vars.canvas.cX, vars.canvas.height-65, 'Loading...', { fontSize: 20, fontFamily: 'consolas', fill: '#444' }).setOrigin(0.5,0.5);
-    versionText = scene.add.text(200, vars.canvas.height-20, 'VERSION 0.908 beta', { fontSize: 20, fontFamily: 'consolas', fill: '#F00' }).setOrigin(1,0.5).setName('version');
+    versionText = scene.add.text(200, vars.canvas.height-20, 'VERSION ' + vars.version, { fontSize: 20, fontFamily: 'consolas', fill: '#F00' }).setOrigin(1,0.5).setName('version');
 
     scene.load.on('fileprogress', function (file) { preloadText.setText('Loading asset: ' + file.key); }); // as external file loads
     scene.load.on('complete', function () { preloadText.destroy(); preloadText=undefined; });
@@ -190,7 +190,7 @@ function create() {
     let loaded = scene.add.image(vars.canvas.cX, vars.canvas.height-95, 'loaded').setName('loaded');
     scene.tweens.add({
         targets: loaded,
-        scale: 0.7,
+        scale: 0.69,
         ease: 'Bounce',
         duration: 3000,
         repeat: -1,
@@ -241,7 +241,7 @@ function create() {
     bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false).setDepth(0);
     vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
     // night time mask used on level 5 - 15
-    let nTM = scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
+    scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
 
     // draw the player
     let sV = vars.player.ship;

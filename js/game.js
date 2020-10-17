@@ -32,6 +32,57 @@ function powerUpUpdate() {
     }
 }
 
+function storyInit() {
+    console.log('Checking version of phaser');
+    vars.versionCheck();
+    vars.canvas.setCursor('none');
+
+    // START THE STORY SCROLLER
+    vars.game.storyVisible = true;
+    storyText = scene.add.bitmapText(0, vars.canvas.height, 'azo', vars.story.introText, 48).setCenterAlign().setAlpha(0).setMaxWidth(vars.canvas.width-20).setName('introStory');
+    storyText.x=10;
+    let scrollHeight = storyText.height;
+    let duration = scrollHeight*15;
+
+    scene.tweens.add({
+        targets: storyText,
+        alpha: 0.7,
+        ease: 'linear',
+        duration: 5000,
+    })
+
+    scene.tweens.add({
+        targets: storyText,
+        y: -scrollHeight,
+        ease: 'linear',
+        duration: duration,
+        onComplete: startGame,
+    })
+
+    // we fade out the loading image on click, so we need to set up a slight pause (3s) before enabling the intro skip
+    setTimeout( function() { storySkipEnable(); }, 5000)
+}
+
+function storySkipEnable() {
+    window.onmousedown = function(e) {
+        if (vars.game.storyVisible===true) {
+            let iV = scene.children.getByName('introVideo');
+            scene.tweens.add({
+                targets: [storyText, iV],
+                alpha: 0,
+                duration: 3000,
+                onComplete: storyTextSpeedUp,
+            })
+            vars.game.storyVisible = false;
+        }
+    }
+}
+
+function storyTextSpeedUp() {
+    vars.game.storyVisible = false;
+    tw = scene.tweens.getTweensOf(storyText);
+    tw[0].setTimeScale(1000);
+}
 
 function startGame() {
     // stop the intro video
@@ -39,11 +90,15 @@ function startGame() {
     // set up the score text
     scene.children.getByName('levelBG').setVisible(true);
     vars.game.started=true;
-    let scoreTitle = scene.add.bitmapText(10, 20, 'azo', 'Score:', 24).setOrigin(0);
-    let score = scene.add.bitmapText(120, 20, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
-    let waveTitle = scene.add.bitmapText(vars.canvas.width*0.69, 20, 'azo', 'Wave:', 24).setOrigin(0);
-    let wave = scene.add.bitmapText(vars.canvas.width*0.69+105, 20, 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextInt');
-    scoreGroup.addMultiple([scoreTitle, score, waveTitle, wave]);
+    let scoreTitle = scene.add.bitmapText(10, 5, 'azo', 'Score:', 24).setOrigin(0);
+    let score = scene.add.bitmapText(120, 5, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
+    let waveTitle = scene.add.bitmapText(vars.canvas.width*0.69, 5, 'azo', 'Wave:', 24).setOrigin(0);
+    let wave = scene.add.bitmapText(vars.canvas.width*0.69+105, 5, 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextInt');
+    let deathsTitle = scene.add.bitmapText(vars.canvas.width*0.35, 1080-30, 'azo', 'Enemies destroyed:', 24).setOrigin(0);
+    let deaths = scene.add.bitmapText(vars.canvas.width*0.35+300, 1080-30, 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextInt');
+    let hpTitle = scene.add.bitmapText(10, 1080-30, 'azo', 'HP:', 24).setOrigin(0);
+    let hp = scene.add.bitmapText(65, 1080-30, 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextInt');
+    scoreGroup.addMultiple([scoreTitle, score, waveTitle, wave, deathsTitle, deaths, hpTitle, hp]);
     cam1.ignore(scoreGroup);
 
     // delete the intro music

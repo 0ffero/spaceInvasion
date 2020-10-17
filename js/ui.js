@@ -5,7 +5,7 @@ function uiGameOver() {
     gV.scores.current = 0;
 
     let gameOverText = scene.add.bitmapText(vars.canvas.cX, vars.canvas.cY, 'azo', 'Game Over!', 64).setOrigin(0.5).setAlpha(0);
-    console.log(' FADING IN GAME OVER');
+    //console.log(' FADING IN GAME OVER');
     scene.tweens.add({
         targets: gameOverText,
         y: 200,

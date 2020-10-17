@@ -9,10 +9,14 @@ function healthBulletUpgradeSpawn(_spawnXY,_fU='') {
         let hpChances = [0,0,0,0,0,0,0,0];
         if (vP.hitpoints>=150) {
             // this player has a lot of health
-            // max increase is 3
-            hpChances[0] +=1; hpChances[1] +=0; hpChances[2] +=0;   // hp upgrades
-            hpChances[3] +=3; hpChances[4] +=1;                     // bullet upgrades
-            hpChances[5] +=2; hpChances[6] +=3; hpChances[7] +=2;   // points
+            if (vP.hitpoints>=225) { // players max hp = 250 so health doesnt drop after 224hp
+                hpChances[0] +=0;
+            } else {
+                hpChances[0] +=1;
+            }
+                              hpChances[1] +=0; hpChances[2] +=0;   // hp upgrades
+            hpChances[3] +=2; hpChances[4] +=1;                     // bullet upgrades
+            hpChances[5] +=1; hpChances[6] +=2; hpChances[7] +=3;   // points
         } else if (vP.hitpoints>=125) {
             hpChances[0] +=1; hpChances[1] +=1; hpChances[2] +=0;
             hpChances[3] +=2; hpChances[4] +=2;
@@ -20,16 +24,28 @@ function healthBulletUpgradeSpawn(_spawnXY,_fU='') {
         } else if (vP.hitpoints>=100) {
             hpChances[0] +=1; hpChances[1] +=1; hpChances[2] +=0;
             hpChances[3] +=1; hpChances[4] +=1;
-            hpChances[5] +=3; hpChances[6] +=2; hpChances[7] +=1;
+            hpChances[5] +=2; hpChances[6] +=3; hpChances[7] +=1;
         } else if (vP.hitpoints>=75) {
-            hpChances[0] +=1; hpChances[1] +=2; hpChances[2] +=1;
-            hpChances[3] +=2; hpChances[4] +=2;
-            hpChances[5] +=2; hpChances[6] +=1; hpChances[7] +=0;
+            if (vars.levels.wave>=20) {
+                hpChances[0] +=1; hpChances[1] +=3; hpChances[2] +=2;
+                hpChances[3] +=1; hpChances[4] +=1;
+                hpChances[5] +=1; hpChances[6] +=0; hpChances[7] +=0;
+            } else {
+                hpChances[0] +=1; hpChances[1] +=2; hpChances[2] +=2;
+                hpChances[3] +=2; hpChances[4] +=2;
+                hpChances[5] +=2; hpChances[6] +=1; hpChances[7] +=0;
+            }
         } else { // below 75hp
             // this player really needs health, increase the chance of that happening (especially high hp bumps currently 50 and 75)
-            hpChances[0] +=1; hpChances[1] +=3; hpChances[2] +=2;
-            hpChances[3] +=1; hpChances[4] +=3;
-            hpChances[5] +=1; hpChances[6] +=0; hpChances[7] +=0;
+            if (vars.levels.wave>=20) { // its starting to get difficult now... give the player an hp upgrade
+                hpChances[0] +=1; hpChances[1] +=2; hpChances[2] +=4;
+                hpChances[3] +=0; hpChances[4] +=0;
+                hpChances[5] +=0; hpChances[6] +=0; hpChances[7] +=0;
+            } else {
+                hpChances[0] +=0; hpChances[1] +=2; hpChances[2] +=3;
+                hpChances[3] +=2; hpChances[4] +=3;
+                hpChances[5] +=1; hpChances[6] +=0; hpChances[7] +=0;
+            }
         }
 
         let ssV = vP.ship.special;
@@ -146,6 +162,7 @@ function playerHit(_player, _bullet) {
         _bulletStrength =  Phaser.Math.Clamp(_bulletStrength*mult,1,max);
         if (pV.hitpoints-(_bulletStrength)>0) {
             pV.hitpoints=~~(pV.hitpoints - _bulletStrength);
+            vars.UI.hpUpdate();
             vars.cameras.flash('red', 1000);
             scene.sound.play('playerHit');
             //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
@@ -167,6 +184,7 @@ function playerHit(_player, _bullet) {
 
         } else { // player is dead
             console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
+            scene.children.getByName('hpTextInt').setText('Destroyed!');
             vars.cameras.shake(cam1, 750);
             /* vars.game.pause(); */
             vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
@@ -191,9 +209,8 @@ function shipPowerUpPickUp(_upgrade) {
         console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade);
         scene.sound.play('speechHP');
         pV.hitpoints+=upgradeValue;
+        vars.UI.hpUpdate();
         pV.shieldChange(true);
-        // upgrade the ship frame TODO
-        // we can probably use player hit to set the shield colour
     } else if (upgradeType==='b') { // bullet upgrades last for 5 seconds
         if (upgradeValue===0) { // double damage
             console.log('%cUpgrade Bullet: Double Damage', vars.console.playerUpgrade);
@@ -264,6 +281,7 @@ function shipUpgradePickUp(_pickup) {
     _pickup.destroy();
     player.setFrame(upgradeTo);
     pV.hitpoints+=30*upgradeTo; // player gets a boost to hp based on upgrade type
+    vars.UI.hpUpdate();
     if (pV.hitpoints<115 && upgradeTo===1) { // upgrade 1: does the player still have less than 115 hp?
         pV.hitpoints=115; // minimum upgrade takes us to 115 hp. Same for upgrade 2 below
     } else if (pV.hitpoints<130 && upgradeTo===2) { // upgrade 2: does the player still have less than 130 hp?

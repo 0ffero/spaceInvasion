@@ -15,52 +15,6 @@ vars.story.introText += 'Now go out there and destroy those invading, human hati
 vars.story.introText += '* regarding the data leaks of 1985 resulting in the enemy now possessing our weapons: It was found out that one of the ranking members of the AC were accidentally leaking secrets to the NES group as they were using an old version of the Wyndeez operating system after following a You-Upload-Your-\nVideos-To-Here-For-\nOthers-To-See-Like\n-The-TV-But-Well-\nJust-Try-It-Youll-\nSee-Its-Really-Good (admittedly a terrible name) tutorial on "disabling automatic updates". Naturally the AC were embarrassed, making a full apology and posting it to ReadIt after a full inquiry was done. It turned out that some intern who had only been with the AC for about two weeks but had since magically disappeared was the cause for the lapse in security. Ironically, the information the NES group were gathering was also being taken by the enemy using a similar method. Weirdly, this same employee apparently worked for NES and was also the cause of their data leaks. The original 26 of the AC have vowed to find this intern and hold them accountable.' + nl;
 vars.story.introText += 'FOOTNOTE: The only possible place shade field technology might still be used is when the enemies reach our inner atmosphere, where their entire ship would change color (usually to a golden yellow). It has no known defensive or offensive impact.' + nl;
 
-function storyInit() {
-    console.log('Checking version of phaser');
-    vars.versionCheck();
-
-    // START THE STORY SCROLLER
-    vars.game.storyVisible = true;
-    storyText = scene.add.bitmapText(0, vars.canvas.height, 'azo', vars.story.introText, 48).setCenterAlign().setAlpha(0.7).setMaxWidth(vars.canvas.width-20).setName('introStory');
-    storyText.x=10;
-    let scrollHeight = storyText.height;
-    let duration = scrollHeight*15;
-
-    scene.tweens.add({
-        targets: storyText,
-        y: -scrollHeight,
-        ease: 'linear',
-        duration: duration,
-        onComplete: startGame,
-    })
-
-    // we fade out the loading image on click, so we need to set up a slight pause (3s) before enabling the intro skip
-    setTimeout( function() { enableIntroSkip(); }, 1000)
-}
-
-function enableIntroSkip() {
-    window.onmousedown = function(e) {
-        if (vars.game.storyVisible===true) {
-            let iV = scene.children.getByName('introVideo');
-            scene.tweens.add({
-                targets: [storyText, iV],
-                alpha: 0,
-                duration: 3000,
-                onComplete: storyTextSpeedUp,
-            })
-            vars.game.storyVisible = false;
-            scene.sys.canvas.style.cursor = 'crosshair';
-        }
-    }
-}
-
-
-
-function storyTextSpeedUp() {
-    vars.game.storyVisible = false;
-    tw = scene.tweens.getTweensOf(storyText);
-    tw[0].setTimeScale(1000);
-}
 
 /* 
 1978 - Arcade

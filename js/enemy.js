@@ -400,6 +400,8 @@ function enemyBossHit(_bullet, _boss) {
 
 function enemyBossShow(_tween, _target, _boss) {
     _boss.setVisible(true);
+    let index = _boss.getData('enemyType');
+    _boss.play('e.hover' + index)
     let bossType = _boss.getData('enemyType');
     if (bossType===5) { // cthulhu has his own shader which is only stopped upon his death
 
@@ -504,6 +506,7 @@ function enemyDeath(enemy) {
     //console.log('Enemy has died, creating death tween...');
     enemy.disableBody(); // disable interaction with bullets
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
+    vars.enemies.deathCountIncrease();
     scene.sound.play('enemyExplode');
     vars.cameras.flash('white', 100);
     let xMove = Phaser.Math.RND.between(30,100);
