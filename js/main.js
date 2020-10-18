@@ -77,8 +77,8 @@ function main() {
         }
     }
 
-    // create a random star
-    if (vars.game.started===true) { // basically runs after the intro and cant be stopped
+    // create a random star (used as the background in levels 1-19)
+    if (vars.game.started===true && vars.levels.wave<20) {
         let x = Phaser.Math.RND.between(5, vars.canvas.width-10);
         let y = Phaser.Math.RND.between(55, vars.scenery.starsMaxY);
         starEmitter.emitParticleAt(x,y);

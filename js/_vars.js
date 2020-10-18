@@ -827,6 +827,10 @@ var vars = {
             0: 'grass',
             10: 'water',
             20: 'space',
+            25: 'nebula',
+            30: 'stellar',
+            35: 'alienCities',
+            45: 'boss',
         },
         raining: false,
         rainCheck: [20*fps,20*fps],
@@ -836,48 +840,113 @@ var vars = {
 
         changeBackground(_bgtype='grass') {
             switch (_bgtype) {
-                case 'water':
+                case 'alienCities': // wave 35
+                    // hide the stellar corona
+                    vars.levels.stellarCorona();
+
+                    // show the alien cities... umm not done yet...
+                break;
+
+                case 'boss': // wave 45
+                    // hide the alien cities
+
+                    // show the boss background
+
+                break;
+
+                case 'nebula': // wave 25
+                    // stop the space stars
+                    vars.levels.starsSpace();
+
+                    // generate a few galaxies
+                    sV.generateNewGalaxy(null,null,8);
+
+                    // add a nebula
+                    sV.generateNewNebula(null,null,true);
+                break;
+
+                case 'space': // wave 20
+                    // fade out the waves
+                    wavesGroup.children.each( (c)=> {
+                        scene.tweens.add({ paused: false, targets: c, alpha: 0, duration: 1000, ease: 'Quad.easeInOut' });
+                    })
+
+                    // hide the background image
+                    let bg = scene.children.getByName('levelBG');
+                    scene.tweens.add({ paused: false, targets: bg, alpha: 0, duration: 1000, ease: 'Quad.easeInOut' });
+
+                    // make sure it isnt raining
+                    if (scene.rain.visible===true) {
+                        scene.rain.setActive(false).setVisible(false); scene.rain.destroy(); scene.rain = undefined;
+                    }
+
+                    // disable the old static stars emitter (we dont delete in as I may use them again after level 46)
+                    starEmitter.setActive(false).setVisible(false);
+
+                    // enable the new space stars emitter
+                    vars.levels.starsSpace();
+                break;
+
+                case 'stellar': // wave 30
+                    // hide any nebulae & galaxies (we just hide them as they have callbacks that destroy them)
+                    nebulaeGroup.children.each( (c)=> {
+                        scene.tweens.add({
+                            targets: c,
+                            alpha: 0,
+                            ease: 'linear',
+                            duration: 3000
+                        })
+                    })
+
+                    // show the stellar corona
+                    vars.levels.stellarCorona();
+                break;
+
+                case 'water': // wave 10
                     vars.game.createWaterTweens();
                     wavesGroup.children.each( (c)=> {
                         c.setVisible(true);
                     });
                 break;
-
-                case 'space':
-                    // fade out the waves and background image
-                    wavesGroup.children.each( (c)=> {
-                        scene.tweens.add({
-                            paused: false,
-                            targets: c,
-                            alpha: 0,
-                            duration: 1000,
-                            ease: 'Quad.easeInOut',
-                        });
-                    })
-                    let bg = scene.children.getByName('levelBG');
-                    scene.tweens.add({
-                        paused: false,
-                        targets: bg,
-                        alpha: 0,
-                        duration: 1000,
-                        ease: 'Quad.easeInOut',
-                    });
-                    // make sure it isnt raining... it cant rain in space!
-                    if (scene.rain.visible===true) {
-                        scene.rain.setActive(false).setVisible(false);
-                        scene.rain.destroy()
-                        scene.rain = undefined;
-                    }
-
-                    // increase the stars max y position
-                    let sV = vars.scenery;
-                    sV.starsMaxY = sV.starsMaxYOptions[1];
-
-                    // generate a few galaxies
-                    sV.generateNewGalaxy(null,null,8);
-                    sV.generateNewNebula(null,null,true);
-                break;
             }
+        },
+
+        levelBGChange: function() {
+            let lV = vars.levels;
+            let changeBackground = false;
+            if (lV.wave===5) { // night time fade in
+                lV.nightTimeFade('in');
+            } else if (lV.wave===10) { // water
+                lV.currentWaveBG = lV.waveBGs[lV.wave];
+                scene.children.getByName('nightTimeMask').destroy();
+                let nTMW = scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMaskWater').setOrigin(0.5,1).setAlpha(1).setName('nightTimeMask');
+                vars.cameras.ignore(cam2, nTMW);
+                changeBackground = true;
+            } else if (lV.wave===15) { // night time fade out
+                lV.nightTimeFade('out');
+            } else if (lV.wave===20 || lV.wave===25 || lV.wave===30 || lV.wave===35 || lV.wave===45) { // space stars, nebula, corona, alien cities, boss
+                lV.currentWaveBG = lV.waveBGs[lV.wave];
+                changeBackground = true;
+            }
+
+            if (changeBackground === true) {
+                let newBG = lV.currentWaveBG;
+                lV.changeBackground(newBG);
+            }
+        },
+
+        nightTimeFade: function(_inout='in') {
+            let nightTimeMask = scene.children.getByName('nightTimeMask');
+            let alpha = 0;
+            if (_inout==='in') {
+                alpha = 1;
+            }
+            scene.tweens.add({
+                targets: nightTimeMask,
+                alpha: alpha,
+                ease: 'linear',
+                duration: 10000,
+            })
         },
 
         rain: function(_init=false) {
@@ -925,18 +994,38 @@ var vars = {
             });
         },
 
-        nightTimeFade: function(_inout='in') {
-            let nightTimeMask = scene.children.getByName('nightTimeMask');
-            let alpha = 0;
-            if (_inout==='in') {
-                alpha = 1;
+        starsSpace: function(_init=false) {
+            if (scene.spaceStars===undefined) { // the spaceStars effect hasnt been initialised yet.
+                vars.levels.starsSpaceInit();
+                if (_init===true) {
+                    scene.spaceStars.setActive(false).setVisible(false);
+                    return true;
+                }
             }
-            scene.tweens.add({
-                targets: nightTimeMask,
-                alpha: alpha,
-                ease: 'linear',
-                duration: 10000,
-            })
+            if (scene.spaceStars.visible===true) {
+                //console.log('Space Stars OFF');
+                scene.spaceStars.setActive(false).setVisible(false);
+            } else {
+                //console.log('Space Stars ON!');
+                scene.spaceStars.setActive(true).setVisible(true);
+            }
+        },
+
+        starsSpaceInit: function() {
+            scene.spaceStars = scene.add.particles('rain');
+            scene.spaceStars.createEmitter({
+                frame: 'white',
+                y: { min: -100, max: 800 },
+                ease: 'Quad.InOut',
+                x: { min: 5, max: 715 },
+                lifespan: 4000,
+                alpha: (function (p, k, t) { return Phaser.Math.Clamp(1 - 2 * Math.abs(t - 0.5), 0, 0.5); }),
+                speedY: { min: 50, max: 100 },
+                scaleX: 0.01,
+                scaleY: { start: 0.1, end: 0.6 },
+                quantity: 0.01,
+                blendMode: 'ADD'
+            });
         },
 
         stellarCorona: function(_init=false) {
@@ -979,29 +1068,11 @@ var vars = {
             // update the overlay
             scene.children.getByName('waveTextInt').setText(lV.wave);
             lV.wavePopupVisible=true;
-            let changeBackground = false;
-            let BG = lV.currentWaveBG;
-            if (lV.wave===10) { // level 10 stops bosses being destroyed between waves AND changes the scenery to waves
+            if (lV.wave===10) { // level 10 stops bosses being destroyed between waves
                 vars.enemies.removeBosses=false;
-                lV.currentWaveBG = lV.waveBGs[lV.wave];
-                // change the nighttime mask to the water one
-                scene.children.getByName('nightTimeMask').destroy();
-                let nTMW = scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMaskWater').setOrigin(0.5,1).setAlpha(1).setName('nightTimeMask');
-                vars.cameras.ignore(cam2, nTMW);
-                changeBackground = true;
-            } else if (lV.wave===20) {
-                lV.currentWaveBG = lV.waveBGs[lV.wave];
-                changeBackground = true;
-            } else if (lV.wave===5) {
-                vars.levels.nightTimeFade('in');
-            } else if (lV.wave===15) {
-                vars.levels.nightTimeFade('out');
             }
 
-            if (changeBackground === true) {
-                let newBG = lV.currentWaveBG;
-                lV.changeBackground(newBG);
-            }
+            vars.levels.levelBGChange(); // check if we should be changing the background
         }
     },
 
@@ -1443,6 +1514,16 @@ var vars = {
     },
 
     scenery: {
+        alienPlanet: {
+
+        },
+        pieceConnectors: {
+            0: [1,2],
+            1: [3],
+            2: [4],
+            3: [0,1,2],
+            4: [0,1,2],
+        },
         spawnPositions: [],
         spawnMinMax: [],
         spawnScale: 0.01,
@@ -1465,10 +1546,54 @@ var vars = {
             },
         },
 
+        generateAlienPlanet: function() {
+            // this generates a map 4x100
+            let pieceConnectors = vars.scenery.pieceConnectors;
+            let pieceCount = 4;
+            // the finished arrays will be 100 in length... this is actually the height of the images
+            let rMax = 4;
+            let cMax = 100;
+            let randomPiece = -1;
+            let colData = {
+                0: [],
+                1: [],
+                2: [],
+                3: [],
+            }
+            for (let r=0; r<rMax; r++) {
+                for (let c=0; c<cMax; c++) {
+                    if (randomPiece===-1) { // this is the first piece, pick a random one
+                        randomPiece = Phaser.Math.RND.between(0,pieceCount);
+                    } else { // this piece is based on the previous one
+                        randomPiece = Phaser.Math.RND.pick(pieceConnectors[randomPiece]);
+                    }
+                    colData[r].push(randomPiece);
+                }
+            }
+            vars.scenery.alienPlanet = colData;
+            // now we have to create the background
+            let pieceWidth = 201; let pieceHeight = 101;
+            for (let c=0; c<cMax; c++) {
+                let y = c * pieceHeight;
+                console.log('Row: ' + c);
+                for (let r=0; r<rMax; r++) { // draw each row (consisting of 4 pieces side by side)
+                    let x = r * pieceWidth;
+                    console.log('Placing piece at: ' + x + ',' + y);
+                    let piece = scene.add.image(x,y, 'alienPlanet', colData[r][c]);
+                    alienPlanetGroup.add(piece);
+                }
+            }
+            alienPlanetGroup.setVisible(false).setAlpha(0); // hide the alien planet and set alpha to 0 so we can fade it in
+        },
+
         generateNewGalaxy: function(_tween=null, _object=null, _count=1) {
-            if (_tween!==null) {
+            if (_tween!==null) { // did we enter here from the tween complete? If so, delete it
                 _object[0].destroy();
             }
+            if (vars.levels.wave<25 || vars.levels.wave>29) { // make sure we should still be spawning the galaxies
+                return false;
+            }
+
             let delay = 0;
             for (let g=0; g<_count; g++) {
                 if (_count!==1) {
@@ -1488,13 +1613,16 @@ var vars = {
 
                 let x = Phaser.Math.RND.between(1, 7) * 100;
                 let frame = Phaser.Math.RND.between(0,2);
-                let a = scene.add.image(x, -100, 'galaxies', frame).setScale(0.4+scaleOffset).setAlpha(0.2).setRotation(angle).setDepth(-1);
+                let a = scene.add.image(x, -100, 'galaxies', frame).setScale(0.4+scaleOffset).setAlpha(0.2).setRotation(angle).setDepth(-1).setName('gxy_' + generateRandomID());
+                nebulaGroup.add(a);
+
                 scene.tweens.add({
                     targets: a,
                     delay: g*delay,
                     y: 1180,
                     angle: finalAngle,
                     ease: 'linear',
+                    blendMode: 'ADD',
                     duration: duration/speed, // larger galaxies move faster to emulate distance from camera
                     onComplete: vars.scenery.generateNewGalaxy,
                 })
@@ -1502,6 +1630,9 @@ var vars = {
         },
 
         generateNewNebula: function(_tween=null, _image=null, _init=false) {
+            if (vars.levels.wave<25 || vars.levels.wave>29) {
+                return false;
+            }
             let x = vars.canvas.cX;
             let y = 0;
             let duration = 75000;
@@ -1512,6 +1643,7 @@ var vars = {
                 let frame = Phaser.Math.RND.between(0,5);
                 let nO0 = scene.add.image(x, -1080, 'nebulae', frame).setAlpha(0.75).setDepth(-1);
                 vars.cameras.ignore(cam2, nO0);
+                nebulaGroup.add(nO0);
 
                 scene.tweens.add({
                     delay: duration/2,
@@ -1526,6 +1658,7 @@ var vars = {
                 let frames = [Phaser.Math.RND.between(0,5),Phaser.Math.RND.between(0,5)];
                 let nO0 = scene.add.image(x, y, 'nebulae', frames[0]).setAlpha(0.75).setDepth(-1);
                 let nO1 = scene.add.image(x, y-1080, 'nebulae', frames[1]).setAlpha(0.75).setDepth(-1);
+                nebulaGroup.addMultiple([nO0, nO1]);
                 vars.cameras.ignore(cam2, nO0); vars.cameras.ignore(cam2, nO1);
 
                 scene.tweens.add({

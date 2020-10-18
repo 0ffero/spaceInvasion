@@ -92,6 +92,7 @@ function preload() {
     scene.load.spritesheet('bulletPrimaryEnemy', 'enemy/bulletPrimary-ext.png', { frameWidth: 34, frameHeight: 42, margin: 1, spacing: 2 });
 
     // SCENERY
+    scene.load.spritesheet('alienPlanet', 'level/alienPlanet-ext.png', { frameWidth: 201, frameHeight: 101, margin: 1, spacing: 2 });
     scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('galaxies', 'level/galaxies.png', { frameWidth: 300, frameHeight: 200 });
@@ -223,6 +224,8 @@ function create() {
     enemyAttackingGroup = scene.physics.add.group();
 
     // scenery
+    alienPlanetGroup = scene.add.group();
+    nebulaGroup = scene.add.group();
     sceneryGroup = scene.add.group();
     wavesGroup = scene.add.group();
 
@@ -243,6 +246,9 @@ function create() {
     vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
     // night time mask used on level 5 - 15
     scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
+
+    console.log('%c Generating Alien Planet', vars.console.callFrom);
+    vars.scenery.generateAlienPlanet();
 
     // draw the player
     let sV = vars.player.ship;
