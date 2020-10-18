@@ -55,6 +55,12 @@ function main() {
                 enemyBossUpdate(c);
             })
         }
+
+        // check to see if we should switch the rain on or off
+        if (vars.levels.wave<20) {
+            vars.levels.rainCheckReducto();
+        }
+        
     } else if (vars.game.paused===true) { // game is paused
         // we dont have to do anything in here, but this will run when we (for example) pause to highlight an upgrade
         // the variable it uses is game.pausedReason

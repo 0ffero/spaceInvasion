@@ -114,6 +114,7 @@ function preload() {
     // PARTICLES
     scene.load.atlas('particles', 'particles/particles.png', 'particles/particles.json');
     scene.load.image('fire', 'particles/fire.png');
+    scene.load.atlas('rain', 'particles/rain.png', 'particles/rain.json');
 
     // FONT
     scene.load.bitmapFont('azo', 'fonts/azo-fire.png', 'fonts/azo-fire.xml');

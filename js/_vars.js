@@ -135,7 +135,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.914ᵦ',
+    version : '0.919ᵦ',
 
 
 
@@ -828,6 +828,8 @@ var vars = {
             10: 'water',
             20: 'space',
         },
+        raining: false,
+        rainCheck: [20*fps,20*fps],
         wave: 0,
         
         wavePopupVisible: false,
@@ -860,6 +862,12 @@ var vars = {
                         duration: 1000,
                         ease: 'Quad.easeInOut',
                     });
+                    // make sure it isnt raining... it cant rain in space!
+                    if (scene.rain.visible===true) {
+                        scene.rain.setActive(false).setVisible(false);
+                        scene.rain.destroy()
+                        scene.rain = undefined;
+                    }
 
                     // increase the stars max y position
                     let sV = vars.scenery;
@@ -870,6 +878,51 @@ var vars = {
                     sV.generateNewNebula(null,null,true);
                 break;
             }
+        },
+
+        rain: function(_init=false) {
+            if (scene.rain===undefined) { // the rain effect hasnt been initialised yet.
+                vars.levels.rainInit();
+                if (_init===true) {
+                    scene.rain.setActive(false).setVisible(false);
+                    return true;
+                }
+            }
+            if (scene.rain.visible===true) {
+                //console.log('Rain OFF');
+                scene.rain.setActive(false).setVisible(false);
+            } else {
+                //console.log('Rain ON!');
+                scene.rain.setActive(true).setVisible(true);
+            }
+        },
+
+        rainCheckReducto: function() {
+            let lV = vars.levels;
+            if (lV.rainCheck[0]<=0) {
+                lV.rainCheck[0]=lV.rainCheck[1];
+                let rainChange = Phaser.Math.RND.between(0,1)===1 ? true : false;
+                if (rainChange===true) { vars.levels.rain(); }
+            } else {
+                lV.rainCheck[0]-=1;
+            }
+        },
+
+        rainInit: function() {
+            scene.rain = scene.add.particles('rain');
+            scene.rain.createEmitter({
+                frame: 'white',
+                y: 10,
+                x: { min: 5, max: 715 },
+                lifespan: 750,
+                tint: [ 0xDDDDDD, 0x4DD2FF, 0x4DA6FF, 0x4D7AFF],
+                alpha: { min: 0.1, max: 0.2 },
+                speedY: { min: 1000, max: 1400 },
+                scaleX: { start: 0.02, end: 0.02 },
+                scaleY: { start: 0.01, end: 0.2 },
+                quantity: 4,
+                blendMode: 'ADD'
+            });
         },
 
         nightTimeFade: function(_inout='in') {
@@ -884,6 +937,40 @@ var vars = {
                 ease: 'linear',
                 duration: 10000,
             })
+        },
+
+        stellarCorona: function(_init=false) {
+            if (scene.stellarCorona===undefined) { // the rain effect hasnt been initialised yet.
+                vars.levels.stellarCoronaInit();
+                if (_init===true) {
+                    scene.stellarCorona.setActive(false).setVisible(false);
+                    return true;
+                }
+            }
+            if (scene.stellarCorona.visible===true) {
+                //console.log('Stellar Corona OFF');
+                scene.stellarCorona.setActive(false).setVisible(false);
+            } else {
+                //console.log('Stellar Corona ON!');
+                scene.stellarCorona.setActive(true).setVisible(true);
+            }
+        },
+
+        stellarCoronaInit: function() {
+            scene.stellarCorona = scene.add.particles('rain');
+            scene.stellarCorona.createEmitter({
+                frame: 'white',
+                y: 10,
+                x: { min: 5, max: 715 },
+                lifespan: 750,
+                tint: [ 0xFFFF00, 0xFFBF00, 0xFF8000],
+                alpha: { min: 0.1, max: 0.2 },
+                speedY: { min: 1000, max: 1400 },
+                scaleX: { start: 0.02, end: 0.02 },
+                scaleY: { start: 0.01, end: 0.2 },
+                quantity: 8,
+                blendMode: 'ADD'
+            });
         },
 
         waveIncrement: function() {

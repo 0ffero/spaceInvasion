@@ -1,4 +1,7 @@
 function particlesInit() {
+    vars.levels.rain(true);
+    vars.levels.stellarCorona(true);
+
     bulletHitEnemy = particles.createEmitter({
         name: 'bulletHitEnemy',
         frame: [ 'smoke-puff', 'cloud', 'smoke-puff' ],

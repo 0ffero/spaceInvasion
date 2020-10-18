@@ -591,19 +591,26 @@ function enemyGetRandom() {
 }
 
 function enemyHit(bullet, enemy, attacker=false) {
-    if (enemy.visible===false && attacker===false) { // if the enemy isnt visible then we cant do damage to it
-        // This is the invisible copy of the attacking enemy! Ignore the hit.
-        return false;
-    } else if (enemy.visible===false && attacker===true) {
-        // this is an attacking enemy
+    if (enemy!==null) {
+        if (enemy.visible===false && attacker===false) { // if the enemy isnt visible then we cant do damage to it
+            // This is the invisible copy of the attacking enemy! Ignore the hit.
+            return false;
+        } else if (enemy.visible===false && attacker===true) {
+            // this is an attacking enemy
+        }
     }
 
     if (vars.DEBUG===true && vars.VERBOSE===true) { console.log('Hit!'); }
 
-    let strength = bullet.getData('hp');
-    if (strength===undefined) {
-        if (vars.DEBUG===true && vars.VERBOSE===true) { console.warn('Invalid bullet strength, its probably being destroyed. This is due to the speed of our bullets'); }
-        return false;
+    let strength=0;
+    if (bullet!==null) {
+        bStrength = bullet.getData('hp');
+        bullet.destroy();
+        if (bStrength===undefined) {
+            if (vars.DEBUG===true && vars.VERBOSE===true) { console.warn('Invalid bullet strength, its probably being destroyed. This is due to the speed of our bullets'); }
+            return false;
+        }
+        strength = bStrength;
     }
 
     // first we need to check that this enemy is attacking
@@ -611,7 +618,6 @@ function enemyHit(bullet, enemy, attacker=false) {
     let position = [-1,-1];
     
     // destroy the bullet and remove it from the bullets array
-    bullet.destroy();
     if (enemy!==null) {
         let enemyType = enemy.getData('colourIndex');
         let tint = vars.enemies.colours[enemyType];
@@ -660,7 +666,6 @@ function enemyHit(bullet, enemy, attacker=false) {
         if (attacker===true) { //
             return retValue;
         }
-
     }
 
     // enemy destroy has been moved to after its death animation: fn enemyDestroy
