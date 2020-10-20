@@ -92,9 +92,13 @@ function preload() {
     scene.load.spritesheet('bulletPrimaryEnemy', 'enemy/bulletPrimary-ext.png', { frameWidth: 34, frameHeight: 42, margin: 1, spacing: 2 });
 
     // SCENERY
+    scene.load.atlas('asteroid1', 'level/asteroid1.png', 'level/asteroid1.json');
+    scene.load.atlas('asteroid2', 'level/asteroid2.png', 'level/asteroid2.json');
+    scene.load.image('alienBG', 'level/alienPlanetBG.gif');
     scene.load.spritesheet('alienPlanet', 'level/alienPlanet-ext.png', { frameWidth: 201, frameHeight: 101, margin: 1, spacing: 2 });
     scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
+    scene.load.atlas('ships', 'level/ships.png', 'level/ships.json');
     scene.load.spritesheet('galaxies', 'level/galaxies.png', { frameWidth: 300, frameHeight: 200 });
     scene.load.spritesheet('nebulae', 'level/nebula-ext.jpg', { frameWidth: 720, frameHeight: 2160 });
     scene.load.image('nightTimeMask', 'level/nightTimeMask.png');
@@ -204,6 +208,9 @@ function create() {
     vars.input.init(); // keys that control the game config (music etc)
     inputInit(); // game controls
 
+    // scenery animations init
+    animationInit('asteroids');
+
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
     // set up the groups and colliders
     // UI
@@ -224,7 +231,7 @@ function create() {
     enemyAttackingGroup = scene.physics.add.group();
 
     // scenery
-    alienPlanetGroup = scene.add.group();
+    alienPlanetContainer = scene.add.container();
     nebulaGroup = scene.add.group();
     sceneryGroup = scene.add.group();
     wavesGroup = scene.add.group();

@@ -138,7 +138,6 @@ var vars = {
     version : '0.919ᵦ',
 
 
-
     audio: {
         currentTrack: 0,
         gameTracks: ['gamemusic1'],
@@ -838,13 +837,58 @@ var vars = {
         
         wavePopupVisible: false,
 
+        alienPlanetScroll: function(_tween, _object) {
+            if (_tween===undefined) {
+                // this is the first time weve entered this function
+                // fade in the alien planet
+                let alienBG = scene.children.getByName('alienBG');
+                scene.tweens.add({ // fade in the background
+                    targets: alienBG,
+                    ease: 'Linear',
+                    alpha: 1,
+                    duration: 3000,
+                })
+                scene.tweens.add({ // fade in the alien planet
+                    targets: alienPlanetContainer,
+                    ease: 'Linear',
+                    alpha: 1,
+                    duration: 10000,
+                })
+            } else { // reset the alien planet
+                alienPlanetContainer.y = vars.scenery.alienPlanet.height;
+            }
+            // scroll the alien planet
+            scene.tweens.add({
+                targets: alienPlanetContainer,
+                ease: 'Linear',
+                y: 51,
+                duration: 15000,
+                onComplete: vars.levels.alienPlanetScroll
+            })
+        },
+
         changeBackground(_bgtype='grass') {
             switch (_bgtype) {
                 case 'alienCities': // wave 35
                     // hide the stellar corona
                     vars.levels.stellarCorona();
 
-                    // show the alien cities... umm not done yet...
+                    // show the alien cities
+                    alienPlanetGroup.setVisible(false);
+
+                    scene.tweens.add({
+                        targets: alienPlanetGroup,
+                        ease: 'Linear',
+                        alpha: 0.5,
+                        duration: 5000,
+                    })
+
+                    scene.tweens.add({
+                        targets: alienPlanetGroup,
+                        ease: 'Linear',
+                        y: 10000,
+                        duration: 180000,
+                    })
                 break;
 
                 case 'boss': // wave 45
@@ -1515,8 +1559,9 @@ var vars = {
 
     scenery: {
         alienPlanet: {
-
+            height: -1,
         },
+        asteroidXArray: [],
         pieceConnectors: {
             0: [1,2],
             1: [3],
@@ -1546,11 +1591,94 @@ var vars = {
             },
         },
 
+        asteroidGenerate(_tween, _asteroid) {
+            let count=16;
+            if (_asteroid!==undefined) {
+                _asteroid[0].destroy();
+                count=1;
+            }
+
+            if (vars.levels.wave<20 || vars.levels.wave>29) { return false; } // make sure we should be generating new asteroids
+
+            let sV = vars.scenery;
+            if (sV.asteroidXArray.length===0) {
+                sV.asteroidInit();
+            }
+
+            let defaultStartY = -300;
+            let defaultEndY = vars.canvas.height+300;
+
+            for (a=0; a<count; a++) {
+                let x = Phaser.Math.RND.pick(sV.asteroidXArray);
+                let yOffset = Phaser.Math.RND.pick([50, 100, 150, 200, 250, 300, 350]);
+                let anim = Phaser.Math.RND.pick(['asteroid1a','asteroid1b','asteroid2a']);
+                //console.log('anim: ' + anim + ', x: ' + x);
+                let scale = Phaser.Math.RND.between(1, 3)/12.5; // this gives us a scale between 0.08 and 0.24
+                let asteroid = scene.add.sprite(x,defaultStartY-(yOffset/2),'asteroid1','a1frame1').setScale(scale);
+                sceneryGroup.add(asteroid);
+                asteroid.anims.play(anim);
+                scene.tweens.add({
+                    targets: asteroid,
+                    delay: a*1000,
+                    y: defaultEndY+(yOffset/2),
+                    duration: 16000,
+                    ease: 'Linear',
+                    onComplete: vars.scenery.asteroidGenerate,
+                })
+            }
+        },
+
+        asteroidInit: function() {
+            /*
+            let wOC = vars.canvas.width-100;
+            let points = wOC/10;
+            console.log(points);
+            let xArray = []
+            for (let x=0; x<=wOC; x+=points) {
+                xArray.push((x/points*points)+points/2);
+            }
+            xArray.push(wOC+100-points);
+            */
+           // The code above creates this Array.name.. its static so no point of generating it every time
+           vars.scenery.asteroidXArray = [31, 93, 155, 217, 279, 341, 403, 465, 527, 589, 651, 658];
+        },
+
+        carrierGenerate: function(_tween, _carrier) {
+            if (_carrier!==undefined) {
+                _carrier[0].destroy();
+            }
+            if (vars.levels.wave>19) { return false; }
+            let x = Phaser.Math.RND.between(vars.canvas.cX-100,vars.canvas.cX+100);
+            let frameArray = [4,5,6,8];
+            let xChange = [200,250,300,350,400,450,500];
+            let xMod = 1;
+            if (x<vars.canvas.cX) {
+                frameArray = [1,2,3,7];
+                xMod = -1;
+            }
+            xChange = Phaser.Math.RND.pick(xChange) * xMod;
+            //console.log('x: ' + x + ', xChange: ' + xChange);
+            let frame = Phaser.Math.RND.pick(frameArray);
+        
+            let carrier = scene.add.image(x,700,'ships','ship' + frame).setScale(0.0);
+            sceneryGroup.add(carrier);
+            scene.tweens.add({
+                targets: carrier,
+                y: 1400,
+                x: x+xChange,
+                scale: 0.4,
+                duration: 7000,
+                ease: 'Cubic.easeIn',
+                onComplete: vars.scenery.carrierGenerate,
+            })
+        },
+
         generateAlienPlanet: function() {
-            // this generates a map 4x100
+            // this generates a map 4(rows)x100(col)
+            scene.add.image(vars.canvas.cX, vars.canvas.cY, 'alienBG').setScale(vars.canvas.width, vars.canvas.height).setName('alienBG').setAlpha(0);
             let pieceConnectors = vars.scenery.pieceConnectors;
             let pieceCount = 4;
-            // the finished arrays will be 100 in length... this is actually the height of the images
+            // the finished arrays will be 100 in length... this is actually the height of the map
             let rMax = 4;
             let cMax = 100;
             let randomPiece = -1;
@@ -1575,15 +1703,18 @@ var vars = {
             let pieceWidth = 201; let pieceHeight = 101;
             for (let c=0; c<cMax; c++) {
                 let y = c * pieceHeight;
-                console.log('Row: ' + c);
+                //console.log('Row: ' + c);
                 for (let r=0; r<rMax; r++) { // draw each row (consisting of 4 pieces side by side)
                     let x = r * pieceWidth;
-                    console.log('Placing piece at: ' + x + ',' + y);
+                    //console.log('Placing piece at: ' + x + ',' + y);
                     let piece = scene.add.image(x,y, 'alienPlanet', colData[r][c]);
-                    alienPlanetGroup.add(piece);
+                    alienPlanetContainer.add(piece);
                 }
             }
-            alienPlanetGroup.setVisible(false).setAlpha(0); // hide the alien planet and set alpha to 0 so we can fade it in
+            // offset the y
+            let yOffset = ~(cMax*pieceHeight-(pieceHeight/2));
+            vars.scenery.alienPlanet.height = yOffset;
+            alienPlanetContainer.setDepth(1).setPosition(50, yOffset).setAlpha(0);
         },
 
         generateNewGalaxy: function(_tween=null, _object=null, _count=1) {
@@ -1694,22 +1825,28 @@ var vars = {
 
         update: function() {
             let sV = vars.scenery;
-            let sT = sV.spawnTypes; // scenery types
-            
-            for (let s=0; s<sT.length; s++) {
-                let current = sV[sT[s]].timeouts.current;
-                let timeout = sV[sT[s]].timeouts[current][0];
-                if (timeout>0) {
-                    sV[sT[s]].timeouts[current][0]--;
-                } else {
-                    // reset the timeout
-                    sV[sT[s]].timeouts[current][0]=sV[sT[s]].timeouts[current][1];
-                    if (sT[s]==='trees') {// spawn the tree
-                        new scenery('trees');
-                    } else if (sT[s]==='barns') {// spawn the tree
-                        new scenery('barns');
+            if (vars.levels.wave<10) { // grass scenery - as you can see below ive changed the way scenery is created and destroyed, it would be a good idea to update this function too TODO
+                let sT = sV.spawnTypes; // scenery types
+                
+                for (let s=0; s<sT.length; s++) {
+                    let current = sV[sT[s]].timeouts.current;
+                    let timeout = sV[sT[s]].timeouts[current][0];
+                    if (timeout>0) {
+                        sV[sT[s]].timeouts[current][0]--;
+                    } else {
+                        // reset the timeout
+                        sV[sT[s]].timeouts[current][0]=sV[sT[s]].timeouts[current][1];
+                        if (sT[s]==='trees') {// spawn the tree
+                            new scenery('trees');
+                        } else if (sT[s]==='barns') {// spawn the tree
+                            new scenery('barns');
+                        }
                     }
                 }
+            } else if (vars.levels.wave<20) { // water scenery
+                sV.carrierGenerate();
+            } else if (vars.levels.wave<30) { // space and nebula scenery
+                sV.asteroidGenerate();
             }
         }
     },

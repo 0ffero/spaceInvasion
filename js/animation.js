@@ -1,6 +1,38 @@
 function animationInit(_spriteName) {
     let selectedSprite = _spriteName;
 
+    if (selectedSprite==='asteroids') {
+        selectedSprite = 'asteroid1';
+        console.log('Setting Up Asteroid 1 Animations');
+        // build the frame names
+        let frameNames = Phaser.Utils.Array.NumberArray(1,12,'a1frame');
+        scene.anims.create({
+            key: 'asteroid1a',
+            frames: scene.anims.generateFrameNumbers(selectedSprite, { frames: frameNames }),
+            frameRate: 12,
+            repeat: -1
+        });
+        
+        frameNames = Phaser.Utils.Array.NumberArray(13,24,'a1frame');
+        scene.anims.create({
+            key: 'asteroid1b',
+            frames: scene.anims.generateFrameNumbers(selectedSprite, { frames: frameNames }),
+            frameRate: 12,
+            repeat: -1
+        });
+
+        selectedSprite = 'asteroid2';
+        console.log('Setting Up Asteroid 2 Animations');
+        // build the frame names
+        frameNames = Phaser.Utils.Array.NumberArray(1,12,'a2frame');
+        scene.anims.create({
+            key: 'asteroid2a',
+            frames: scene.anims.generateFrameNumbers(selectedSprite, { frames: frameNames }),
+            frameRate: 12,
+            repeat: -1
+        });
+    }
+
     if (selectedSprite==='enemies') {
         console.log('Setting Up Player Animations');
         let sC = vars.enemies.spriteCount;

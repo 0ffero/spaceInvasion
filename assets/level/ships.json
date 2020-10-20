@@ -1,0 +1,69 @@
+{
+"frames": 
+    {
+        "ship1": {
+            "frame": {"x":0,"y":0,"w":598,"h":392},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":598,"h":392},
+            "sourceSize": {"w":598,"h":392},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship2": {
+            "frame": {"x":599,"y":0,"w":526,"h":448},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":526,"h":448},
+            "sourceSize": {"w":526,"h":448},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship3": {
+            "frame": {"x":1128,"y":0,"w":260,"h":484},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":260,"h":484},
+            "sourceSize": {"w":260,"h":484},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship4": {
+            "frame": {"x":1391,"y":0,"w":566,"h":364},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":566,"h":364},
+            "sourceSize": {"w":566,"h":364},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship5": {
+            "frame": {"x":11,"y":398,"w":415,"h":455},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":415,"h":455},
+            "sourceSize": {"w":415,"h":455},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship6": {
+            "frame": {"x":442,"y":453,"w":509,"h":420},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":509,"h":420},
+            "sourceSize": {"w":509,"h":420},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship7": {
+            "frame": {"x":998,"y":490,"w":410,"h":476},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":410,"h":476},
+            "sourceSize": {"w":410,"h":476},
+            "pivot": {"x":0.5,"y":0.5}
+        },
+        "ship8": {
+            "frame": {"x":1422,"y":366,"w":281,"h":477},
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {"x":0,"y":0,"w":281,"h":477},
+            "sourceSize": {"w":281,"h":477},
+            "pivot": {"x":0.5,"y":0.5}
+        }
+    }
+}
