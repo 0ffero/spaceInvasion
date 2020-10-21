@@ -135,7 +135,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.919ᵦ',
+    version : '0.940ᵦ',
 
 
     audio: {
@@ -902,6 +902,8 @@ var vars = {
                     // stop the space stars
                     vars.levels.starsSpace();
 
+                    let sV = vars.scenery;
+
                     // generate a few galaxies
                     sV.generateNewGalaxy(null,null,8);
 
@@ -925,7 +927,7 @@ var vars = {
                     }
 
                     // disable the old static stars emitter (we dont delete in as I may use them again after level 46)
-                    starEmitter.setActive(false).setVisible(false);
+                    starEmitter.remove();
 
                     // enable the new space stars emitter
                     vars.levels.starsSpace();
@@ -933,7 +935,7 @@ var vars = {
 
                 case 'stellar': // wave 30
                     // hide any nebulae & galaxies (we just hide them as they have callbacks that destroy them)
-                    nebulaeGroup.children.each( (c)=> {
+                    nebulaGroup.children.each( (c)=> {
                         scene.tweens.add({
                             targets: c,
                             alpha: 0,
@@ -1562,6 +1564,7 @@ var vars = {
             height: -1,
         },
         asteroidXArray: [],
+        asteroidsRunning: false,
         pieceConnectors: {
             0: [1,2],
             1: [3],
@@ -1569,6 +1572,7 @@ var vars = {
             3: [0,1,2],
             4: [0,1,2],
         },
+        shipsRunning: false,
         spawnPositions: [],
         spawnMinMax: [],
         spawnScale: 0.01,
@@ -1592,14 +1596,15 @@ var vars = {
         },
 
         asteroidGenerate(_tween, _asteroid) {
-            let count=16;
+            if (vars.scenery.asteroidsRunning===false) { vars.scenery.asteroidsRunning=true; }
             if (_asteroid!==undefined) {
                 _asteroid[0].destroy();
                 count=1;
             }
-
+            
             if (vars.levels.wave<20 || vars.levels.wave>29) { return false; } // make sure we should be generating new asteroids
-
+            
+            let count=16;
             let sV = vars.scenery;
             if (sV.asteroidXArray.length===0) {
                 sV.asteroidInit();
@@ -1640,10 +1645,12 @@ var vars = {
             xArray.push(wOC+100-points);
             */
            // The code above creates this Array.name.. its static so no point of generating it every time
+           console.log('%cInitialising Asteroid Field', vars.console.callTo);
            vars.scenery.asteroidXArray = [31, 93, 155, 217, 279, 341, 403, 465, 527, 589, 651, 658];
         },
 
         carrierGenerate: function(_tween, _carrier) {
+            vars.scenery.shipsRunning=true;
             if (_carrier!==undefined) {
                 _carrier[0].destroy();
             }
@@ -1660,7 +1667,7 @@ var vars = {
             //console.log('x: ' + x + ', xChange: ' + xChange);
             let frame = Phaser.Math.RND.pick(frameArray);
         
-            let carrier = scene.add.image(x,700,'ships','ship' + frame).setScale(0.0);
+            let carrier = scene.add.image(x,800,'ships','ship' + frame).setScale(0.0);
             sceneryGroup.add(carrier);
             scene.tweens.add({
                 targets: carrier,
@@ -1844,9 +1851,15 @@ var vars = {
                     }
                 }
             } else if (vars.levels.wave<20) { // water scenery
-                sV.carrierGenerate();
+                // these should only fire once!
+                if (sV.shipsRunning===false) {
+                    sV.carrierGenerate();
+                }
             } else if (vars.levels.wave<30) { // space and nebula scenery
-                sV.asteroidGenerate();
+                // these should only fire once!
+                if (sV.asteroidsRunning===false) {
+                    sV.asteroidGenerate();
+                }
             }
         }
     },
