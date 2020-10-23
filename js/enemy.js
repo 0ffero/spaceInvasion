@@ -678,44 +678,40 @@ function enemyHit(bullet, enemy, attacker=false) {
 
 function enemiesLand() {
     let eV = vars.enemies;
-    eV.isLanding = true;
+    if (eV.isLanding === false) {
+        eV.isLanding = true;
 
-    let count=0;
-    let yMinMax = [1200,0];
-    enemies.children.each( (c) => {
-        c.body.velocity.x=0;
-        if (c.y<yMinMax[0]) {
-            yMinMax[0]=c.y;
-        }
-        if (c.y>yMinMax[1]) {
-            yMinMax[1]=c.y;
-        }
-    })
-    let yDelta = (vars.canvas.height-30) - yMinMax[1];
+        enemies.children.each( (c) => {
+            c.body.velocity.x=0;
+        })
 
-    enemies.children.each( (c) => {
-        let scaleDelta = 0.25 + ((c.y/yDelta)*0.25);
-        thisYDelta = c.y+yDelta;
-        if (count===0) {
-            count=1;
-            scene.tweens.add({
-                targets: c,
-                y: thisYDelta,
-                scale: scaleDelta,
-                //ease: 'linear',
-                duration: 2500,
-                onComplete: enemiesStopAnims,
-            })
-        } else {
-            scene.tweens.add({
-                targets: c,
-                y: thisYDelta,
-                scale: scaleDelta,
-                //ease: 'linear',
-                duration: 2500,
-            })
-        }
-    })
+        let newScale = vars.game.scale*1.1;
+        let count=0;
+        enemies.children.each( (c) => {
+            let xy = eV.landingPositions.shift();
+            if (count===0) {
+                count=1;
+                scene.tweens.add({
+                    targets: c,
+                    x: xy[0],
+                    y: xy[1],
+                    scale: newScale,
+                    ease: 'Quad.easeOut',
+                    duration: 2500,
+                    onComplete: enemiesStopAnims,
+                })
+            } else {
+                scene.tweens.add({
+                    targets: c,
+                    x: xy[0],
+                    y: xy[1],
+                    scale: newScale,
+                    ease: 'Quad.easeOut',
+                    duration: 2500,
+                })
+            }
+        })
+    }
 }
 
 function enemiesMove() {
@@ -768,33 +764,32 @@ function enemiesMove() {
                 if (c.y>lowest) { lowest = c.y; }
             }
         })
-        if (lowest>800) {
-            console.log('DEAD! Cause: Enemy boundary reached');
-            vars.game.pause();
-            vars.game.started=false; // this tells us that we have died
-            vars.player.dead();
-            return;
-        }
 
-        // update the speed of the enemies
-        eV.increaseEnemySpeed();
+        // check if enemy has reached the max Y
+        let playerDead = eV.checkForWinCondition(lowest);
+        if (playerDead===true) {
+            enemiesLand();
+         } else {
+            // update the speed of the enemies
+            eV.increaseEnemySpeed();
 
-        // get the previous direction before we moved the enemies down
-        let oldDirection = eV.moveDirectionPrevious;
-        if (oldDirection==='left') {
-            eV.moveDirectionCurrent='right';
-            enemies.children.each( (c)=> {
-                c.setVelocityX(eV.speed).setVelocityY(0);
-            })
-        } else if (oldDirection==='right') {
-            eV.moveDirectionCurrent='left';
-            enemies.children.each( (c)=> {
-                c.setVelocityX(-eV.speed).setVelocityY(0);
-            })
-        } else {
-            console.error('Invalid old direction: ' + eV.moveDirectionPrevious);
+            // get the previous direction before we moved the enemies down
+            let oldDirection = eV.moveDirectionPrevious;
+            if (oldDirection==='left') {
+                eV.moveDirectionCurrent='right';
+                enemies.children.each( (c)=> {
+                    c.setVelocityX(eV.speed).setVelocityY(0);
+                })
+            } else if (oldDirection==='right') {
+                eV.moveDirectionCurrent='left';
+                enemies.children.each( (c)=> {
+                    c.setVelocityX(-eV.speed).setVelocityY(0);
+                })
+            } else {
+                console.error('Invalid old direction: ' + eV.moveDirectionPrevious);
+            }
+            eV.moveDirectionPrevious = 'down';
         }
-        eV.moveDirectionPrevious = 'down';
     }
 }
 

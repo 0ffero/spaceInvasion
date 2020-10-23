@@ -187,10 +187,9 @@ function playerHit(_player, _bullet) {
             scene.children.getByName('hpTextIntS').setText('Destroyed!');
             scene.children.getByName('hpTextInt').setText('Destroyed!');
             vars.cameras.shake(cam1, 750);
-            /* vars.game.pause(); */
+            enemiesLand();
             vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
             vars.player.dead();
-            enemiesLand();
         }
     } // else the ADI field is in effect, player takes no damage.
 }

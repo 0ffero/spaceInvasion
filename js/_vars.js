@@ -241,12 +241,8 @@ var vars = {
         bossFireRatesResets: [],
         bossLimit: 1,
         bossNext: -1,
-        bulletDamage: 1,
-        cthulhuSpotted: false,
-        deadSinceLastPowerup: 0,
-        deathTotal: 0,
-
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
+        bulletDamage: 1,
         colours: [
             ['red', 0xFF0000],
             ['green', 0x00FF00],
@@ -254,10 +250,14 @@ var vars = {
             ['purple', 0xC926FF],
             ['yellow', 0xFFFF00],
             ['purple2', 0xC926FF] // cthulhu's bullets
-        ]
-        ,
-        list: [],
+        ],
+        cthulhuSpotted: false,
+        deadSinceLastPowerup: 0,
+        deathTotal: 0,
+        landingPositions: [],
         isLanding: false,
+        list: [],
+        maxYForWinCondition: 800,
         moveDirectionCurrent: 'right',
         moveDirectionPrevious: 'down',
         removeBosses: true,
@@ -288,8 +288,8 @@ var vars = {
                 vars.enemies.replaceArrays.counter=counter;
             }
         },
-
         replaceMethodSelected: 1,
+
 
         shootTimeout: [fps*0.5, fps*0.5],
         speed: 50,
@@ -517,6 +517,18 @@ var vars = {
             theBullet.setVelocity(_xSpeed, _speed);
         },
 
+        checkForWinCondition: function(_lowest) {
+            if (_lowest>vars.enemies.maxYForWinCondition) {
+                console.log('DEAD! Cause: Enemy boundary reached');
+                vars.game.pause();
+                vars.game.started=false; // this tells us that we have died
+                vars.player.dead();
+                vars.enemies.destroyAllBullets();
+                return true;
+            }
+            return false;
+        },
+
         deathCountIncrease: function() {
             let eV = vars.enemies;
             eV.deathTotal+=1;
@@ -572,6 +584,28 @@ var vars = {
             enemyBossPatternsCreate();
             eV.bossFireRatesInit();
             eV.replaceArrays.init();
+            eV.landingPositionsInit();
+        },
+
+        landingPositionsInit: function() {
+            let xInc = vars.canvas.width/12; // give us 11 positions
+            let positionsPerRow = 11;
+            let rows = 10; let cols = 9; // 90 positions are totally unnecessary as we will probably max out the rows at 7 and cols at 10 (ie 70 positions) TODO we should decide what these maximums are to limit the array
+            let maxEnemies=rows*cols;
+            let requiredRows = ~~(maxEnemies/positionsPerRow)+1;
+            let y = vars.canvas.height-50;
+
+            console.log('Total Possible Enemies: ' + maxEnemies + ', ' + 'Required rows: ' + requiredRows);
+
+            let landingPositions = [];
+            for (let r=0; r<requiredRows; r++) {
+                for (let x=xInc; x<vars.canvas.width; x+=xInc) { // build the landing array
+                    landingPositions.push([x,y]);
+                }
+                y-=40
+            }
+
+            vars.enemies.landingPositions = landingPositions;
         },
 
         setEnemyBulletDamage: function() {
