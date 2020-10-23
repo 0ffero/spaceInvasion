@@ -63,7 +63,6 @@ function preload() {
     versionText = scene.add.text(200, vars.canvas.height-20, 'VERSION ' + vars.version, { fontSize: 20, fontFamily: 'consolas', fill: '#F00' }).setOrigin(1,0.5).setName('version');
 
     scene.load.on('fileprogress', function (file) { preloadText.setText('Loading asset: ' + file.key); }); // as external file loads
-    scene.load.on('complete', function () { preloadText.destroy(); preloadText=undefined; });
 
     // MUSIC
     scene.load.audio('intro', 'music/intro.ogg');
@@ -164,14 +163,21 @@ function preload() {
     scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
     scene.gSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.gSPipeline.setFloat2('mouse', 0.0, 0.0);
+
     scene.cSPipeline = game.renderer.addPipeline('ColourScanline', new ColourScanlinePipeline(scene.game)); // <-- different variables!
     scene.cSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.cSPipeline.setFloat2('mouse', 0.0, 0.0);
+
     scene.gSSPipeline = game.renderer.addPipeline('GreenScreenScanline', new GreenScreenScanlinePipeline(scene.game)); // <-- different variables!
     scene.gSSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.gSSPipeline.setFloat2('mouse', 0.0, 0.0);
+
     scene.warpPipeline = game.renderer.addPipeline('EnemyBossWarpPipeline', new EnemyBossWarpPipeline(scene.game));
     scene.warpPipeline.setFloat2('resolution', game.config.width, game.config.height);
+
+    scene.bossSpinnerPipeline = game.renderer.addPipeline('EnemyBossSpinnerPipeline', new enemyBossSpinnerPipeline(scene.game));
+    scene.bossSpinnerPipeline.setFloat2('resolution', game.config.width, game.config.height);
+    scene.bossSpinnerPipeline.setFloat2('mouse', 0.0, 0.0);
 
     // set up the shader pipelines time variables
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
@@ -192,7 +198,8 @@ function create() {
         scene.gSPipeline.setFloat2('mouse', pointer.x, pointer.y);
         scene.gSSPipeline.setFloat2('mouse', pointer.x, pointer.y);
     });
-    scene.children.getByName('loadingText').destroy();
+    vars.cameras.preInit();
+
     let loaded = scene.add.image(vars.canvas.cX, vars.canvas.height-95, 'loaded').setName('loaded');
     scene.tweens.add({
         targets: loaded,
@@ -205,36 +212,40 @@ function create() {
     scene.sound.setVolume(vars.audio.volume); // this volume is roughly equal to the volume of a standard youtube video.
 
     // INPUT
+    preloadText.setText('Setting up Input');
     vars.input.init(); // keys that control the game config (music etc)
     inputInit(); // game controls
 
     // scenery animations init
+    preloadText.setText('Setting up Animations: Asteroids');
     animationInit('asteroids');
 
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
     // set up the groups and colliders
     // UI
-    scoreGroup = scene.add.group();
+    //let gV = vars.game;
+    scene.groups = {};
+    scene.groups.scoreGroup = scene.add.group();
 
     // player
-    shipUpgradeGroup    = scene.add.group();
-    shipPowerUpGroup    = scene.add.group();
+    scene.groups.shipUpgradeGroup = scene.add.group();
+    scene.groups.shipPowerUpGroup = scene.add.group();
+    preloadText.setText('Setting up Animations: Upgrades');
     animationInit('shipUpgrades');
     animationInit('upgrades');
-
-    bullets             = scene.physics.add.group();
+    bullets             = scene.physics.add.group(); // there are lots of links to this, do later TODO, should be scene.groups.bullets
 
     // enemies
-    enemies             = scene.physics.add.group();
-    enemyBossGroup      = scene.physics.add.group();
-    enemyBullets        = scene.physics.add.group();
-    enemyAttackingGroup = scene.physics.add.group();
+    enemies             = scene.physics.add.group(); // same with this one! Should be scene.groups.enemies
+    scene.groups.enemyBossGroup = scene.physics.add.group();
+    scene.groups.enemyBullets = scene.physics.add.group();
+    scene.groups.enemyAttackingGroup = scene.physics.add.group();
 
     // scenery
     alienPlanetContainer = scene.add.container();
-    nebulaGroup = scene.add.group();
-    sceneryGroup = scene.add.group();
-    wavesGroup = scene.add.group();
+    scene.groups.nebulaGroup = scene.add.group();
+    scene.groups.sceneryGroup = scene.add.group();
+    scene.groups.wavesGroup = scene.add.group();
 
     // add enemy count to the enemies var
     let note = '\n\nNOTES:\nAnother weird thing PHASER does... the frame total, for some inexplicable fukn\nreason is 1 more than the actual count. So we need a version check here :S\nIf we get an error on the count we know that this count CANNOT be trusted!';
@@ -249,15 +260,18 @@ function create() {
     animationInit('enemies');
 
     // draw the background(s)
+    preloadText.setText('Initialising game...');
     bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false).setDepth(0);
     vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
     // night time mask used on level 5 - 15
     scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
 
-    console.log('%c Generating Alien Planet', vars.console.callFrom);
+    //console.log('%c Generating Alien Planet', vars.console.callFrom);
+    preloadText.setText('Generating [REDCATED]');
     vars.scenery.generateAlienPlanet();
 
     // draw the player
+    preloadText.setText('Player');
     let sV = vars.player.ship;
     player = scene.physics.add.sprite(vars.canvas.cX, vars.canvas.height-75, 'player').setName('player').setVisible(false);//.setScale(vars.game.scale);
     player.setCollideWorldBounds(true);
@@ -265,13 +279,14 @@ function create() {
 
     // physics overlaps
     scene.physics.add.overlap(bullets, enemies, enemyHit, null, this);
-    scene.physics.add.overlap(bullets, enemyBossGroup, enemyBossHit, null, this);
-    scene.physics.add.overlap(enemyBullets, player, playerHit, null, this);
-    scene.physics.add.overlap(shipUpgradeGroup, player, shipUpgradePickUp, null, this);
-    scene.physics.add.overlap(shipPowerUpGroup, player, shipPowerUpPickUp, null, this);
-    scene.physics.add.overlap(enemyAttackingGroup, bullets, enemyAttackingHit, null, this);
+    scene.physics.add.overlap(bullets, scene.groups.enemyBossGroup, enemyBossHit, null, this);
+    scene.physics.add.overlap(scene.groups.enemyBullets, player, playerHit, null, this);
+    scene.physics.add.overlap(scene.groups.shipUpgradeGroup, player, shipUpgradePickUp, null, this);
+    scene.physics.add.overlap(scene.groups.shipPowerUpGroup, player, shipPowerUpPickUp, null, this);
+    scene.physics.add.overlap(scene.groups.enemyAttackingGroup, bullets, enemyAttackingHit, null, this);
 
     // set up the particles
+    preloadText.setText('Initialising Particle Systems');
     particles = scene.add.particles('particles');
     particlesInit();
 
@@ -279,4 +294,8 @@ function create() {
     scene.children.getByName('loadingImage').destroy();
     let loadingImage = scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loadedImage').setName('loadingImage').setInteractive();
     loadingImage.on('pointerdown', vars.game.introStart);
+
+    preloadText.destroy(); preloadText=undefined;
+
+    scene.children.getByName('loadingText').destroy();
 }

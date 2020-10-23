@@ -6,6 +6,7 @@ function main() {
     scene.gSSPipeline.setFloat1('time', scene.t);
     scene.cSPipeline.setFloat1('time', scene.t);
     scene.warpPipeline.setFloat1('time', scene.t);
+    //scene.enemyBossSpinnerPipeline.setFloat1('time', scene.t);
 
 
     if (vars.game.started===true && vars.game.paused===false) {
@@ -25,7 +26,7 @@ function main() {
             gV.bulletCheckTimeout[0] = gV.bulletCheckTimeout[1]; // reset the timeout
             vars.player.bulletCheck(); // check if the players bullets are off the screen
 
-            enemyBullets.children.each( (c)=> { // check each of the enemy bullets
+            scene.groups.enemyBullets.children.each( (c)=> { // check each of the enemy bullets
                 if (c.y>vars.canvas.height+100) { // just making sure its well out of the screen
                     c.destroy();
                 }
@@ -50,8 +51,8 @@ function main() {
             vars.enemies.update();
         }
         // update any bosses (even if the player is dead the boss will continue to animate)
-        if (enemyBossGroup.children.size>0) {
-            enemyBossGroup.children.each( (c)=> {
+        if (scene.groups.enemyBossGroup.children.size>0) {
+            scene.groups.enemyBossGroup.children.each( (c)=> {
                 enemyBossUpdate(c);
             })
         }
@@ -71,7 +72,7 @@ function main() {
     if (vars.player.isDead===false && vars.game.started===true) {
         let pausedReason = vars.game.pausedReason;
         if (pausedReason!=='highlight') { // if we ARENT highlighting something, we let the scenery work as normal
-            if (vars.levels.currentWaveBG==='grass' || vars.levels.currentWaveBG==='water') { // the grass has scenery (barns, trees)
+            if (vars.levels.currentWaveBG==='grass' || vars.levels.currentWaveBG==='water' || vars.levels.currentWaveBG==='space' || vars.levels.currentWaveBG==='nebula') { // the grass has scenery (barns, trees)
                 vars.scenery.update();
             }
         }

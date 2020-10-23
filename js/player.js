@@ -110,7 +110,7 @@ function healthBulletUpgradeSpawn(_spawnXY,_fU='') {
         }
 
         if (error===false) {
-            shipPowerUpGroup.add(hpU);
+            scene.groups.shipPowerUpGroup.add(hpU);
             vars.cameras.ignore(cam2, hpU);
             scene.tweens.add({
                 targets: hpU,
@@ -184,6 +184,7 @@ function playerHit(_player, _bullet) {
 
         } else { // player is dead
             console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
+            scene.children.getByName('hpTextIntS').setText('Destroyed!');
             scene.children.getByName('hpTextInt').setText('Destroyed!');
             vars.cameras.shake(cam1, 750);
             /* vars.game.pause(); */
@@ -261,7 +262,7 @@ class shipUpgrade { // these are created when a boss is killed
         } else { // the player hasnt fully upgraded their ship, spawn ship upgrade crate
             let upgradeBox = scene.physics.add.sprite(this.spawnX, this.spawnY, 'upgradeBox', 0).setScale(1).setData('upgrade', sV.upgrades);
             upgradeBox.anims.play('shipGrade' + sV.upgrades);
-            shipUpgradeGroup.add(upgradeBox);
+            scene.groups.shipUpgradeGroup.add(upgradeBox);
             vars.cameras.ignore(cam2, upgradeBox);
             scene.tweens.add({
                 targets: upgradeBox,

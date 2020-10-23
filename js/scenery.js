@@ -49,7 +49,7 @@ class scenery {
             this.sceneryObject = scene.add.image(startX, sV.yPosition, this.type, frame).setScale(sV.spawnScale).setName(this.name);
 
             // add object to the scenery group
-            sceneryGroup.add(this.sceneryObject);
+            scene.groups.sceneryGroup.add(this.sceneryObject);
             vars.cameras.ignore(cam2, this.sceneryObject);
 
             // add tween to this new scenery object

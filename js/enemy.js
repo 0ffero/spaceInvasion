@@ -329,9 +329,10 @@ class enemyBoss {
         var thisSprite = scene.physics.add.sprite(this.startPosition[0], this.startPosition[1], 'enemies', this.sprite).setScale(this.scale).setAlpha(0);
         thisSprite.setData({ hp: this.hp, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
         let thisSpriteBody = thisSprite.body;
-        enemyBossGroup.add(boss);
+        scene.groups.enemyBossGroup.add(boss);
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
         boss.data = thisSprite.data; // and data after adding it to the group.. because Phaser :S
+        vars.cameras.ignore(cam2, boss);
         scene.tweens.add({
             targets: thisSprite,
             alpha: 1,
@@ -539,7 +540,7 @@ function enemyDeath(enemy) {
         shaderType('warp',1);
     }
     if (eV.bossSpawnTimeout[0]<=0) {
-        if (enemyBossGroup.children.size<eV.bossLimit) {
+        if (scene.groups.enemyBossGroup.children.size<eV.bossLimit) {
             //console.log('Spawning a Boss');
             vars.enemies.spawnBoss();
         } else {
@@ -623,7 +624,7 @@ function enemyHit(bullet, enemy, attacker=false) {
         let tint = vars.enemies.colours[enemyType];
         enemyPieceParticle.setTint(tint[1]);
         if (attacker===true) {
-            let aE = enemyAttackingGroup.children.get('name', 'f_' + enemy.name);
+            let aE = scene.groups.enemyAttackingGroup.children.get('name', 'f_' + enemy.name);
             if (aE!==undefined) {
                 position = [aE.x, aE.y];
             } else {

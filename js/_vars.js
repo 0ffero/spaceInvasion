@@ -49,18 +49,15 @@ var vars = {
 
         init: function() {
             // CAMERAS
-            //scene.cameras.main.ignore([ scoreGroup ]);
+            let nightTimeMask = scene.children.getByName('nightTimeMask');
+            cam2.ignore([ bG, enemies, scene.groups.wavesGroup, nightTimeMask, alienPlanetContainer ]);
+            shaderType('colour',1);
+        },
+        
+        preInit: function() {
             cam1 = scene.cameras.main;
             cam2 = scene.cameras.add(0, 0, vars.canvas.width, vars.canvas.height); // used for switching between shaders smoothly
             cam2.setAlpha(0);
-            // theres no point in adding these yet as there are no bodies at the start of the game
-            // shipUpgradeGroup, shipPowerUpGroup, bullets, enemyBossGroup, enemyBullets, enemyAttackingGroup, sceneryGroup
-            // basically when each of these are created (each bullet, each tree etc) you have to specifically tell phaser that cam2 cant see them
-            // due to the way this works theres now a function called cam2Ignore() in game.js
-            let nightTimeMask = scene.children.getByName('nightTimeMask');
-            cam2.ignore([ bG, enemies, wavesGroup, nightTimeMask ]);
-
-            shaderType('colour',1);
         },
 
         shake: function(_cam=cam1, _duration=200) {
@@ -95,25 +92,56 @@ var vars = {
     },
 
     cheats: {
-        annihilate: function() {
+        annihilate: function(_all=false) {
             let first=true;
             enemies.children.each( (c)=> {
-                if (first===true) {
-                    first=false;;
+                if (first===true && _all===false) {
+                    first=false;
                 } else {
                     c.destroy();
                 }
             })
+
+            if (_all===true) { // load the next wave
+                gameLevelNext();
+            }
         },
+
         bossSpawn: function() {
             vars.enemies.spawnBoss();
         },
-        
         bossSpawnCthulhu: function() {
             vars.levels.wave=3
             vars.enemies.bossNext=4
             vars.cheats.bossSpawn()
-        }
+        },
+
+        levelGroupSkip: function() {
+            let levelGroups = [10,15,20,25,30,35];
+            for (level of levelGroups) {
+                if (vars.levels.wave<level) {
+                    let nextLevel = level-1;
+                    console.log('Skipping to: ' + nextLevel);
+                    vars.levels.wave = nextLevel;
+                    vars.cheats.annihilate(true);
+                    vars.cheats.removeOldLevelScenery(level);
+                    break;
+                }
+            }
+        },
+
+        levelSkip: function() {
+            vars.cheats.annihilate(true);
+        },
+
+        removeOldLevelScenery: function(_level) {
+            if (lV.wave===20 || lV.wave===25 || lV.wave===30 || lV.wave===35 || lV.wave===45) { // space stars, nebula, corona, alien cities, boss
+                lV.currentWaveBG = lV.waveBGs[lV.wave];
+                changeBackground = true;
+            }
+
+            if (bG.visible===true) { bG.visible=false; }
+        },
     },
 
     console: {
@@ -135,7 +163,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.940ᵦ',
+    version : '0.944ᵦ',
 
 
     audio: {
@@ -284,7 +312,7 @@ var vars = {
         width: -1,
 
         attackersFireUpdate: function(_enemyCount) {
-            enemyAttackingGroup.children.each( (c)=> {
+            scene.groups.enemyAttackingGroup.children.each( (c)=> {
                 let progress = c.pathTween.totalProgress;
                 //console.log('Current Progress: ' + progress);
 
@@ -381,7 +409,7 @@ var vars = {
                     let enemyName = enemy.name; // needed to re-enable the real enemy sprite
                     let enemySpriteFrame = enemy.frame.name%vars.enemies.spriteCount;
                     let attackingEnemy = scene.add.follower(path, enemyXY[0], enemyXY[1], 'enemies', enemySpriteFrame).setName('f_' + enemyName).setScale(vars.game.scale);
-                    enemyAttackingGroup.add(attackingEnemy);
+                    scene.groups.enemyAttackingGroup.add(attackingEnemy);
                     vars.cameras.ignore(cam2, attackingEnemy);
 
                     let resets = [fireTimings.bulletCount, fireTimings.bulletSpacing, fireTimings.fireSpacing ];
@@ -479,7 +507,7 @@ var vars = {
             theBullet.setName('bullet_' + generateRandomID());
             theBullet.setData({ hp: _strength, boss: _boss });
             scene.sound.play('enemyShoot');
-            enemyBullets.add(theBullet);
+            scene.groups.enemyBullets.add(theBullet);
             if (_cam2Ignore===true) {
                 vars.cameras.ignore(cam2, theBullet);
             }
@@ -493,8 +521,8 @@ var vars = {
             let eV = vars.enemies;
             eV.deathTotal+=1;
             // update the dead total text
-            let deaths = scene.children.getByName('deathTextInt');
-            deaths.setText(eV.deathTotal);
+            scene.children.getByName('deathTextIntS').setText(eV.deathTotal);
+            scene.children.getByName('deathTextInt').setText(eV.deathTotal);
         },
 
         debugBossPatterns: function() {
@@ -507,22 +535,22 @@ var vars = {
         },
 
         destroyAllAttackers: function() {
-            if (enemyAttackingGroup.children.size>0) {
-                enemyAttackingGroup.children.each( (c)=> {
+            if (scene.groups.enemyAttackingGroup.children.size>0) {
+                scene.groups.enemyAttackingGroup.children.each( (c)=> {
                     c.destroy();
                 })
             }
         },
 
         destroyAllBullets: function() {
-            enemyBullets.children.each( (c)=> {
+            scene.groups.enemyBullets.children.each( (c)=> {
                 c.destroy();
             })
         },
 
         destroyAllBosses: function() {
-            if (enemyBossGroup.children.size>0) {
-                enemyBossGroup.children.each( (c)=> {
+            if (scene.groups.enemyBossGroup.children.size>0) {
+                scene.groups.enemyBossGroup.children.each( (c)=> {
                     c.destroy();
                 })
             }
@@ -651,8 +679,8 @@ var vars = {
             // now we check to see if the enemies should be shooting (only happens every few seconds)
             eV.shootTimeoutDo();
             eV.attackTimeoutDo();
-            if (enemyAttackingGroup.children.size>0) {
-                eV.attackersFireUpdate(enemyAttackingGroup.children.size);
+            if (scene.groups.enemyAttackingGroup.children.size>0) {
+                eV.attackersFireUpdate(scene.groups.enemyAttackingGroup.children.size);
             }
         }
 
@@ -683,7 +711,7 @@ var vars = {
 
         createWaterTweens: function() {
             // create the tweens in paused state (also invisible) as they arent used until wave 10
-            wavesGroup.children.each( (c, i)=> {
+            scene.groups.wavesGroup.children.each( (c, i)=> {
                 scene.tweens.add({
                     paused: false,
                     targets: c,
@@ -702,7 +730,7 @@ var vars = {
             let yOffset = 940
             for (let i = 0; i < 45; i++) {
                 let waterimage = scene.add.image(8 + i * 16, yOffset, 'waterGradient').setVisible(false);
-                wavesGroup.add(waterimage);
+                scene.groups.wavesGroup.add(waterimage);
             }
         },
 
@@ -736,7 +764,7 @@ var vars = {
                 storyInit();
                 player.setDepth(10);
 
-                // cameras
+                // init camera views
                 vars.cameras.init();
                 vars.cameras.ignore(cam2, player);
 
@@ -762,8 +790,8 @@ var vars = {
                 c.setVisible(false);
             })
             // destroy the scenery currently visible as were about to speed up the tween speed
-            if (sceneryGroup.children.size>0) {
-                sceneryGroup.children.each( (c)=>{
+            if (scene.groups.sceneryGroup.children.size>0) {
+                scene.groups.sceneryGroup.children.each( (c)=>{
                     c.destroy();
                 })
             }
@@ -874,17 +902,15 @@ var vars = {
                     vars.levels.stellarCorona();
 
                     // show the alien cities
-                    alienPlanetGroup.setVisible(false);
-
                     scene.tweens.add({
-                        targets: alienPlanetGroup,
+                        targets: alienPlanetContainer,
                         ease: 'Linear',
                         alpha: 0.5,
                         duration: 5000,
                     })
 
                     scene.tweens.add({
-                        targets: alienPlanetGroup,
+                        targets: alienPlanetContainer,
                         ease: 'Linear',
                         y: 10000,
                         duration: 180000,
@@ -913,7 +939,7 @@ var vars = {
 
                 case 'space': // wave 20
                     // fade out the waves
-                    wavesGroup.children.each( (c)=> {
+                    scene.groups.wavesGroup.children.each( (c)=> {
                         scene.tweens.add({ paused: false, targets: c, alpha: 0, duration: 1000, ease: 'Quad.easeInOut' });
                     })
 
@@ -935,7 +961,7 @@ var vars = {
 
                 case 'stellar': // wave 30
                     // hide any nebulae & galaxies (we just hide them as they have callbacks that destroy them)
-                    nebulaGroup.children.each( (c)=> {
+                    scene.groups.nebulaGroup.children.each( (c)=> {
                         scene.tweens.add({
                             targets: c,
                             alpha: 0,
@@ -950,7 +976,7 @@ var vars = {
 
                 case 'water': // wave 10
                     vars.game.createWaterTweens();
-                    wavesGroup.children.each( (c)=> {
+                    scene.groups.wavesGroup.children.each( (c)=> {
                         c.setVisible(true);
                     });
                 break;
@@ -1112,6 +1138,7 @@ var vars = {
             let lV = vars.levels;
             lV.wave++;
             // update the overlay
+            scene.children.getByName('waveTextIntS').setText(lV.wave);
             scene.children.getByName('waveTextInt').setText(lV.wave);
             lV.wavePopupVisible=true;
             if (lV.wave===10) { // level 10 stops bosses being destroyed between waves
@@ -1214,7 +1241,8 @@ var vars = {
             gV.scores.current += _score;
 
             //draw the score
-            let scoreText = scene.children.getByName('scoreTextInt').setText(gV.scores.current);
+            scene.children.getByName('scoreTextIntS').setText(gV.scores.current);
+            scene.children.getByName('scoreTextInt').setText(gV.scores.current);
         },
 
         shieldChange: function(_upgrade=false) {
@@ -1436,7 +1464,7 @@ var vars = {
                     let x = _xy[0]; let y = _xy[1];
                     let upG = scene.physics.add.sprite(x,y,'upgradesS').setScale(0.4).anims.play('amstradField');
                     upG.setData('upgrade', 'fx_ADI');
-                    shipPowerUpGroup.add(upG);
+                    scene.groups.shipPowerUpGroup.add(upG);
                     let paused = false;
                     console.log('ADDING TWEEN');
                     if (ssV.ADI.seenBefore===false) {
@@ -1486,7 +1514,7 @@ var vars = {
                     let x = _xy[0]; let y = _xy[1];
                     let upG = scene.physics.add.sprite(x,y,'upgradesS').setScale(0.4).anims.play('shadeField');
                     upG.setData('upgrade', 'fx_SHADE');
-                    shipPowerUpGroup.add(upG);
+                    scene.groups.shipPowerUpGroup.add(upG);
                     let paused = false;
                     if (ssV.SHADE.seenBefore===false) {
                         ssV.SHADE.seenBefore = true;
@@ -1597,6 +1625,7 @@ var vars = {
 
         asteroidGenerate(_tween, _asteroid) {
             if (vars.scenery.asteroidsRunning===false) { vars.scenery.asteroidsRunning=true; }
+            let count=16;
             if (_asteroid!==undefined) {
                 _asteroid[0].destroy();
                 count=1;
@@ -1604,7 +1633,6 @@ var vars = {
             
             if (vars.levels.wave<20 || vars.levels.wave>29) { return false; } // make sure we should be generating new asteroids
             
-            let count=16;
             let sV = vars.scenery;
             if (sV.asteroidXArray.length===0) {
                 sV.asteroidInit();
@@ -1620,7 +1648,8 @@ var vars = {
                 //console.log('anim: ' + anim + ', x: ' + x);
                 let scale = Phaser.Math.RND.between(1, 3)/12.5; // this gives us a scale between 0.08 and 0.24
                 let asteroid = scene.add.sprite(x,defaultStartY-(yOffset/2),'asteroid1','a1frame1').setScale(scale);
-                sceneryGroup.add(asteroid);
+                vars.cameras.ignore(cam2, asteroid);
+                scene.groups.sceneryGroup.add(asteroid);
                 asteroid.anims.play(anim);
                 scene.tweens.add({
                     targets: asteroid,
@@ -1668,7 +1697,8 @@ var vars = {
             let frame = Phaser.Math.RND.pick(frameArray);
         
             let carrier = scene.add.image(x,800,'ships','ship' + frame).setScale(0.0);
-            sceneryGroup.add(carrier);
+            scene.groups.sceneryGroup.add(carrier);
+            vars.cameras.ignore(cam2, carrier);
             scene.tweens.add({
                 targets: carrier,
                 y: 1400,
@@ -1714,8 +1744,9 @@ var vars = {
                 for (let r=0; r<rMax; r++) { // draw each row (consisting of 4 pieces side by side)
                     let x = r * pieceWidth;
                     //console.log('Placing piece at: ' + x + ',' + y);
-                    let piece = scene.add.image(x,y, 'alienPlanet', colData[r][c]);
+                    let piece = scene.add.image(x,y, 'alienPlanet', colData[r][c]).setName('alienPlanetPiece_r' + r + '_c' + c);
                     alienPlanetContainer.add(piece);
+                    vars.cameras.ignore(cam2, piece);
                 }
             }
             // offset the y
@@ -1751,16 +1782,17 @@ var vars = {
 
                 let x = Phaser.Math.RND.between(1, 7) * 100;
                 let frame = Phaser.Math.RND.between(0,2);
-                let a = scene.add.image(x, -100, 'galaxies', frame).setScale(0.4+scaleOffset).setAlpha(0.2).setRotation(angle).setDepth(-1).setName('gxy_' + generateRandomID());
-                nebulaGroup.add(a);
+                let nG = scene.add.image(x, -100, 'galaxies', frame).setScale(0.4+scaleOffset).setAlpha(0.2).setRotation(angle).setDepth(-1).setName('gxy_' + generateRandomID());
+                scene.groups.nebulaGroup.add(nG);
+                vars.cameras.ignore(cam2, nG);
 
                 scene.tweens.add({
-                    targets: a,
+                    targets: nG,
                     delay: g*delay,
                     y: 1180,
                     angle: finalAngle,
                     ease: 'linear',
-                    blendMode: 'ADD',
+                    blendMode: 'MULTIPLY',
                     duration: duration/speed, // larger galaxies move faster to emulate distance from camera
                     onComplete: vars.scenery.generateNewGalaxy,
                 })
@@ -1781,7 +1813,7 @@ var vars = {
                 let frame = Phaser.Math.RND.between(0,5);
                 let nO0 = scene.add.image(x, -1080, 'nebulae', frame).setAlpha(0.75).setDepth(-1);
                 vars.cameras.ignore(cam2, nO0);
-                nebulaGroup.add(nO0);
+                scene.groups.nebulaGroup.add(nO0);
 
                 scene.tweens.add({
                     delay: duration/2,
@@ -1796,7 +1828,7 @@ var vars = {
                 let frames = [Phaser.Math.RND.between(0,5),Phaser.Math.RND.between(0,5)];
                 let nO0 = scene.add.image(x, y, 'nebulae', frames[0]).setAlpha(0.75).setDepth(-1);
                 let nO1 = scene.add.image(x, y-1080, 'nebulae', frames[1]).setAlpha(0.75).setDepth(-1);
-                nebulaGroup.addMultiple([nO0, nO1]);
+                scene.groups.nebulaGroup.addMultiple([nO0, nO1]);
                 vars.cameras.ignore(cam2, nO0); vars.cameras.ignore(cam2, nO1);
 
                 scene.tweens.add({
@@ -1921,14 +1953,22 @@ var vars = {
         },
 
         hpUpdate: function() {
+            scene.children.getByName('hpTextIntS').setText(vars.player.hitpoints);
             scene.children.getByName('hpTextInt').setText(vars.player.hitpoints);
         }
     },
 
     video: {
         play: function() {
-            let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(21*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0.07).setName('introVideo').setLoop(true);
+            let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(21*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0).setName('introVideo').setLoop(true);
             video.playWhenUnlocked=true;
+            scene.tweens.add({
+                targets: video,
+                delay: 2000,
+                alpha: 0.07,
+                ease: 'linear',
+                duration: 3000,
+            })
             scene.tweens.add({
                 targets: video,
                 rotation: -21*(Math.PI/180),

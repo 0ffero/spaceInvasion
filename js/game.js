@@ -46,9 +46,10 @@ function storyInit() {
 
     scene.tweens.add({
         targets: storyText,
+        delay: 0,
         alpha: 0.7,
-        ease: 'linear',
-        duration: 5000,
+        ease: 'Quad.easeIn',
+        duration: 7000,
     })
 
     scene.tweens.add({
@@ -90,6 +91,21 @@ function startGame() {
     // set up the score text
     scene.children.getByName('levelBG').setVisible(true);
     vars.game.started=true;
+
+    // text shadows
+    let shadowOffset = sO = [5,3];
+    let alpha = 0.3;
+    let scoreTitleShadow = scene.add.bitmapText(10+sO[0], 5+sO[1], 'azo', 'Score:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
+    let scoreShadow = scene.add.bitmapText(120+sO[0], 5+sO[1], 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextIntS').setTint(0x000000).setAlpha(alpha);
+    let waveTitleShadow = scene.add.bitmapText(vars.canvas.width*0.69+sO[0], 5+sO[1], 'azo', 'Wave:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
+    let waveShadow = scene.add.bitmapText(vars.canvas.width*0.69+105+sO[0], 5+sO[1], 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextIntS').setTint(0x000000).setAlpha(alpha);
+    let deathsTitleShadow = scene.add.bitmapText(vars.canvas.width*0.35+sO[0], 1080-30+sO[1], 'azo', 'Enemies destroyed:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
+    let deathsShadow = scene.add.bitmapText(vars.canvas.width*0.35+300+sO[0], 1080-30+sO[1], 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextIntS').setTint(0x000000).setAlpha(alpha);
+    let hpTitleShadow = scene.add.bitmapText(10+sO[0], 1080-30+sO[1], 'azo', 'HP:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
+    let hpShadow = scene.add.bitmapText(65+sO[0], 1080-30+sO[1], 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextIntS').setTint(0x000000).setAlpha(alpha);
+    scene.groups.scoreGroup.addMultiple([scoreTitleShadow, scoreShadow, waveTitleShadow, waveShadow, deathsTitleShadow, deathsShadow, hpTitleShadow, hpShadow]);
+
+    // actual text
     let scoreTitle = scene.add.bitmapText(10, 5, 'azo', 'Score:', 24).setOrigin(0);
     let score = scene.add.bitmapText(120, 5, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
     let waveTitle = scene.add.bitmapText(vars.canvas.width*0.69, 5, 'azo', 'Wave:', 24).setOrigin(0);
@@ -98,8 +114,9 @@ function startGame() {
     let deaths = scene.add.bitmapText(vars.canvas.width*0.35+300, 1080-30, 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextInt');
     let hpTitle = scene.add.bitmapText(10, 1080-30, 'azo', 'HP:', 24).setOrigin(0);
     let hp = scene.add.bitmapText(65, 1080-30, 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextInt');
-    scoreGroup.addMultiple([scoreTitle, score, waveTitle, wave, deathsTitle, deaths, hpTitle, hp]);
-    cam1.ignore(scoreGroup);
+    scene.groups.scoreGroup.addMultiple([scoreTitle, score, waveTitle, wave, deathsTitle, deaths, hpTitle, hp]);
+
+    cam1.ignore(scene.groups.scoreGroup);
 
     // delete the intro music
     scene.sound.sounds.forEach( (c)=> {
