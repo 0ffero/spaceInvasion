@@ -9,7 +9,7 @@ function animationInit(_spriteName) {
         scene.anims.create({
             key: 'asteroid1a',
             frames: scene.anims.generateFrameNumbers(selectedSprite, { frames: frameNames }),
-            frameRate: 12,
+            frameRate: 6,
             repeat: -1
         });
         
@@ -17,7 +17,7 @@ function animationInit(_spriteName) {
         scene.anims.create({
             key: 'asteroid1b',
             frames: scene.anims.generateFrameNumbers(selectedSprite, { frames: frameNames }),
-            frameRate: 12,
+            frameRate: 6,
             repeat: -1
         });
 
@@ -28,7 +28,7 @@ function animationInit(_spriteName) {
         scene.anims.create({
             key: 'asteroid2a',
             frames: scene.anims.generateFrameNumbers(selectedSprite, { frames: frameNames }),
-            frameRate: 12,
+            frameRate: 6,
             repeat: -1
         });
     }

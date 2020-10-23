@@ -134,6 +134,23 @@ var vars = {
             vars.cheats.annihilate(true);
         },
 
+        levelSkipTo: function(_level=-1) {
+            let wave = _level;
+            if (_level===-1) {
+                wave = vars.levels.wave+1;
+            }
+            var cWave = vars.levels.wave;
+            //let skipLevelCount = wave-cWave;
+            var skip = setInterval( function() {
+                if (cWave<wave) {
+                    vars.cheats.levelSkip();
+                    cWave++;
+                } else {
+                    clearInterval(skip);
+                }
+            },333, this)
+        },
+
         removeOldLevelScenery: function(_level) {
             if (lV.wave===20 || lV.wave===25 || lV.wave===30 || lV.wave===35 || lV.wave===45) { // space stars, nebula, corona, alien cities, boss
                 lV.currentWaveBG = lV.waveBGs[lV.wave];
@@ -1660,7 +1677,8 @@ var vars = {
         },
 
         asteroidGenerate(_tween, _asteroid) {
-            if (vars.scenery.asteroidsRunning===false) { vars.scenery.asteroidsRunning=true; }
+            let setDepth=false;
+            if (vars.scenery.asteroidsRunning===false) { vars.scenery.asteroidsRunning=true; setDepth=true; }
             let count=16;
             if (_asteroid!==undefined) {
                 _asteroid[0].destroy();
@@ -1674,24 +1692,31 @@ var vars = {
                 sV.asteroidInit();
             }
 
-            let defaultStartY = -300;
-            let defaultEndY = vars.canvas.height+300;
+            let defaultStartY = -100;
+            let defaultEndY = vars.canvas.height+100;
+            let layerSpeeds = [null,8131,4267,119]; // these offsets make the asteroids more "random" without the overhead of generating a random ms offset
+            let layerTints = [null,0x454545,0x696969,0xbbbbbb];
 
-            for (a=0; a<count; a++) {
+            for (let a=0; a<count; a++) {
                 let x = Phaser.Math.RND.pick(sV.asteroidXArray);
-                let yOffset = Phaser.Math.RND.pick([50, 100, 150, 200, 250, 300, 350]);
                 let anim = Phaser.Math.RND.pick(['asteroid1a','asteroid1b','asteroid2a']);
-                //console.log('anim: ' + anim + ', x: ' + x);
-                let scale = Phaser.Math.RND.between(1, 3)/12.5; // this gives us a scale between 0.08 and 0.24
-                let asteroid = scene.add.sprite(x,defaultStartY-(yOffset/2),'asteroid1','a1frame1').setScale(scale);
+                let layer = Phaser.Math.RND.between(1, 3);
+                let delay = 1000*a;
+                // set the duration based on the layer (basically the sprites size)
+                let duration = 8000 + layerSpeeds[layer];
+                let scale = layer/9; // this gives us a scale between 0.1 and 0.3
+                let tint = layerTints[layer];
+                let angle = Phaser.Math.RND.angle();
+                console.log('Layer: ' + layer + ', Duration: ' + duration + ', Scale: ' + scale + ', Angle: ' + angle + ', tint: #' + tint.toString(16));
+                let asteroid = scene.add.sprite(x,defaultStartY,'asteroid1','a1frame1').setScale(scale).setDepth(-1).setTint(tint).setRotation(angle);
                 vars.cameras.ignore(cam2, asteroid);
                 scene.groups.sceneryGroup.add(asteroid);
                 asteroid.anims.play(anim);
                 scene.tweens.add({
                     targets: asteroid,
-                    delay: a*1000,
-                    y: defaultEndY+(yOffset/2),
-                    duration: 16000,
+                    delay: delay,
+                    y: defaultEndY,
+                    duration: duration,
                     ease: 'Linear',
                     onComplete: vars.scenery.asteroidGenerate,
                 })
