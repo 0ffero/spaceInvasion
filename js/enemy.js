@@ -383,7 +383,11 @@ function enemyBossHit(_bullet, _boss) {
             vars.cameras.flash('white', 2500);
             let points = _boss.getData('points');
             let enemyType = _boss.getData('enemyType'); // 5 is the cthulhu boss
-            shaderType('default',1);
+            if (vars.shader.current==='gray' || vars.shader.current==='grey' || vars.shader.current==='grayscan' || vars.shader.current==='greyscan') { // is the shade field running?
+                if (enemyType===5) { // only switch it off if the boss that died was cthulhu
+                    shaderType('default',1);
+                }
+            }
             pV.increaseScore(points);
             if (lV.wave===1) { // on wave 1 we take it easy on the player by resetting the enemy death count to max
                 eV.bossSpawnTimeout[0]=eV.bossSpawnTimeout[1];

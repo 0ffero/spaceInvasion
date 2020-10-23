@@ -311,8 +311,8 @@ var TV = new Phaser.Class({
 });
 
 // FUNCTIONS
-function shaderType(_shaderName='scan', _cam=1) {
-    vars.shader.current = 'default';
+function shaderType(_shaderName='default', _cam=1) {
+    let update = false;
     switch (_shaderName) {
         case 'warp':
             if (_cam===2) {
@@ -322,6 +322,7 @@ function shaderType(_shaderName='scan', _cam=1) {
                 cam2.setAlpha(1);
                 cam2.ignore(storyText);
             }
+            update = true;
         break;
 
         case 'colour': case 'colourscan': case 'default':
@@ -335,6 +336,7 @@ function shaderType(_shaderName='scan', _cam=1) {
                     cam2.setAlpha(1);
                     cam2.ignore(storyText);
                 }
+                update = true;
             }
         break;
 
@@ -346,6 +348,7 @@ function shaderType(_shaderName='scan', _cam=1) {
                 cam2.setAlpha(1);
                 cam2.ignore(storyText);
             }
+            update = true;
         break;
 
         case 'gray': case 'grey': case 'grayscan': case 'greyscan':
@@ -356,6 +359,7 @@ function shaderType(_shaderName='scan', _cam=1) {
                 cam2.setAlpha(1);
                 cam2.ignore(storyText);
             }
+            update = true;
         break;
 
         case 'none': case 'disable':
@@ -364,6 +368,11 @@ function shaderType(_shaderName='scan', _cam=1) {
             } else {
                 cam1.clearRenderToTexture();
             }
+            update = true;
         break;
+    }
+
+    if (update===true) {
+        vars.shader.current = _shaderName;
     }
 }

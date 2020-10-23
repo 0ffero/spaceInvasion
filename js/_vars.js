@@ -952,14 +952,16 @@ var vars = {
                         scene.rain.setActive(false).setVisible(false); scene.rain.destroy(); scene.rain = undefined;
                     }
 
-                    // disable the old static stars emitter (we dont delete in as I may use them again after level 46)
-                    starEmitter.remove();
+                    // increase the max Y for the default star emitter
+                    vars.scenery.starsMaxY = vars.canvas.height;
 
                     // enable the new space stars emitter
                     vars.levels.starsSpace();
                 break;
 
                 case 'stellar': // wave 30
+                    // disable the old static stars emitter (we dont delete in as I may use them again after level 46)
+                    starEmitter.remove();
                     // hide any nebulae & galaxies (we just hide them as they have callbacks that destroy them)
                     scene.groups.nebulaGroup.children.each( (c)=> {
                         scene.tweens.add({
