@@ -570,10 +570,6 @@ function enemyDestroy() {
     }
 }
 
-function enemiesGenerate() {
-    vars.enemies.spawn();
-}
-
 function enemyGetRandom() {
     let enemyArray = enemies.children.getArray();
     let enemyChildCount = enemies.children.size;
@@ -814,9 +810,7 @@ function enemiesStopAnims() {
 function enemiesInit() {
     vars.enemies.init();
 }
-function enemiesSpawn() {
-    vars.enemies.spawn();
-}
+
 function enemiesUpdate() {
     vars.enemies.update();
 }

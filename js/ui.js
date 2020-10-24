@@ -4,6 +4,10 @@ function uiGameOver() {
     if (gV.scores.current>gV.scores.best) { console.log('High Score!'); gV.scores.best = gV.scores.current; }
     gV.scores.current = 0;
 
+    // hide any upgrades left on the screen
+    scene.groups.shipUpgradeGroup.setVisible(false);
+    scene.groups.shipPowerUpGroup.setVisible(false);
+
     let gameOverText = scene.add.bitmapText(vars.canvas.cX, vars.canvas.cY, 'azo', 'Game Over!', 64).setOrigin(0.5).setAlpha(0);
     //console.log(' FADING IN GAME OVER');
     scene.tweens.add({

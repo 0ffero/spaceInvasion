@@ -87,6 +87,7 @@ function preload() {
 
     // ENEMIES
     scene.load.spritesheet('enemies', 'enemy/enemies-ext.png', { frameWidth: 100, frameHeight: 100, margin: 1, spacing: 2 });
+    scene.load.image('enemyBossBuildingBlock', 'enemy/enemyBuildingBlock.gif');
     // BULLET
     scene.load.spritesheet('bulletPrimaryEnemy', 'enemy/bulletPrimary-ext.png', { frameWidth: 34, frameHeight: 42, margin: 1, spacing: 2 });
 

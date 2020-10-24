@@ -1,28 +1,38 @@
 var fps = 60;
 var gameScale = 0.4;
 
+const constsLevelGroups = {
+    GRASS        :  0,
+    WATER        : 10,
+    SPACE        : 20,
+    NEBULA       : 25,
+    STELLAR      : 30,
+    ALIENCITIES  : 35,
+    BOSS         : 45
+}
+
 const constsM = { // mouse buttons
     mouse: {
-        left: 1,
-        right: 2,
-        middle: 4,
-        mouse4: 8,
-        mouse5: 16,
+        left   : 1,
+        right  : 2,
+        middle : 4,
+        mouse4 : 8,
+        mouse5 : 16
     }
 }
 
 const constsPS = { // player shields frames
-    NO_SHIELD:    12,
-    LOW_SHIELD:    9,
-    RED_SHIELD:    6,
-    ORANGE_SHIELD: 3,
-    GREEN_SHIELD:  0,
+    NO_SHIELD     : 12,
+    LOW_SHIELD    :  9,
+    RED_SHIELD    :  6,
+    ORANGE_SHIELD :  3,
+    GREEN_SHIELD  :  0
 }
 
 const constsD = { // depth of sprite groups
-    BG: 1,
-    SCENERY: 20,
-    MAIN: 50
+    BG      :  1,
+    SCENERY : 20,
+    MAIN    : 50
 }
 
 
@@ -114,20 +124,6 @@ var vars = {
             vars.levels.wave=3
             vars.enemies.bossNext=4
             vars.cheats.bossSpawn()
-        },
-
-        levelGroupSkip: function() {
-            let levelGroups = [10,15,20,25,30,35];
-            for (level of levelGroups) {
-                if (vars.levels.wave<level) {
-                    let nextLevel = level-1;
-                    console.log('Skipping to: ' + nextLevel);
-                    vars.levels.wave = nextLevel;
-                    vars.cheats.annihilate(true);
-                    vars.cheats.removeOldLevelScenery(level);
-                    break;
-                }
-            }
         },
 
         levelSkip: function() {
@@ -277,6 +273,9 @@ var vars = {
         maxYForWinCondition: 800,
         moveDirectionCurrent: 'right',
         moveDirectionPrevious: 'down',
+        paths: { // these are for level 20+
+            path1: new Phaser.Curves.Path(-40, 540).lineTo(360+150, 540).circleTo(150,true).circleTo(150,true).lineTo(720+40, 540),
+        },
         removeBosses: true,
 
         replaceArrays: {
@@ -584,7 +583,7 @@ var vars = {
                 })
             }
         },
-        
+
         increaseEnemySpeed() {
             let eV = vars.enemies;
             eV.speed < eV.speeds.max ? eV.speed +=5 : eV.speed = eV.speeds.max;
@@ -660,8 +659,18 @@ var vars = {
             eV.speed = 50 + (vars.levels.wave*2);
             let xPos = vars.game.rowStartY;
             eV.moveDirectionPrevious = eV.moveDirectionCurrent = 'right';
-            for (let row=1; row<=5; row++) {
-                for (let col=1; col<=9; col++) {
+            let nextWave = vars.levels.wave+1;
+
+            // how many enemy rows are we showing?
+            let rows = 5; // early levels
+            if (vars.enemies.cthulhuSpotted===true && nextWave>=20) { rows = 6; } // if cthulhu has been seen we add him to the enemies
+
+            // and how many columns?
+            let cols=9; // early levels
+            if (nextWave>=30) { cols = 10; }
+
+            for (let row=1; row<=rows; row++) { // only five rows and 9 cols are visible at the start, but we create all of the enemies here
+                for (let col=1; col<=cols; col++) {
                     this.list.push(new enemy(0, row, col * xPos, col));
                 }
             }

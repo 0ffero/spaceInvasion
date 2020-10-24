@@ -16,7 +16,7 @@ function gameLevelNext() {
     vars.enemies.setEnemyBulletDamage();
 
     // generate the next wave
-    enemiesGenerate();
+    vars.enemies.spawn();
 
     vars.game.pause();
     wavePopUp(); // show the wave pop up
