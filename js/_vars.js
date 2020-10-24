@@ -248,6 +248,29 @@ var vars = {
 
     enemies: {
         attackTimeout: [8*fps,12*fps],
+        attackPatternsNonDynamic: { 
+            lineToCircle: {
+                maxOnPath: 10,
+            },
+            sineWaveNormal: {
+                maxOnPath: 10,
+            },
+            sineWaveSlow: {
+                maxOnPath: 10,
+            },
+            sineWaveFast: {
+                maxOnPath: 10,
+            },
+            sineWaveClose: {
+                maxOnPath: 10,
+            },
+            sineWaveMinMax: {
+                maxOnPath: 10,
+            },
+            simpleX: {
+                maxOnPath:20,
+            }
+        },
         bossSpawnTimeout: [25,25], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
         bossSpawnCount: 0,
         bossFireRates: [],
@@ -273,9 +296,8 @@ var vars = {
         maxYForWinCondition: 800,
         moveDirectionCurrent: 'right',
         moveDirectionPrevious: 'down',
-        paths: { // these are for level 20+
-            path1: new Phaser.Curves.Path(-40, 540).lineTo(360+150, 540).circleTo(150,true).circleTo(150,true).lineTo(720+40, 540),
-        },
+        palette: ['#FFFFFF', '#C7C7C7', '#000000', '#FFFF00', '#FF8000', '#FF0000', '#C70000', '#3399FF', '#0A7DF0', '#0048C7', '#0037A5', '#5EFF92', '#36D900', '#00B300', '#008D00', '#9D64A3', '#88548D', '#A300D9'],
+        paletteColours: ['white', 'grey', 'black', 'yellow', 'orange', 'red', 'redDark', 'blueLight', 'blue', 'blueMedium', 'blueDark', 'greenLight', 'green', 'greenMedium', 'greenDark', 'purpleLight', 'purple', 'purpleDark'],
         removeBosses: true,
 
         replaceArrays: {
@@ -315,6 +337,7 @@ var vars = {
         },
 
         spriteCount: -1,
+        spritesGenerated: {},
 
         // these positions are used to determine when the enemies should move
         // down after moving left or right and hitting the edge of the screen

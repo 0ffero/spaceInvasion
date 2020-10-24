@@ -250,6 +250,48 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
     },
 }
 
+function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. They are used when we get into space
+    let cW = vars.canvas.width;
+    let cCX = vars.canvas.cX;
+    let cCY = vars.canvas.cY;
+
+    //switch (selected) {
+    scene.paths = {}
+    let start = [-50,300]; let offsets = [150,50]; let yMinMax = [3,5];
+    let positions = [];
+    positions.push(cW/2-300, start[1]+offsets[1]); positions.push(cW-100, start[1]-offsets[1]); positions.push(cW-100, start[1]-offsets[1]+200); positions.push(100, start[1]-offsets[1]+400); positions.push(100, start[1]-offsets[1]+600); positions.push(cW+100, start[1]-offsets[1]+400);
+    scene.paths.backAndForth = new Phaser.Curves.Path(cW-100,-50).splineTo(positions);
+
+    let sineWaves = ['sineWaveNormal', 'sineWaveSlow', 'sineWaveFast', 'sineWaveClose'];
+
+    for (let p=0; p<sineWaves.length; p++) {
+        let selected = sineWaves[p];
+        if (selected==='sineWaveSlow') {
+            offsets[0]=200;
+        } else if (selected==='sineWaveFast') {
+            offsets[0]=100;
+        } else if (selected==='sineWaveClose') {
+            yMixMax = [1,3];
+        } else if (selected==='sineWaveMinMax') {
+            offsets = [100,75]; yMinMax = [1,3];
+        }
+        let positions = [];
+        let y = start[1]; let counter=0;
+        for (let x=start[0]; x<=cW+offsets[0]; x+=offsets[0]) { positions.push(x,y); counter++; if (counter%2===0) { y=start[1]+50; } else { y=start[1]-50; } }
+        let lastPositionX = positions[positions.length-2];
+        for (let x=lastPositionX; x>=0-offsets[0]; x-=offsets[0]) { counter++; if (counter%2===0) { positions.push(x,start[1]+offsets[1]*yMinMax[1]); } else { positions.push(x,start[1]+offsets[1]*yMinMax[0]); } }
+
+        // create the sine wave
+        x=positions.shift(); y=positions.shift();
+        scene.paths[selected] = new Phaser.Curves.Path(x, y).splineTo(positions);
+    }
+
+    scene.paths.lineToCircle = new Phaser.Curves.Path(-40, cCY).lineTo(cCX+150, cCY).circleTo(150,true).circleTo(150,true).lineTo(cW+40, cCY);
+
+    scene.paths.simpleX = new Phaser.Curves.Path(-40, cCY).lineTo(cW-50, 100).lineTo(0+50,100).lineTo(cW+50,cCY);
+
+    console.log('%cEnemy Attack Patterns: NON Dynamic - created. Stored in scene.paths', vars.console.callTo);
+}
 
 /*
    █████ █   █ █████ █████ █   █    █████ █     █████ █████ █████ 
@@ -787,6 +829,11 @@ function enemiesMove() {
             eV.moveDirectionPrevious = 'down';
         }
     }
+}
+
+function enemiesMoveLaterLevels() {
+    // select a random attack pattern
+    // TODO - Continue From Here
 }
 
 function enemiesStopAnims() {

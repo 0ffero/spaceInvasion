@@ -237,17 +237,17 @@ function create() {
     bullets             = scene.physics.add.group(); // there are lots of links to this, do later TODO, should be scene.groups.bullets
 
     // enemies
-    enemies             = scene.physics.add.group(); // same with this one! Should be scene.groups.enemies
+    enemies = scene.physics.add.group(); // same with this one! Should be scene.groups.enemies
     scene.groups.enemyBossGroup = scene.physics.add.group();
     scene.groups.enemyBullets = scene.physics.add.group();
     scene.groups.enemyAttackingGroup = scene.physics.add.group();
-
+    
     // scenery
     alienPlanetContainer = scene.add.container();
     scene.groups.nebulaGroup = scene.add.group();
     scene.groups.sceneryGroup = scene.add.group();
     scene.groups.wavesGroup = scene.add.group();
-
+    
     // add enemy count to the enemies var
     let note = '\n\nNOTES:\nAnother weird thing PHASER does... the frame total, for some inexplicable fukn\nreason is 1 more than the actual count. So we need a version check here :S\nIf we get an error on the count we know that this count CANNOT be trusted!';
     vars.versionCheck();
@@ -259,6 +259,8 @@ function create() {
         debugger;
     }
     animationInit('enemies');
+    generateSprites(); // spriteGenerator.js
+    enemyAttackPatternsNonDynamic(); // enemy.js
 
     // draw the background(s)
     preloadText.setText('Initialising game...');
@@ -297,6 +299,7 @@ function create() {
     loadingImage.on('pointerdown', vars.game.introStart);
 
     preloadText.destroy(); preloadText=undefined;
+
 
     scene.children.getByName('loadingText').destroy();
 }
