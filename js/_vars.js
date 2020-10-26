@@ -176,7 +176,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.944ᵦ',
+    version : '0.9.059 (beta release)',
 
 
     audio: {
@@ -269,6 +269,18 @@ var vars = {
             },
             simpleX: {
                 maxOnPath:20,
+            }
+        },
+        availableAttackPatterns: { 
+            ready: [],
+            used: [],
+
+            init: function() {
+                console.log('%c  Setting up available attack patterns', vars.console.callTo);
+                let aAP = vars.enemies.availableAttackPatterns;
+                for (p in scene.paths) {
+                    aAP.ready.push(p);
+                }
             }
         },
         bossSpawnTimeout: [25,25], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
@@ -601,9 +613,19 @@ var vars = {
 
         destroyAllBosses: function() {
             if (scene.groups.enemyBossGroup.children.size>0) {
+                // hold the boss types in an array
+                let bossTypes = '';
                 scene.groups.enemyBossGroup.children.each( (c)=> {
+                    // get the bosses hp bar
+                    let bossName = c.getData('name');
+                    bossTypes += c.getData('enemyType');
+                    scene.children.getByName('hpO_' + bossName).destroy();
+                    scene.children.getByName('hpI_' + bossName).destroy();
                     c.destroy();
                 })
+                if (vars.shader.current!=='default' && bossTypes.indexOf('5')!==-1) { // if theres a cthulhu boss on screen and the shader isnt default
+                    shaderType(); // calling shader type with no vars resets it to default
+                }
             }
         },
 
@@ -627,7 +649,7 @@ var vars = {
         },
 
         landingPositionsInit: function() {
-            let xInc = vars.canvas.width/12; // give us 11 positions
+            let xInc = vars.canvas.width/12; // gives us 11 positions
             let positionsPerRow = 11;
             let rows = 10; let cols = 9; // 90 positions are totally unnecessary as we will probably max out the rows at 7 and cols at 10 (ie 70 positions) TODO we should decide what these maximums are to limit the array
             let maxEnemies=rows*cols;
@@ -806,6 +828,15 @@ var vars = {
                     repeat: -1
                 });
             })
+        },
+
+        debugPathDraw: function(_path) {
+            if (typeof scene.paths[_path] !== 'undefined') {
+                graphics  = scene.add.graphics();
+                let colour = Phaser.Math.RND.between(0,0xffffff);
+                graphics.lineStyle(1, colour, 1);
+                scene.paths[_path].draw(graphics, 128);
+            }
         },
 
         generateWaterWaves: function() {
@@ -1586,7 +1617,7 @@ var vars = {
                             ssV.ADI.collected=false;
                             ssV.ADI.timeOut = ssV.ADI.timeOutMax;
                             // disable the shader
-                            shaderType('default',1);
+                            shaderType();
                         }
                     }
                 },

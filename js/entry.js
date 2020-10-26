@@ -60,7 +60,7 @@ function preload() {
 
     // LOADING PROGRESS UI STUFF
     preloadText = scene.add.text(vars.canvas.cX, vars.canvas.height-65, 'Loading...', { fontSize: 20, fontFamily: 'consolas', fill: '#444' }).setOrigin(0.5,0.5);
-    versionText = scene.add.text(200, vars.canvas.height-20, 'VERSION ' + vars.version, { fontSize: 20, fontFamily: 'consolas', fill: '#F00' }).setOrigin(1,0.5).setName('version');
+    versionText = scene.add.text(10, vars.canvas.height-20, 'VERSION ' + vars.version, { fontSize: 20, fontFamily: 'consolas', fill: '#F00' }).setOrigin(0,0.5).setName('version');
 
     scene.load.on('fileprogress', function (file) { preloadText.setText('Loading asset: ' + file.key); }); // as external file loads
 
@@ -124,38 +124,6 @@ function preload() {
     // FONT
     scene.load.bitmapFont('azo', 'fonts/azo-fire.png', 'fonts/azo-fire.xml');
 
-    // SOUNDS
-    scene.load.audio('enemyShoot',       'audio/enemyBlaster.ogg');
-    scene.load.audio('enemyHit',         'audio/enemyHit.ogg');
-    scene.load.audio('enemyBossHit',     'audio/enemyBossHit.ogg');
-    scene.load.audio('enemyBossExplode', 'audio/enemyBossExplode.ogg');
-    scene.load.audio('enemyExplode',     'audio/enemyExplode.ogg');
-    scene.load.audio('pickUpStandard',   'audio/pickup.ogg');
-    scene.load.audio('playerDeath',      'audio/playerDeath.ogg');
-    scene.load.audio('playerGun1',       'audio/blaster.ogg');
-    scene.load.audio('playerHit',        'audio/bulletBounce.ogg');
-    scene.load.audio('playerShieldDrop', 'audio/playerLoseShield.ogg');
-
-    // SPEECH (original voice from https://www.naturalreaders.com/online/ English UK Rachel -> Goldwave, mechanise (star wars droid low) -> echo (reverb))
-    scene.load.audio('speechBonusPoints',     'speech/bonusPoints.ogg');
-    scene.load.audio('speechHP',              'speech/hpUpgrade.ogg');
-    scene.load.audio('speechDoubleDamage',    'speech/doubleDamage.ogg');
-    scene.load.audio('speechDoubleFireRate',  'speech/doubleFireRate.ogg');
-    scene.load.audio('speechIncomingBoss',    'speech/warningIncomingBoss.ogg');
-    scene.load.audio('speechShield100',       'speech/shield100.ogg');
-    scene.load.audio('speechShield75',        'speech/shield75.ogg');
-    scene.load.audio('speechShield50',        'speech/shield50.ogg');
-    scene.load.audio('speechShield25',        'speech/shield25.ogg');
-    scene.load.audio('speechShieldDestroyed', 'speech/shieldDestroyed.ogg');
-    scene.load.audio('speechShieldUpgrade',   'speech/shieldUpgrade.ogg');
-
-    // VIDEO
-    scene.load.video('introVideo', 'video/spaceinvaders.mp4');
-
-    // UI
-    scene.load.image('loaded', 'UI/loaded.png');
-    scene.load.image('loadedImage', 'UI/loadedImage.png');
-
     // SHADER PIPE LINES
     // cS = colour scaline
     // gS = grayscale scaline
@@ -183,6 +151,40 @@ function preload() {
     // set up the shader pipelines time variables
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
     scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
+
+    // SOUNDS
+    scene.load.audio('enemyShoot',       'audio/enemyBlaster.ogg');
+    scene.load.audio('enemyHit',         'audio/enemyHit.ogg');
+    scene.load.audio('enemyBossHit',     'audio/enemyBossHit.ogg');
+    scene.load.audio('enemyBossExplode', 'audio/enemyBossExplode.ogg');
+    scene.load.audio('enemyExplode',     'audio/enemyExplode.ogg');
+    scene.load.audio('pickUpStandard',   'audio/pickup.ogg');
+    scene.load.audio('playerDeath',      'audio/playerDeath.ogg');
+    scene.load.audio('playerGun1',       'audio/blaster.ogg');
+    scene.load.audio('playerHit',        'audio/bulletBounce.ogg');
+    scene.load.audio('playerShieldDrop', 'audio/playerLoseShield.ogg');
+
+    // SPEECH (original voice from https://www.naturalreaders.com/online/ English UK Rachel -> Goldwave, mechanise (star wars droid low) -> echo (reverb))
+    scene.load.audio('speechBonusPoints',     'speech/bonusPoints.ogg');
+    scene.load.audio('speechHP',              'speech/hpUpgrade.ogg');
+    scene.load.audio('speechDoubleDamage',    'speech/doubleDamage.ogg');
+    scene.load.audio('speechDoubleFireRate',  'speech/doubleFireRate.ogg');
+    scene.load.audio('speechIncomingBoss',    'speech/warningIncomingBoss.ogg');
+    scene.load.audio('speechShield100',       'speech/shield100.ogg');
+    scene.load.audio('speechShield75',        'speech/shield75.ogg');
+    scene.load.audio('speechShield50',        'speech/shield50.ogg');
+    scene.load.audio('speechShield25',        'speech/shield25.ogg');
+    scene.load.audio('speechShieldDestroyed', 'speech/shieldDestroyed.ogg');
+    scene.load.audio('speechShieldUpgrade',   'speech/shieldUpgrade.ogg');
+
+    // UI
+    scene.load.image('loaded', 'UI/loaded.png');
+    scene.load.image('loadedImage', 'UI/loadedImage.png');
+    scene.load.image('hpBarInner', 'UI/hpBarInner.png');
+    scene.load.image('hpBarOutline', 'UI/hpBarOutline.png');
+
+    // VIDEO
+    scene.load.video('introVideo', 'video/spaceinvaders.mp4');
 }
 
 

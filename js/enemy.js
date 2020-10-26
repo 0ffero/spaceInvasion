@@ -262,19 +262,11 @@ function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. Th
     positions.push(cW/2-300, start[1]+offsets[1]); positions.push(cW-100, start[1]-offsets[1]); positions.push(cW-100, start[1]-offsets[1]+200); positions.push(100, start[1]-offsets[1]+400); positions.push(100, start[1]-offsets[1]+600); positions.push(cW+100, start[1]-offsets[1]+400);
     scene.paths.backAndForth = new Phaser.Curves.Path(cW-100,-50).splineTo(positions);
 
-    let sineWaves = ['sineWaveNormal', 'sineWaveSlow', 'sineWaveFast', 'sineWaveClose'];
+    let sineWaves = ['sineWaveMinMax', 'sineWaveSlow', 'sineWaveFast', 'sineWaveClose'];
 
     for (let p=0; p<sineWaves.length; p++) {
         let selected = sineWaves[p];
-        if (selected==='sineWaveSlow') {
-            offsets[0]=200;
-        } else if (selected==='sineWaveFast') {
-            offsets[0]=100;
-        } else if (selected==='sineWaveClose') {
-            yMixMax = [1,3];
-        } else if (selected==='sineWaveMinMax') {
-            offsets = [100,75]; yMinMax = [1,3];
-        }
+        if (selected==='sineWaveSlow') { offsets = [200,50]; yMinMax = [3,5]; } else if (selected==='sineWaveFast') { offsets = [100,50]; yMinMax = [3,5]; } else if (selected==='sineWaveClose') { offsets = [150,50]; yMixMax = [1,3]; } else if (selected==='sineWaveMinMax') { offsets = [100,75]; yMinMax = [1,3]; }
         let positions = [];
         let y = start[1]; let counter=0;
         for (let x=start[0]; x<=cW+offsets[0]; x+=offsets[0]) { positions.push(x,y); counter++; if (counter%2===0) { y=start[1]+50; } else { y=start[1]-50; } }
@@ -288,9 +280,53 @@ function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. Th
 
     scene.paths.lineToCircle = new Phaser.Curves.Path(-40, cCY).lineTo(cCX+150, cCY).circleTo(150,true).circleTo(150,true).lineTo(cW+40, cCY);
 
+    scene.paths.simpleM = new Phaser.Curves.Path(-40, cCY+150).lineTo(cCX-(cCX/2), cCY-300).lineTo(cCX,cCY).lineTo(cCX+(cCX/2),cCY-300).lineTo(cW+50, cCY+150);
+    scene.paths.simpleMDeep = new Phaser.Curves.Path(-40, cCY+150).lineTo(cCX-(cCX/2), cCY-300).lineTo(cCX,cCY+250).lineTo(cCX+(cCX/2),cCY-300).lineTo(cW+50, cCY+150);
+    scene.paths.simpleW = new Phaser.Curves.Path(-40, cCY-150).lineTo(cCX-(cCX/2), cCY+250).lineTo(cCX,cCY).lineTo(cCX+(cCX/2),cCY+250).lineTo(cW+50, cCY-150);
+    scene.paths.simpleWHigh = new Phaser.Curves.Path(-40, cCY-450).lineTo(cCX-(cCX/2), cCY+50).lineTo(cCX,cCY-300).lineTo(cCX+(cCX/2),cCY+50).lineTo(cW+50, cCY-450);
     scene.paths.simpleX = new Phaser.Curves.Path(-40, cCY).lineTo(cW-50, 100).lineTo(0+50,100).lineTo(cW+50,cCY);
+    scene.paths.simpleX2 = new Phaser.Curves.Path(-40, 100).lineTo(cW-50, cCY).lineTo(0+50,cCY).lineTo(cW+50,100);
+
+    // square wave
+    start = [-50,600];
+    let inc = [100,200];
+    positions = [];
+    positions.push(start);
+
+    let x1 = start[0]; let y1 = start[1]; // init x and y
+    let yMod = 1;
+    let p=0;
+    while (x1<vars.canvas.width) {
+        if (p%4===0 || p%4===2) { x1+=inc[0]; } else { yMod*=-1; y1+=yMod*inc[1] }
+        positions.push([x1,y1]);
+        p++;
+    }
+
+    scene.paths.squareWave = new Phaser.Curves.Path(start[0], start[1]);
+    for (pos of positions) {
+        scene.paths.squareWave.lineTo(pos[0], pos[1]);
+    }
 
     console.log('%cEnemy Attack Patterns: NON Dynamic - created. Stored in scene.paths', vars.console.callTo);
+    // add all the paths to the enemy var
+    vars.enemies.availableAttackPatterns.init();
+
+    /*
+    EXAMPLE FOLLOWERS + HOW TO FIGURE OUT AMOUNT OF FOLLOWERS FOR LINE
+    let delay = 333; let duration=8000;
+    let totalFollowers = ~~(duration/delay);
+    for (let f=0; f<totalFollowers; f++) {
+        var lemming = this.add.follower(path1, 0, 0, 'lemming');
+
+        lemming.startFollow({
+            positionOnPath: true,
+            delay: f*delay,
+            duration: duration,
+            repeat: 1,
+        });
+    }
+    */
+
 }
 
 /*
@@ -366,10 +402,16 @@ class enemyBoss {
         this.fireratepattern = firerate[1];
 
         let selectedPath = Phaser.Math.RND.between(0,eV.bossPaths.length-1);
+        let startPoint = eV.bossPaths[selectedPath][1].getStartPoint()
         //console.log('Selected boss path = ' + eV.bossPaths[selectedPath][0]);
-        let boss = scene.add.follower(eV.bossPaths[selectedPath][1],0,0, 'enemies', this.sprite).setScale(this.scale);
+        let boss = scene.add.follower(eV.bossPaths[selectedPath][1],startPoint.x,startPoint.y, 'enemies', this.sprite).setScale(this.scale);
+        let bossName = 'eB_' + generateRandomID();
+        let hpO = scene.add.image(0,0,'hpBarOutline').setOrigin(0,0.5).setName('hpO_' + bossName).setVisible(false);
+        let hpI = scene.add.image(1,0,'hpBarInner').setOrigin(0,0.5).setName('hpI_' + bossName).setVisible(false);
+        vars.cameras.ignore(cam2,hpO); vars.cameras.ignore(cam2,hpI);
+
         var thisSprite = scene.physics.add.sprite(this.startPosition[0], this.startPosition[1], 'enemies', this.sprite).setScale(this.scale).setAlpha(0);
-        thisSprite.setData({ hp: this.hp, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
+        thisSprite.setData({ name: bossName, hp: this.hp, hpOriginal: this.hp, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
         let thisSpriteBody = thisSprite.body;
         scene.groups.enemyBossGroup.add(boss);
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
@@ -393,7 +435,6 @@ class enemyBoss {
             repeat: -1,
             ease: 'Quad.easeInOut',
         });
-        
     }
 }
 
@@ -412,14 +453,26 @@ function enemyBossHit(_bullet, _boss) {
             enemyPieceParticle.emitParticleAt(bossPosition[0], bossPosition[1]);
         }
         let hp = _boss.getData('hp');
+        let bossName = _boss.getData('name');
         let bossHP = hp-bulletStrength;
         let pV = vars.player;
         if (bossHP>0) {
+            // update the hp bar
+            let enemyHPOriginal = _boss.getData('hpOriginal');
+            let hpI = scene.children.getByName('hpI_' + bossName);
+            let hpBarWidth = bossHP/enemyHPOriginal;
+            hpI.setScale(hpBarWidth, 1);
+
+            // update the boss
             _boss.setData('hp', bossHP);
-            //console.log('Boss HP: ' + bossHP);
+
+            // update the players score
             pV.increaseScore(bulletStrength*50);
         } else { // the boss is dead, long live the... oh wait
             let lV = vars.levels;
+            // remove the hp bar
+            scene.children.getByName('hpI_' + bossName).destroy();
+            scene.children.getByName('hpO_' + bossName).destroy();
             console.log('The boss is dead! Make him to explody things...');
             scene.sound.play('enemyBossExplode');
             vars.cameras.flash('white', 2500);
@@ -427,7 +480,7 @@ function enemyBossHit(_bullet, _boss) {
             let enemyType = _boss.getData('enemyType'); // 5 is the cthulhu boss
             if (vars.shader.current==='gray' || vars.shader.current==='grey' || vars.shader.current==='grayscan' || vars.shader.current==='greyscan') { // is the shade field running?
                 if (enemyType===5) { // only switch it off if the boss that died was cthulhu
-                    shaderType('default',1);
+                    shaderType();
                 }
             }
             pV.increaseScore(points);
@@ -447,15 +500,17 @@ function enemyBossHit(_bullet, _boss) {
 
 function enemyBossShow(_tween, _target, _boss) {
     _boss.setVisible(true);
-    let index = _boss.getData('enemyType');
-    _boss.play('e.hover' + index)
+    let bossName = _boss.getData('name');
+    scene.children.getByName('hpO_' + bossName).setVisible(true);
+    scene.children.getByName('hpI_' + bossName).setVisible(true);
     let bossType = _boss.getData('enemyType');
+    _boss.play('e.hover' + bossType);
     if (bossType===5) { // cthulhu has his own shader which is only stopped upon his death
 
     } else {
-        shaderType('default',1);
+        shaderType();
     }
-    if (vars.enemies.cthulhuSpotted===false && _target[0].getData('enemyType')===5) { // is this the first time cthulhu was spotted ?
+    if (vars.enemies.cthulhuSpotted===false && bossType===5) { // is this the first time cthulhu was spotted ?
         vars.enemies.cthulhuSpotted = true;
         // highlight the boss
         vars.UI.highlightObject(_boss, 1);
@@ -463,6 +518,13 @@ function enemyBossShow(_tween, _target, _boss) {
 }
 
 function enemyBossUpdate(_boss) {
+    // update the hp bar coordinates
+    let bossName = _boss.getData('name');
+    let xy = _boss.getTopCenter();
+    scene.children.getByName('hpO_' + bossName).setPosition(xy.x-20, xy.y-10);
+    scene.children.getByName('hpI_' + bossName).setPosition(xy.x-19, xy.y-10);
+
+    // check if the boss should be shooting
     let firerate = _boss.getData('firerate');
     if (firerate.firetimeout>0) {  // is the countdown still happening?
         firerate.firetimeout--;
