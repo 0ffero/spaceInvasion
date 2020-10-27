@@ -394,6 +394,13 @@ class enemyBoss {
         this.sprite = eV.bossNext;
 
         this.hp = 40 + (vars.levels.wave*5) + (this.sprite * 5);
+
+        let explosionOffset = this.hp/10;
+        let explosionArray = []
+        for (let i=0; i<9; i++) {
+            explosionArray.push(0);
+        }
+
         this.points = 2000 * (this.sprite+1);
         this.scale = vars.game.scale*3;
         this.startPosition = [cV.cX, cV.cY];
@@ -404,14 +411,14 @@ class enemyBoss {
         let selectedPath = Phaser.Math.RND.between(0,eV.bossPaths.length-1);
         let startPoint = eV.bossPaths[selectedPath][1].getStartPoint()
         //console.log('Selected boss path = ' + eV.bossPaths[selectedPath][0]);
-        let boss = scene.add.follower(eV.bossPaths[selectedPath][1],startPoint.x,startPoint.y, 'enemies', this.sprite).setScale(this.scale);
         let bossName = 'eB_' + generateRandomID();
+        let boss = scene.add.follower(eV.bossPaths[selectedPath][1],startPoint.x,startPoint.y, 'enemies', this.sprite).setScale(this.scale).setName('f_' + bossName);
         let hpO = scene.add.image(0,0,'hpBarOutline').setOrigin(0,0.5).setName('hpO_' + bossName).setVisible(false);
         let hpI = scene.add.image(1,0,'hpBarInner').setOrigin(0,0.5).setName('hpI_' + bossName).setVisible(false);
         vars.cameras.ignore(cam2,hpO); vars.cameras.ignore(cam2,hpI);
 
         var thisSprite = scene.physics.add.sprite(this.startPosition[0], this.startPosition[1], 'enemies', this.sprite).setScale(this.scale).setAlpha(0);
-        thisSprite.setData({ name: bossName, hp: this.hp, hpOriginal: this.hp, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
+        thisSprite.setData({ name: bossName, hp: this.hp, hpOriginal: this.hp, damageSinceLastExplosion: 0, explosionOffset: explosionOffset, explosionArray: explosionArray, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
         let thisSpriteBody = thisSprite.body;
         scene.groups.enemyBossGroup.add(boss);
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
@@ -436,6 +443,88 @@ class enemyBoss {
             ease: 'Quad.easeInOut',
         });
     }
+}
+
+function enemyBossExplosionCheck(__strength, __boss) {
+    let damageSinceLastExplosion = __boss.getData('damageSinceLastExplosion');
+    let explosionOffset = __boss.getData('explosionOffset');
+    damageSinceLastExplosion+=__strength;
+    if (damageSinceLastExplosion>=explosionOffset) {
+        if (vars.DEBUG===true) { console.log('Adding Explosion'); }
+        let foundPosition=-1; // this variable is used to track a valid quad.
+        // Its required because I check the array from the requested explosion quad til the end of the array
+        // if no valid quad was found, it will then start checking from the start of the array
+        // get a random quadrant
+        let Qs = __boss.getData('explosionArray');
+        let rndQuad = Phaser.Math.RND.between(0,8); // this gives us the array position
+        if (Qs[rndQuad]===0) { // valid position
+            if (vars.DEBUG===true) { console.log('Explosion in quad ' + rndQuad); }
+            // first, update the quads
+            Qs[rndQuad]=1; __boss.setData('explosionArray', Qs);
+            foundPosition = rndQuad;
+        } else { // quad already has an explosion in it, find the next available quad
+            if (vars.DEBUG===true) { console.log('%cQuad ' + rndQuad + ' already has an explosion in it, looking for the next available quad', vars.console.error); }
+
+            // the reason Im doing all this below is because the other option may put
+            // us into a massive loop for something as simple as an explosion site
+            // THERES PROBABLY A WAY TO DO THIS WITH A MATRIX, POSSIBLE TODO
+
+            if (rndQuad === 8) { // was the random quad position 8 of the array? (ie the last possible position)
+                rndQuad=0; // if so, start the quad check at position 0
+            }
+            for (let q=rndQuad; q<=8; q++) { // check the remaining blocks after the randomly selected one
+                if (Qs[q]===0) {
+                    Qs[q]=1;
+                    foundPosition=q;
+                    break;
+                }
+            }
+            if (foundPosition===-1) { // no blocks were found to be available after the requested block, so start from array position 0
+                for (let q=0; q<=8; q++) {
+                    if (Qs[q]===0) {
+                        Qs[q]=1;
+                        foundPosition=q;
+                        break;
+                    }
+                }
+            }
+        }
+        if (foundPosition===-1) { // this is a serious problem... we should have an available quad
+            console.error('%cERROR: We were searching for a valid quad on the boss enemy, but all quads are set to 1 apparently... wtf?', vars.console.error);
+        } else {
+            if (vars.DEBUG===true) { console.log('%cOriginal quad wasnt available. Next available quad was at array position ' + foundPosition, vars.console.errorResolved); }
+            // show the explosion in the empty quadrant
+            bossMatrix = vars.enemies.bossMatrix;
+            let bossInfo = [~~(__boss.x+0.5), ~~(__boss.y+0.5), ~~(__boss.displayWidth+0.5), ~~(__boss.displayHeight+0.5) ];
+            bossVector = new Phaser.Math.Vector2(bossInfo[0], bossInfo[1]);
+            // deep copy so we dont modify the matrix
+            selectedMatrix = [bossMatrix[foundPosition][0],bossMatrix[foundPosition][1]];
+
+            let test = true;
+            let xMod = bossInfo[2]/3;
+            let yMod = bossInfo[3]/3;
+            selectedMatrix[0]*=xMod; selectedMatrix[1]*=yMod;
+            if (test===false) { // if we ever needed the exact xy position, generally we only require the offset
+                addVector = new Phaser.Math.Vector2(selectedMatrix[0],selectedMatrix[1]);
+                if (vars.DEBUG===true) {
+                    console.log('Original xy: ' + bossVector.x + ', ' + bossVector.y);
+                    console.log('Add Vector - x: ' + addVector.x + ', y: ' + addVector.y);
+                }
+                bossVector.add(addVector);
+                if (vars.DEBUG===true) {
+                    console.log('New xy: ' + bossVector.x + ', ' + bossVector.y);
+                }
+            } else { // offset only
+                 // this sends the offsets only
+                 vars.particles.bossFireEmitter(selectedMatrix[0], selectedMatrix[1], foundPosition, __boss);
+            }
+            //debugger;
+        }
+        damageSinceLastExplosion-=explosionOffset;
+    }
+
+    // update the bosses DSLE
+    __boss.setData('damageSinceLastExplosion', damageSinceLastExplosion);
 }
 
 function enemyBossHit(_bullet, _boss) {
@@ -465,6 +554,7 @@ function enemyBossHit(_bullet, _boss) {
 
             // update the boss
             _boss.setData('hp', bossHP);
+            enemyBossExplosionCheck(bulletStrength, _boss);
 
             // update the players score
             pV.increaseScore(bulletStrength*50);
@@ -473,6 +563,16 @@ function enemyBossHit(_bullet, _boss) {
             // remove the hp bar
             scene.children.getByName('hpI_' + bossName).destroy();
             scene.children.getByName('hpO_' + bossName).destroy();
+            // remove all the fire particles associated with the boss
+            let partV = vars.particles;
+            for (p in partV.currentEmitters) {
+                //console.log(p);
+                let pName = 'bfE_f_' + bossName;
+                if (p.includes(pName)===true) {
+                    if (vars.DEBUG===true) { console.log('Found particle associated with boss. Deleting it.'); }
+                    partV.currentEmitters[p].remove();
+                }
+            }
             console.log('The boss is dead! Make him to explody things...');
             scene.sound.play('enemyBossExplode');
             vars.cameras.flash('white', 2500);

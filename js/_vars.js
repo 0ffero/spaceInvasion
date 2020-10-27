@@ -1,6 +1,10 @@
 var fps = 60;
 var gameScale = 0.4;
 
+const consts = {
+    INVALID: -1,
+}
+
 const constsLevelGroups = {
     GRASS        :  0,
     WATER        : 10,
@@ -158,9 +162,12 @@ var vars = {
     },
 
     console: {
+        animSetUp: 'font-size: 12px; color: #0080ff;',
         callFrom: 'font-size: 12px; color: green',
         callTo: 'font-size: 14px; color: green',
         doing: 'font-size: 10px; color: yellow',
+        error: 'font-size: 12px; color: red; background-color: #660000;',
+        errorResolved: 'font-size: 14px; color: yellow; background-color: #006600;',
         playerUpgrade: 'font-size: 14px; color: green; background-color: white;',
     },
 
@@ -176,7 +183,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.059 (beta release)',
+    version : '0.9.064 (beta release)',
 
 
     audio: {
@@ -283,6 +290,11 @@ var vars = {
                 }
             }
         },
+        bossMatrix: [
+            [-1,-1],[0,-1],[1,-1],
+            [-1, 0],[0, 0],[1, 0],
+            [-1, 1],[0, 1],[1, 1]
+        ],
         bossSpawnTimeout: [25,25], // [0] = current counter [1] = reset to ie every 10 enemy deaths a boss spawns
         bossSpawnCount: 0,
         bossFireRates: [],
@@ -656,14 +668,14 @@ var vars = {
             let requiredRows = ~~(maxEnemies/positionsPerRow)+1;
             let y = vars.canvas.height-50;
 
-            console.log('Total Possible Enemies: ' + maxEnemies + ', ' + 'Required rows: ' + requiredRows);
+            console.log('Setting up landing positions..\n  total possible enemies: ' + maxEnemies + ', required rows: ' + requiredRows);
 
             let landingPositions = [];
             for (let r=0; r<requiredRows; r++) {
                 for (let x=xInc; x<vars.canvas.width; x+=xInc) { // build the landing array
                     landingPositions.push([x,y]);
                 }
-                y-=40
+                y-=40;
             }
 
             vars.enemies.landingPositions = landingPositions;
@@ -1267,6 +1279,32 @@ var vars = {
 
     particles: {
         currentEmitters: {},
+
+        bossFireEmitter: function(_x=false,_y=false, _id=false, _boss) {
+            if (_x===false || _y===false || _id===false || _boss===null) {
+                console.error('Invalid x/y vars or no boss passed... halting');
+                return false;
+            }
+
+            // THIS IS PRACTICALLY THE SAME AS THE generateFireEmitter EXCEPT IT FOLLOWS A BOSS
+            // give the particle a random offset so they arent all in a line (max 15 px offset in any direction giving us a 5 pixel margin)
+            _x += Phaser.Math.RND.between(-15,15); _y += Phaser.Math.RND.between(-15,15);
+            let fire = scene.add.particles('fire').createEmitter({
+                x: _x, // these are offsets, because of course they FUKN ARE!!!! DAMMIHNC$NYCB*N&*OT. "Thats obvious!" "No It ISNT!" I pass you the x,y. YOU figure out the offset...SHEESH!
+                y: _y, // these need to be renamed to spriteXoffset etc :S Its fine! I know now :S Plus.. the effect IS awesome. Thank god etc
+                speed: { min: 100, max: 200 },
+                angle: { min: -85, max: -95 },
+                scale: { start: 0.2, end: 0.4, ease: 'Back.easeOut' },
+                alpha: { start: 0.4, end: 0, ease: 'Quart.easeOut' },
+                blendMode: 'SCREEN',
+                lifespan: 1000,
+                follow: _boss,
+            });
+            fire.name = 'bfE_' + _boss.name + '_' + _id;
+            vars.cameras.ignore(cam2, fire);
+
+            vars.particles.currentEmitters[fire.name] = fire;
+        },
 
         destroyFireEmitters: function() {
             // remove any lingering emitters
