@@ -41,6 +41,9 @@ function wavePopUp() {
     // (in case I move to a newer version for whatever reason)
     vars.versionCheck();
 
+    // start the level music if applicable
+    vars.audio.levelMusicStart();
+
     // tween the wave popup
     scene.tweens.add({
         targets: myText,
@@ -48,7 +51,7 @@ function wavePopUp() {
         x: myText.x+860,
         ease: 'linear',
         duration: 2500,
-        onComplete: vars.audio.levelMusicStart,
+        onComplete: vars.levels.finalChecks
     });
     player.setDepth(1);
 }

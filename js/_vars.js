@@ -178,12 +178,16 @@ var vars = {
         }
     },
 
+    test: {
+        // filled by test.js <-- generally unused
+    },
+
     DEBUG: false,
     VERBOSE: false,
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.064 (beta release)',
+    version : '0.9.071 (beta release)',
 
 
     audio: {
@@ -222,7 +226,6 @@ var vars = {
                     aV.getNext();
                 })
             }
-            vars.game.unpause();
         },
 
         musicEnableDisable: function() {
@@ -255,28 +258,18 @@ var vars = {
 
     enemies: {
         attackTimeout: [8*fps,12*fps],
+        attackPatternsEnabled: false,
         attackPatternsNonDynamic: { 
-            lineToCircle: {
-                maxOnPath: 10,
+            // generated in enemyAttackPatternsNonDynamic()
+
+            debugPathDraw: function(_path) {
+                if (typeof scene.paths[_path] !== 'undefined') {
+                    graphics  = scene.add.graphics();
+                    let colour = Phaser.Math.RND.between(0,0xffffff);
+                    graphics.lineStyle(1, colour, 1);
+                    scene.paths[_path].draw(graphics, 128);
+                }
             },
-            sineWaveNormal: {
-                maxOnPath: 10,
-            },
-            sineWaveSlow: {
-                maxOnPath: 10,
-            },
-            sineWaveFast: {
-                maxOnPath: 10,
-            },
-            sineWaveClose: {
-                maxOnPath: 10,
-            },
-            sineWaveMinMax: {
-                maxOnPath: 10,
-            },
-            simpleX: {
-                maxOnPath:20,
-            }
         },
         availableAttackPatterns: { 
             ready: [],
@@ -288,6 +281,65 @@ var vars = {
                 for (p in scene.paths) {
                     aAP.ready.push(p);
                 }
+            },
+
+            pathAddFollowers: function(_pathName='none', _pathData, _maxFollowers = false) {
+                if (pathName==='none') { return false; }
+                vars.enemies.availableAttackPatterns.used.push(_pathName);
+                let delay = _pathData.delay; let duration=_pathData.duration;
+                if (delay<=0 || duration<=0) { return false; }
+                let totalFollowers = _pathData.maxOnPath;
+                if (_maxFollowers===true) {
+                    totalFollowers = ~~(duration/delay);
+                }
+                let ease = 'Linear';
+                /* if (_pathName==='lineToCircle') {
+                    ease = 'Sine.easeInOut'
+                } */
+                let frame = 0;
+                let test = true;
+                if (test===true) {
+                    frame = Phaser.Math.RND.between(0,5);
+                }
+
+                let actualPath = scene.paths[_pathName];
+                for (let f=0; f<totalFollowers; f++) {
+                    let enemyFollower = scene.add.follower(actualPath, 0, 0, 'enemies', frame).setScale(0.4);
+                    if (f===totalFollowers-1) {
+                        enemyFollower.startFollow({
+                            positionOnPath: true,
+                            delay: f*delay,
+                            duration: duration,
+                            repeat: _pathData.repeat,
+                            ease: ease,
+                            onComplete: vars.enemies.availableAttackPatterns.pathPickNext
+                        });
+                    } else {
+                        enemyFollower.startFollow({
+                            positionOnPath: true,
+                            delay: f*delay,
+                            duration: duration,
+                            repeat: _pathData.repeat,
+                            ease: ease
+                        });
+                    }
+                }
+            },
+
+            pathPickNext: function() {
+                let aap = vars.enemies.availableAttackPatterns;
+                let rndPath = Phaser.Math.RND.between(0, aap.ready.length-1); // get array index
+                let pathNameArray = aap.ready.splice(rndPath,1); // get the path name
+                pathName = pathNameArray[0];
+                let pathData = vars.enemies.attackPatternsNonDynamic[pathName];
+                console.log(pathName);
+
+                if (aap.ready.length===0) { // this was the last available pattern move all used paths back into ready
+                    console.log('All paths used. Resetting them');
+                    aap.ready = aap.used;
+                    aap.used = [];
+                }
+                vars.enemies.availableAttackPatterns.pathAddFollowers(pathName, pathData);
             }
         },
         bossMatrix: [
@@ -842,15 +894,6 @@ var vars = {
             })
         },
 
-        debugPathDraw: function(_path) {
-            if (typeof scene.paths[_path] !== 'undefined') {
-                graphics  = scene.add.graphics();
-                let colour = Phaser.Math.RND.between(0,0xffffff);
-                graphics.lineStyle(1, colour, 1);
-                scene.paths[_path].draw(graphics, 128);
-            }
-        },
-
         generateWaterWaves: function() {
             // create the waves (tweens are created when we reach wave 10)
             let yOffset = 940
@@ -1109,6 +1152,13 @@ var vars = {
                     });
                 break;
             }
+        },
+
+        finalChecks: function() { // this happens after the wave pop up/fly by
+            if (vars.levels.wave===25) {
+                vars.enemies.attackPatternsEnabled = true;
+            }
+            vars.game.unpause();
         },
 
         levelBGChange: function() {

@@ -47,3 +47,115 @@ this.tweens.add({
  * number 8 in the palette. If a cell contains a period character `.` then it is transparent.
  * 
  * The default palette is Arne16, but you can specify your own using the `palette` property.
+
+
+
+
+
+// full implementation for boss shield (levels 40+)
+var config = {
+    type: Phaser.AUTO,
+    width: 720,
+    height: 1080,
+    backgroundColor: '#2d2d2d',
+    parent: 'phaser-example',
+    scene: {
+        preload: preload,
+        create: create
+    }
+};
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.spritesheet('lemming', 'assets/sprites/balls.png', { frameWidth: 17, frameHeight: 17});
+    this.load.image('brush', 'assets/sprites/brush1.png');
+}
+
+function create () {
+    bossShieldContainer = this.add.container(360,450);
+    console.log(bossShieldContainer.x);
+    let width=260;
+    let outerPath = new Phaser.Curves.Path(0+260, 0).circleTo(width);
+    width=210;
+    let middlePath = new Phaser.Curves.Path(0+210, 0).circleTo(width);
+    width = 150;
+    let innerPath = new Phaser.Curves.Path(0+150, 0).circleTo(width,true);
+    
+    let wave = 40;
+    let shieldCoverage = -1;
+    switch (wave) {
+        case 40: // boss 0
+            shieldCoverage = 0.4;
+        break;
+        case 41: // boss 1
+            shieldCoverage = 0.5;
+        break;
+        case 42: // boss 2
+            shieldCoverage = 0.6;
+        break;
+        case 43: // boss 3
+            shieldCoverage = 0.7;
+        break;
+        case 44: // boss 4
+            shieldCoverage = 0.8;
+        break;
+        case 45: // boss 5
+            shieldCoverage = 0.9;
+        break;
+        case 46: // boss 6
+            shieldCoverage = 1;
+        break;
+    }
+
+    let tint = 0xffffff;
+    let delay = 150;
+    let duration = 3000;
+    let max= ~~(duration/delay);
+    let allowed = (max*shieldCoverage);
+    for (let f=0; f<allowed; f++) {
+        let brush = this.add.follower(middlePath, 0, 0, 'brush').setScale(1).setTint(tint);
+        bossShieldContainer.add(brush)
+        brush.startFollow({
+            delay: f*delay,
+            positionOnPath: true,
+            duration: duration,
+            repeat: -1,
+        });
+    }
+
+    tint = 0xff0000;
+    duration = 2000;
+    max= ~~(duration/delay);
+    allowed = (max*shieldCoverage);
+        for (let f=0; f<allowed; f++) {
+        let brush = this.add.follower(innerPath, 0, 0, 'brush').setScale(1).setTint(tint);
+        bossShieldContainer.add(brush)
+        brush.startFollow({
+            delay: f*delay,
+            positionOnPath: true,
+            duration: duration,
+            repeat: -1,
+        });
+    }
+
+    tint = 0x0000FF;
+    duration = 2000;
+    delay = 100;
+    max= ~~(duration/delay+0.5);
+    allowed = max;
+    console.log(allowed);
+        for (let f=0; f<allowed; f++) {
+        let brush = this.add.follower(outerPath, 0, 0, 'brush').setScale(0.5).setTint(tint);
+        bossShieldContainer.add(brush)
+        brush.startFollow({
+            delay: f*delay,
+            positionOnPath: true,
+            duration: duration,
+            repeat: -1,
+        });
+    }
+
+
+}
