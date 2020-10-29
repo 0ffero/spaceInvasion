@@ -187,7 +187,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.071 (beta release)',
+    version : '0.9.072 (beta release)',
 
 
     audio: {
@@ -285,26 +285,29 @@ var vars = {
 
             pathAddFollowers: function(_pathName='none', _pathData, _maxFollowers = false) {
                 if (pathName==='none') { return false; }
-                vars.enemies.availableAttackPatterns.used.push(_pathName);
+                let eV = vars.enemies;
+                eV.availableAttackPatterns.used.push(_pathName);
                 let delay = _pathData.delay; let duration=_pathData.duration;
                 if (delay<=0 || duration<=0) { return false; }
                 let totalFollowers = _pathData.maxOnPath;
                 if (_maxFollowers===true) {
                     totalFollowers = ~~(duration/delay);
                 }
-                let ease = 'Linear';
+                let ease = 'Linear'; // if we need to modify the ease for a specific path (most paths WONT need this!)
                 /* if (_pathName==='lineToCircle') {
                     ease = 'Sine.easeInOut'
                 } */
-                let frame = 0;
-                let test = true;
-                if (test===true) {
-                    frame = Phaser.Math.RND.between(0,5);
-                }
+
 
                 let actualPath = scene.paths[_pathName];
                 for (let f=0; f<totalFollowers; f++) {
-                    let enemyFollower = scene.add.follower(actualPath, 0, 0, 'enemies', frame).setScale(0.4);
+                    // grab the next enemy and attach to the follower
+                    let currentEnemy = vars.enemies.list.shift(); // grab the first available enemy
+                    eV.list.push(currentEnemy); // push it to the end of the list
+                    let frame = currentEnemy.enemyType;
+                    let eName = currentEnemy.name;
+                    let enemyFollower = scene.add.follower(actualPath, 0, 0, 'enemies', frame).setScale(0.4).setName('f25_' + eName);
+                    scene.groups.enemyAttackingGroup25.add(enemyFollower);
                     if (f===totalFollowers-1) {
                         enemyFollower.startFollow({
                             positionOnPath: true,
@@ -693,6 +696,18 @@ var vars = {
             }
         },
 
+        hideSmallEnemies: function() {
+            enemies.children.each( (c, i)=>{
+                c.disableBody(true,false); // stop the enemy
+                scene.tweens.add({
+                    delay: i*100,
+                    targets: c,
+                    alpha: 0,
+                    duration: 1000,
+                })
+            })
+        },
+
         increaseEnemySpeed() {
             let eV = vars.enemies;
             eV.speed < eV.speeds.max ? eV.speed +=5 : eV.speed = eV.speeds.max;
@@ -765,6 +780,7 @@ var vars = {
 
         spawn: function() {
             let eV = vars.enemies;
+            eV.list = [];
             eV.speed = 50 + (vars.levels.wave*2);
             let xPos = vars.game.rowStartY;
             eV.moveDirectionPrevious = eV.moveDirectionCurrent = 'right';
@@ -772,19 +788,19 @@ var vars = {
 
             // how many enemy rows are we showing?
             let rows = 5; // early levels
-            if (vars.enemies.cthulhuSpotted===true && nextWave>=20) { rows = 6; } // if cthulhu has been seen we add him to the enemies
+            if (eV.cthulhuSpotted===true && nextWave>=20) { rows = 6; } // if cthulhu has been seen we add him to the enemies
 
             // and how many columns?
             let cols=9; // early levels
-            if (nextWave>=30) { cols = 10; }
+            if (nextWave>=25) { cols = 10; }
 
             for (let row=1; row<=rows; row++) { // only five rows and 9 cols are visible at the start, but we create all of the enemies here
                 for (let col=1; col<=cols; col++) {
-                    this.list.push(new enemy(0, row, col * xPos, col));
+                    eV.list.push(new enemy(0, row, col * xPos, col));
                 }
             }
-            // if wave isnt 1 we modify the spawn positions of the enemies
-            if (vars.levels.wave>1) {
+            // if wave >1 & <25 we modify the spawn positions of the enemies
+            if (vars.levels.wave>1 && vars.levels.wave<25) {
                 eV.spawnPositionsModify();
             }
         },
@@ -844,15 +860,20 @@ var vars = {
         update: function() {
             let eV = vars.enemies;
             //this function was becoming unweildy so its been moved to enemy.js
-            enemiesMove();
-            // now we check to see if the enemies should be shooting (only happens every few seconds)
-            eV.shootTimeoutDo();
-            eV.attackTimeoutDo();
-            if (scene.groups.enemyAttackingGroup.children.size>0) {
-                eV.attackersFireUpdate(scene.groups.enemyAttackingGroup.children.size);
+            if (vars.levels.wave < 25) { // the first 25 levels
+                enemiesMove();
+                // now we check to see if the enemies should be shooting (only happens every few seconds)
+                eV.shootTimeoutDo();
+                eV.attackTimeoutDo();
+                if (scene.groups.enemyAttackingGroup.children.size>0) {
+                    eV.attackersFireUpdate(scene.groups.enemyAttackingGroup.children.size);
+                }
+            } else { // enemy movement after level 24
+                // enemies after level 24 are controlled by
+                // vars.enemies.availableAttackPatterns.pathPickNext();
             }
+            
         }
-
 
     },
 
@@ -1157,6 +1178,8 @@ var vars = {
         finalChecks: function() { // this happens after the wave pop up/fly by
             if (vars.levels.wave===25) {
                 vars.enemies.attackPatternsEnabled = true;
+                //fade out the enemies as they are going to be attached to a path instead of moving back and forth
+                vars.enemies.hideSmallEnemies();
             }
             vars.game.unpause();
         },
@@ -1858,7 +1881,7 @@ var vars = {
                 let scale = layer/9; // this gives us a scale between 0.1 and 0.3
                 let tint = layerTints[layer];
                 let angle = Phaser.Math.RND.angle();
-                console.log('Layer: ' + layer + ', Duration: ' + duration + ', Scale: ' + scale + ', Angle: ' + angle + ', tint: #' + tint.toString(16));
+                //console.log('Layer: ' + layer + ', Duration: ' + duration + ', Scale: ' + scale + ', Angle: ' + angle + ', tint: #' + tint.toString(16));
                 let asteroid = scene.add.sprite(x,defaultStartY,'asteroid1','a1frame1').setScale(scale).setDepth(-1).setTint(tint).setRotation(angle);
                 vars.cameras.ignore(cam2, asteroid);
                 scene.groups.sceneryGroup.add(asteroid);

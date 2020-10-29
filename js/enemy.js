@@ -368,6 +368,7 @@ class enemy {
             case 3: this.colour = 0x0000ff; break;
             case 4: this.colour = 0xA300D9; break;
             case 5: this.colour = 0xffff00; break;
+            case 6: this.colour = 0xffff00; break;
 
             default: this.colour = 0xffffff; break;
         }
@@ -728,13 +729,15 @@ function enemyAttackingHit(_enemy, _bullet) {
     }
 }
 
-function enemyDeath(enemy) {
+function enemyDeath(enemy, enemy25=false) {
     //console.log('Enemy has died, creating death tween...');
+    let eV = vars.enemies;
     enemy.disableBody(); // disable interaction with bullets
     enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
-    vars.enemies.deathCountIncrease();
+    eV.deathCountIncrease();
     scene.sound.play('enemyExplode');
     vars.cameras.flash('white', 100);
+
     let xMove = Phaser.Math.RND.between(30,100);
     if (enemy.x>vars.canvas.cX) { xMove = -xMove; }
     xMove = enemy.x + xMove;
@@ -748,10 +751,10 @@ function enemyDeath(enemy) {
         //ease: 'linear',
         duration: 1000,
         onComplete: enemyDestroy,
-    }, this)
+    }, this);
+
 
     // check to see if we should spawn a power up
-    let eV = vars.enemies;
     eV.deadSinceLastPowerup++;
     if (eV.deadSinceLastPowerup===10) {
         healthBulletUpgradeSpawn([enemy.x, enemy.y],'')
@@ -767,7 +770,7 @@ function enemyDeath(enemy) {
     if (eV.bossSpawnTimeout[0]<=0) {
         if (scene.groups.enemyBossGroup.children.size<eV.bossLimit) {
             //console.log('Spawning a Boss');
-            vars.enemies.spawnBoss();
+            eV.spawnBoss();
         } else {
             eV.bossSpawnTimeout[0]=1;
         }
@@ -776,15 +779,20 @@ function enemyDeath(enemy) {
 
 function enemyDestroy() {
     //console.log('Enemy Destroyed.');
-    let enemy = this.targets[0];
+    let enemy = this.targets[0]; // so, this refers to the tween
     let enemyName = enemy.name;
-    let thisEmitter = vars.particles.currentEmitters['fE_' + enemyName];
-    if (thisEmitter!==undefined) { // looks like this emitter is already dead?
-        thisEmitter.remove(); // destroy the fire emitter
-        vars.particles.currentEmitters['fE_' + enemyName] = undefined;
+
+    // destroy the emitter is if exists level < 25
+    if (vars.enemies.attackPatternsEnabled===false) {
+        let thisEmitter = vars.particles.currentEmitters['fE_' + enemyName];
+        if (thisEmitter!==undefined) { // looks like this emitter is already dead?
+            thisEmitter.remove(); // destroy the fire emitter
+            vars.particles.currentEmitters['fE_' + enemyName] = undefined;
+        }
     }
+
     bulletHitEnemy.emitParticleAt(enemy.x, enemy.y); // explosion particle
-    enemy.destroy(); // this = tween
+    enemy.destroy();
     // check if there are any enemies left on screen
     if (enemies.children.entries.length===0) { // all enemies are dead!
         gameLevelNext();
@@ -891,6 +899,40 @@ function enemyHit(bullet, enemy, attacker=false) {
     }
 
     // enemy destroy has been moved to after its death animation: fn enemyDestroy
+}
+
+function enemy25Hit(_follower, _bullet) {
+    if (_bullet!==null) {
+        let fName = _follower.name;
+        let position = [_follower.x, _follower.y];
+        let enemyName = fName.replace('f25_','');
+        let realEnemy = scene.children.getByName(enemyName);
+        let particleTint = realEnemy.getData('colourIndex');
+
+        // particles
+        let tint = vars.enemies.colours[particleTint];
+        console.log('Particle XY: ' + position[0] + ',' + position[1] + '. Tint (' + particleTint + '): ' + tint);
+        enemyPieceParticle.setTint(tint[1]);
+        enemyPieceParticle.emitParticleAt(position[0], position[1]);
+        bulletHitEnemy.emitParticleAt(position[0], position[1]);
+
+        // sound
+        scene.sound.play('enemyHit');
+
+        // enemy hp
+        let bulletStrength = _bullet.getData('hp');
+        let hp = realEnemy.getData('hp');
+        hp-=bulletStrength;
+        if (hp<=0) { // enemy is dead
+            // make them explode
+            enemyDeath(realEnemy, true);
+            // hide the follower
+            _follower.remove();
+            debugger;
+        } else { // enemy is still alive, update its hp
+            realEnemy.setData('hp', hp);
+        }
+    }
 }
 
 function enemiesLand() {
