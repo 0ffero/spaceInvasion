@@ -1,0 +1,57 @@
+{"frames": [
+    {
+        "filename": "BG",
+        "frame": {"x":0,"y":0,"w":52,"h":22},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":52,"h":22},
+        "sourceSize": {"w":52,"h":22},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "uB_ADI",
+        "frame": {"x":53,"y":0,"w":25,"h":21},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":25,"h":21},
+        "sourceSize": {"w":25,"h":21},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "uB_SHADE",
+        "frame": {"x":79,"y":0,"w":25,"h":21},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":25,"h":21},
+        "sourceSize": {"w":25,"h":21},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "uB_bulletsNormal",
+        "frame": {"x":105,"y":0,"w":24,"h":20},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":24,"h":20},
+        "sourceSize": {"w":24,"h":20},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "uB_bulletsDoubleDamage",
+        "frame": {"x":130,"y":0,"w":24,"h":20},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":24,"h":20},
+        "sourceSize": {"w":24,"h":20},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "uB_bulletsDoubleFireRate",
+        "frame": {"x":155,"y":0,"w":24,"h":20},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":24,"h":20},
+        "sourceSize": {"w":24,"h":20},
+        "pivot": {"x":0.5,"y":0.5}
+    }
+]
+}

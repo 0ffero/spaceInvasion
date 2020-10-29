@@ -183,6 +183,8 @@ function preload() {
     scene.load.image('loadedImage', 'UI/loadedImage.png');
     scene.load.image('hpBarInner', 'UI/hpBarInner.png');
     scene.load.image('hpBarOutline', 'UI/hpBarOutline.png');
+    scene.load.atlas('hpBarPlayer', 'UI/hpBarPlayer.png', 'UI/hpBarPlayer.json');
+    scene.load.atlas('upgradesBar', 'UI/upgradesBar.png', 'UI/upgradesBar.json');
 
     // VIDEO
     scene.load.video('introVideo', 'video/spaceinvaders.mp4');
@@ -221,7 +223,6 @@ function create() {
     inputInit(); // game controls
 
     // scenery animations init
-    preloadText.setText('Setting up Animations: Asteroids');
     animationInit('asteroids');
 
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
@@ -234,7 +235,6 @@ function create() {
     // player
     scene.groups.shipUpgradeGroup = scene.add.group();
     scene.groups.shipPowerUpGroup = scene.add.group();
-    preloadText.setText('Setting up Animations: Upgrades');
     animationInit('shipUpgrades');
     animationInit('upgrades');
     bullets             = scene.physics.add.group(); // there are lots of links to this, do later TODO, should be scene.groups.bullets
@@ -267,18 +267,15 @@ function create() {
     enemyAttackPatternsNonDynamic(); // enemy.js
 
     // draw the background(s)
-    preloadText.setText('Initialising game...');
     bG = scene.add.image(0,0,'levelBackground').setScale(vars.canvas.width,1).setOrigin(0,0).setName('levelBG').setVisible(false).setDepth(0);
     vars.game.generateWaterWaves(); // the waves are created then hidden so they can be faded in on level 10
     // night time mask used on level 5 - 15
     scene.add.image(vars.canvas.cX, vars.canvas.height,'nightTimeMask').setOrigin(0.5,1).setAlpha(0).setName('nightTimeMask');
 
     //console.log('%c Generating Alien Planet', vars.console.callFrom);
-    preloadText.setText('Generating [REDCATED]');
     vars.scenery.generateAlienPlanet();
 
     // draw the player
-    preloadText.setText('Player');
     let sV = vars.player.ship;
     player = scene.physics.add.sprite(vars.canvas.cX, vars.canvas.height-75, 'player').setName('player').setVisible(false);//.setScale(vars.game.scale);
     player.setCollideWorldBounds(true);
@@ -294,7 +291,6 @@ function create() {
     scene.physics.add.overlap(scene.groups.enemyAttackingGroup25, bullets, enemy25Hit, null, this);
 
     // set up the particles
-    preloadText.setText('Initialising Particle Systems');
     particles = scene.add.particles('particles');
     particlesInit();
 

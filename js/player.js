@@ -216,17 +216,23 @@ function shipPowerUpPickUp(_upgrade) {
             console.log('%cUpgrade Bullet: Double Damage', vars.console.playerUpgrade);
             scene.sound.play('speechDoubleDamage');
             ssV.doubleDamageEnabled = true;
+            // swap the current bullet on ui
+            scene.children.getByName('UI_bulletTypeN').setVisible(false);
+            scene.children.getByName('UI_bulletTypeDD').setVisible(true);
         } else if (upgradeValue===1) { // double fire rate
             console.log('%cUpgrade Bullet: Double Fire Rate. Setting Timeout to 5 seconds instead of 3', vars.console.playerUpgrade);
             scene.sound.play('speechDoubleFireRate');
             ssV.doubleFireRate = true;
             ssV.upgradeTimeout[0] = 5*vars.game.fps;
+            scene.children.getByName('UI_bulletTypeN').setVisible(false);
+            scene.children.getByName('UI_bulletTypeDFR').setVisible(true);
         } else {
             console.warn('%cUnknown bullet upgrade picked up: ' + upgrade, 'font-size: 24px;');
         }
     }  else if (upgradeType==='score') { // points upgrade
         vars.player.increaseScore(upgradeValue);
         scene.sound.play('speechBonusPoints');
+        
     } else if (upgradeType==='fx') { // shade of amstrad field
         if (upgradeValue==='ADI') {
             ssV.ADIPickUp();

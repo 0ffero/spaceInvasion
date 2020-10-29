@@ -187,7 +187,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.072 (beta release)',
+    version : '0.9.076 (beta release)',
 
 
     audio: {
@@ -1716,6 +1716,7 @@ var vars = {
                         ssV.ADI.onScreen=false;
                         // enable the green screen effect
                         shaderType('green',1);
+                        scene.children.getByName('UI_ADI').setVisible(true);
                     } else {
                         // reduce the counter
                         if (ssV.ADI.timeOut>0) {
@@ -1729,6 +1730,7 @@ var vars = {
                             ssV.ADI.timeOut = ssV.ADI.timeOutMax;
                             // disable the shader
                             shaderType();
+                            scene.children.getByName('UI_ADI').setVisible(false);
                         }
                     }
                 },
@@ -1764,6 +1766,7 @@ var vars = {
                         ssV.SHADE.onScreen=false;
                         // enable the green screen effect
                         shaderType('gray',1);
+                        scene.children.getByName('UI_SHADE').setVisible(true);
                     } else {
                         // reduce the counter
                         if (ssV.SHADE.timeOut>0) {
@@ -1777,6 +1780,7 @@ var vars = {
                             ssV.SHADE.timeOut = ssV.SHADE.timeOutMax;
                             // disable the shader
                             shaderType('default',1);
+                            scene.children.getByName('UI_SHADE').setVisible(false);
                         }
                     }
                 },
@@ -1784,9 +1788,17 @@ var vars = {
                 resetVars: function() {
                     let ssV = vars.player.ship.special;
                     ssV.upgradeTimeout[0]=ssV.upgradeTimeout[1];
-                    ssV.doubleDamageEnabled=false;
-                    ssV.doubleFireRate=false;
+                    if (ssV.doubleDamageEnabled===true) {
+                        ssV.doubleDamageEnabled=false;
+                        scene.children.getByName('UI_bulletTypeDD').setVisible(false);
+                    }
+                    if (ssV.doubleFireRate===true) {
+                        ssV.doubleFireRate=false;
+                        scene.children.getByName('UI_bulletTypeDFR').setVisible(false);
+                    }
+                    scene.children.getByName('UI_bulletTypeN').setVisible(true);
                     ssV.upgradeOnScreen=false;
+                    // change the ui bullet image back to normal bullets
                 }
             },
 

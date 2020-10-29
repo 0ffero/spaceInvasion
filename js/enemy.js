@@ -623,10 +623,12 @@ function enemyBossShow(_tween, _target, _boss) {
     scene.children.getByName('hpI_' + bossName).setVisible(true);
     let bossType = _boss.getData('enemyType');
     _boss.play('e.hover' + bossType);
-    if (bossType===5) { // cthulhu has his own shader which is only stopped upon his death
-
-    } else {
-        shaderType();
+    if (vars.player.ship.special.ADIUpgrade===false && vars.player.ship.special.SHADEUpgrade===false ) { // make sure there isnt a shader already running due to a player upgrade
+        if (bossType===5) { // cthulhu has his own shader which is only stopped upon his death
+            // the cthulhu shader is started elsewhere
+        } else {
+            shaderType();
+        }
     }
     if (vars.enemies.cthulhuSpotted===false && bossType===5) { // is this the first time cthulhu was spotted ?
         vars.enemies.cthulhuSpotted = true;
@@ -729,7 +731,66 @@ function enemyAttackingHit(_enemy, _bullet) {
     }
 }
 
-function enemyDeath(enemy, enemy25=false) {
+function enemy25Death(enemy) {
+    console.log('Enemy25 has died, hiding and destroying...');
+    let eV = vars.enemies;
+    enemy.disableBody(); // disable interaction with bullets
+    enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
+    eV.deathCountIncrease();
+    scene.sound.play('enemyExplode');
+    vars.cameras.flash('white', 100);
+
+    enemy.setVisible(false);
+    enemy25Destroy(enemy);
+
+    enemyUpgradeDrop(enemy);
+}
+
+function enemy25Destroy(enemy) {
+    console.log('Enemy25 Destroyed.');
+    bulletHitEnemy.emitParticleAt(enemy.x, enemy.y); // explosion particle
+    enemy.destroy();
+    // check if there are any enemies left on screen
+    if (enemies.children.entries.length===0) { // all enemies are dead!
+        gameLevelNext();
+    }
+}
+
+function enemy25Hit(_follower, _bullet) {
+    if (_bullet!==null) {
+        let fName = _follower.name;
+        let position = [_follower.x, _follower.y];
+        let enemyName = fName.replace('f25_','');
+        let realEnemy = scene.children.getByName(enemyName);
+        let particleTint = realEnemy.getData('colourIndex');
+
+        // particles
+        let tint = vars.enemies.colours[particleTint];
+        //console.log('Particle XY: ' + position[0] + ',' + position[1] + '. Tint (' + particleTint + '): ' + tint);
+        enemyPieceParticle.setTint(tint[1]);
+        enemyPieceParticle.emitParticleAt(position[0], position[1]);
+        bulletHitEnemy.emitParticleAt(position[0], position[1]);
+
+        // sound
+        scene.sound.play('enemyHit');
+
+        // enemy hp
+        let bulletStrength = _bullet.getData('hp');
+        let hp = realEnemy.getData('hp');
+        hp-=bulletStrength;
+        if (hp<=0) { // enemy is dead
+            // make them explode
+            enemy25Death(realEnemy);
+            // hide the follower
+            _follower.remove();
+            debugger;
+        } else { // enemy is still alive, update its hp
+            realEnemy.setData('hp', hp);
+        }
+    }
+}
+
+function enemyDeath(enemy) {
     //console.log('Enemy has died, creating death tween...');
     let eV = vars.enemies;
     enemy.disableBody(); // disable interaction with bullets
@@ -753,33 +814,12 @@ function enemyDeath(enemy, enemy25=false) {
         onComplete: enemyDestroy,
     }, this);
 
-
-    // check to see if we should spawn a power up
-    eV.deadSinceLastPowerup++;
-    if (eV.deadSinceLastPowerup===10) {
-        healthBulletUpgradeSpawn([enemy.x, enemy.y],'')
-        eV.deadSinceLastPowerup=0;
-    }
-
-    // check to see if we should spawn a boss yet
-    eV.bossSpawnTimeout[0]--;
-    if (eV.bossSpawnTimeout[0]===2) { // warn that a boss is incoming
-        scene.sound.play('speechIncomingBoss');
-        shaderType('warp',1);
-    }
-    if (eV.bossSpawnTimeout[0]<=0) {
-        if (scene.groups.enemyBossGroup.children.size<eV.bossLimit) {
-            //console.log('Spawning a Boss');
-            eV.spawnBoss();
-        } else {
-            eV.bossSpawnTimeout[0]=1;
-        }
-    }
+    enemyUpgradeDrop(enemy);
 }
 
-function enemyDestroy() {
+function enemyDestroy(_tween, _sprite) {
     //console.log('Enemy Destroyed.');
-    let enemy = this.targets[0]; // so, this refers to the tween
+    let enemy = _sprite[0]; // so, this refers to the tween
     let enemyName = enemy.name;
 
     // destroy the emitter is if exists level < 25
@@ -901,36 +941,27 @@ function enemyHit(bullet, enemy, attacker=false) {
     // enemy destroy has been moved to after its death animation: fn enemyDestroy
 }
 
-function enemy25Hit(_follower, _bullet) {
-    if (_bullet!==null) {
-        let fName = _follower.name;
-        let position = [_follower.x, _follower.y];
-        let enemyName = fName.replace('f25_','');
-        let realEnemy = scene.children.getByName(enemyName);
-        let particleTint = realEnemy.getData('colourIndex');
+function enemyUpgradeDrop(enemy) {
+    let eV = vars.enemies;
+    // check to see if we should spawn a power up
+    eV.deadSinceLastPowerup++;
+    if (eV.deadSinceLastPowerup===10) {
+        healthBulletUpgradeSpawn([enemy.x, enemy.y],'')
+        eV.deadSinceLastPowerup=0;
+    }
 
-        // particles
-        let tint = vars.enemies.colours[particleTint];
-        console.log('Particle XY: ' + position[0] + ',' + position[1] + '. Tint (' + particleTint + '): ' + tint);
-        enemyPieceParticle.setTint(tint[1]);
-        enemyPieceParticle.emitParticleAt(position[0], position[1]);
-        bulletHitEnemy.emitParticleAt(position[0], position[1]);
-
-        // sound
-        scene.sound.play('enemyHit');
-
-        // enemy hp
-        let bulletStrength = _bullet.getData('hp');
-        let hp = realEnemy.getData('hp');
-        hp-=bulletStrength;
-        if (hp<=0) { // enemy is dead
-            // make them explode
-            enemyDeath(realEnemy, true);
-            // hide the follower
-            _follower.remove();
-            debugger;
-        } else { // enemy is still alive, update its hp
-            realEnemy.setData('hp', hp);
+    // check to see if we should spawn a boss yet
+    eV.bossSpawnTimeout[0]--;
+    if (eV.bossSpawnTimeout[0]===2) { // warn that a boss is incoming
+        scene.sound.play('speechIncomingBoss');
+        shaderType('warp',1);
+    }
+    if (eV.bossSpawnTimeout[0]<=0) {
+        if (scene.groups.enemyBossGroup.children.size<eV.bossLimit) {
+            //console.log('Spawning a Boss');
+            eV.spawnBoss();
+        } else {
+            eV.bossSpawnTimeout[0]=1;
         }
     }
 }

@@ -1,0 +1,39 @@
+{"frames": [
+    {
+        "filename": "BG",
+        "frame": {"x":0,"y":0,"w":118,"h":22},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":118,"h":22},
+        "sourceSize": {"w":118,"h":22},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "Red",
+        "frame": {"x":119,"y":0,"w":90,"h":9},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":90,"h":9},
+        "sourceSize": {"w":90,"h":9},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "Orange",
+        "frame": {"x":210,"y":0,"w":25,"h":9},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":25,"h":9},
+        "sourceSize": {"w":25,"h":9},
+        "pivot": {"x":0.5,"y":0.5}
+    },
+    {
+        "filename": "Blue",
+        "frame": {"x":119,"y":10,"w":116,"h":9},
+        "rotated": false,
+        "trimmed": false,
+        "spriteSourceSize": {"x":0,"y":0,"w":116,"h":9},
+        "sourceSize": {"w":116,"h":9},
+        "pivot": {"x":0.5,"y":0.5}
+    }
+]
+}
