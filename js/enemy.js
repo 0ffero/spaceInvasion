@@ -682,7 +682,7 @@ function enemyBossUpdate(_boss) {
                     let bulletSprite = Phaser.Math.RND.between(0,vars.enemies.spriteCount-1); // basically the colour of the bullet
                     let bulletSpeed = Phaser.Math.Clamp((vars.levels.wave-1)*10 + 600, 600, 800); // boss bullet speed is based on the wave (between 600 and 800)
                     let boss=true;
-                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, bulletSpeed, false, xSpeed, boss);
+                    vars.enemies.bulletPhysicsObject([_boss.x, _boss.y], bulletSprite, bulletScale, damage, bulletSpeed, true, xSpeed, boss);
                 }
                 _boss.data.list.firerate.bulletcount--;
 

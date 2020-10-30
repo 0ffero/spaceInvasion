@@ -124,16 +124,15 @@ function healthBulletUpgradeSpawn(_spawnXY,_fU='') {
 function playerHit(_player, _bullet) {
     let pV = vars.player;
     let cV = pV.ship.cannonSlots;
+    let sV = vars.player.ship;
     let ssV = vars.player.ship.special;
 
-    let _bulletStrength;
+    let _bulletStrength=0;
     let _boss = false;
     if (_bullet!==0) {
         _bulletStrength = _bullet.getData('hp');
         _boss = _bullet.getData('boss');
         _bullet.destroy();
-    } else {
-        _bulletStrength = 0;
     }
 
     if (_boss!==false && _boss!==true) { // sanity check
@@ -141,17 +140,16 @@ function playerHit(_player, _bullet) {
     }
 
     // SET UP THE BULLET DAMAGE MULTIPLIER
-    let mult = 1;
-    let max = 3;
+    let mult = 1; let max = 3;
     if (_boss===true) { // boss bullet?
-        mult += 0.2;
-        max=5;
+        mult += 0.2; max=5;
     }
     if (vars.levels.wave>=7) { // wave 7 or above, bullets increase in damage
         mult += 0.1 + ((vars.levels.wave-7)*0.05); // I cant be bothered to make sure that js will always use PE/BOMDAS so Im using brackets
     } // wave is < 7 (we dont add any extra damage)
-    
-    if (ssV.SHADE.collected===true) { // first, check if the SHADE effect is running. if it is the bullet damage and mul are set to 1
+
+    // check if the SHADE effect is running. if it is the bullet damage and mult are set to 1
+    if (ssV.SHADE.collected===true) {
         console.log('SHADE field active. Reducing damage and multiplier to 1.');
         mult=1;
         _bulletStrength=1;
@@ -160,36 +158,27 @@ function playerHit(_player, _bullet) {
     if (ssV.ADI.collected===false) { // if the ADI field ISNT active the player WILL take damage
         // fix the bullet damage.. nothing should do more than 5 damage per hit (Ive tested this.. by level 20 the bullet damage was 9 and was way too strong)
         _bulletStrength =  Phaser.Math.Clamp(_bulletStrength*mult,1,max);
-        if (pV.hitpoints-(_bulletStrength)>0) {
+        if (pV.hitpoints-_bulletStrength>0) { // after removing the bullet strength is the players hp>0? If it is, do the hit
+            console.log('Damage done to player (' + pV.hitpoints + '): ' + _bulletStrength);
             pV.hitpoints=~~(pV.hitpoints - _bulletStrength);
             vars.UI.hpUpdate();
-            vars.cameras.flash('red', 1000);
+            vars.cameras.flash('red', 250);
             scene.sound.play('playerHit');
             //console.log('HP: ' + pV.hitpoints + ', bulletStrength: ' + _bulletStrength);
-            // first, we reset the upgrades if the player has between 0 and 115 hp
-            if (pV.hitpoints<=115 && pV.hitpoints>=100 && pV.ship.upgrades!==1) {
-                console.log('%cPLAYER >> Dropping upgrades to 1', vars.console.doing);
-                pV.ship.upgrades=1;
-                cV.l2r2.enabled=false;
-            } else if (pV.hitpoints > 0 && pV.hitpoints<100 && pV.ship.upgrades!==0) {
-                console.log('%cPLAYER >> Dropping upgrades to 0', vars.console.doing);
-                pV.ship.upgrades=0;
-                cV.l1r1.enabled=false;
-                cV.l2r2.enabled=false;
-            }
+            sV.shipDowngradeCheck(); // eg ship upgrades may have been damaged due to players hp
 
             // now we set the shield colour
             console.log('%cPLAYER >> Setting the shield colour', vars.console.callFrom);
-            vars.player.shieldChange(false);
+            pV.shieldChange(false);
 
-        } else { // player is dead
+        } else { // hp<=0 ie player is dead
             console.log('%cPLAYER IS DEAD', 'background-color: red; color: black');
             scene.children.getByName('hpTextIntS').setText('Destroyed!');
             scene.children.getByName('hpTextInt').setText('Destroyed!');
             vars.cameras.shake(cam1, 750);
             enemiesLand();
             vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
-            vars.player.dead();
+            pV.dead();
         }
     } // else the ADI field is in effect, player takes no damage.
 }
@@ -279,30 +268,36 @@ class shipUpgrade { // these are created when a boss is killed
 }
 
 function shipUpgradePickUp(_pickup) {
-    //console.log(_pickup);
+    scene.sound.play('pickUpStandard'); // play ship upgrade sound
     let pV = vars.player;
     let cV = pV.ship.cannonSlots;
-    scene.sound.play('pickUpStandard');
-    let upgradeTo = _pickup.getData('upgrade');
-    _pickup.destroy();
-    player.setFrame(upgradeTo);
-    pV.hitpoints+=30*upgradeTo; // player gets a boost to hp based on upgrade type
-    vars.UI.hpUpdate();
-    if (pV.hitpoints<115 && upgradeTo===1) { // upgrade 1: does the player still have less than 115 hp?
-        pV.hitpoints=115; // minimum upgrade takes us to 115 hp. Same for upgrade 2 below
-    } else if (pV.hitpoints<130 && upgradeTo===2) { // upgrade 2: does the player still have less than 130 hp?
-        pV.hitpoints=130; // minimum upgrade takes us to 130 hp.
-    }
 
-    // enable the upgrades guns slot
-    if (upgradeTo===1) {
-        cV.l1r1.enabled=true;
-        cV.l2r2.enabled=false; // this shouldnt register but left it here just in case.
-    } else if (upgradeTo===2) {
-        cV.l1r1.enabled=true;
-        cV.l2r2.enabled=true;
-    } // we are only dealing with upgrades here so we dont have to deal with a drop to upgrade 0
+    let upgradeTo = _pickup.getData('upgrade');
+
+    // player gets a boost to hp based on upgrade type (1 or 2)
+    pV.hitpoints+=30*upgradeTo;
+    // update the UI
+    vars.UI.hpUpdate();
+
+    // enable guns for the ship upgrade and increase player to minimum health if necessary
+    if (upgradeTo===1) { // ship upgrade 1
+        // enable secondary guns
+        cV.l1r1.enabled=true; cV.l2r2.enabled=false;
+        // upgrade 1: automatic 'full' orange shield
+        if (pV.hitpoints<constsPS.GREEN_SHIELD.hpLower-5) { pV.hitpoints=constsPS.GREEN_SHIELD.hpLower-5; }
+        // set the frame based on hp
+        if (pV.hitpoints>=constsPS.GREEN_SHIELD.hpLower) { player.setFrame(upgradeTo); } else { player.setFrame(upgradeTo+3); }
+    } else if (upgradeTo===2) { // ship upgrade 2
+        // enable all guns
+        cV.l1r1.enabled=true; cV.l2r2.enabled=true;
+        // automatic green shield
+        if (pV.hitpoints < constsPS.GREEN_SHIELD.hpLower + 25) { pV.hitpoints=constsPS.GREEN_SHIELD.hpLower + 25; }
+        player.setFrame(upgradeTo);
+    }
 
     let bW = pV.ship.bodyWidths;
     player.setSize(bW[upgradeTo][0],bW[upgradeTo][1]);
+
+    // destroy the pickup
+    _pickup.destroy();
 }

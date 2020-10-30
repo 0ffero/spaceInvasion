@@ -26,11 +26,12 @@ const constsM = { // mouse buttons
 }
 
 const constsPS = { // player shields frames
-    NO_SHIELD     : 12,
-    LOW_SHIELD    :  9,
-    RED_SHIELD    :  6,
-    ORANGE_SHIELD :  3,
-    GREEN_SHIELD  :  0
+    NO_SHIELD     : { frame: 12, hpLower:  1,  hpUpper:  75, strength: 0,   var: 0  },
+    LOW_SHIELD    : { frame: 9,  hpLower:  76, hpUpper:  99, strengthLower: 0, strength: 25,  var: 1  },
+    RED_SHIELD    : { frame: 6,  hpLower: 100, hpUpper: 124, strengthLower: 25, strength: 50,  var: 2  },
+    ORANGE_SHIELD : { frame: 3,  hpLower: 125, hpUpper: 149, strengthLower: 50, strength: 75,  var: 3  },
+    GREEN_SHIELD  : { frame: 0,  hpLower: 150, hpUpper: 250, strengthLower: 75, strength: 100, var: 4 },
+    EXTRA_SHIELD  : { frame: 12, hpLower: 251, hpUpper: 300 },
 }
 
 const constsD = { // depth of sprite groups
@@ -187,7 +188,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.076 (beta release)',
+    version : '0.9.082 (beta release)',
 
 
     audio: {
@@ -1418,9 +1419,9 @@ var vars = {
     player: {
         isDead: false,
         scale: 1.0,
-        hitpoints: 125,
+        hitpoints: 130,
         hitpointsMinMax: [125, 200],
-        shield: 4,
+        shield: 3,
         startPosition: {
             x: -1,
             y: -1,
@@ -1473,76 +1474,42 @@ var vars = {
         },
 
         shieldChange: function(_upgrade=false) {
-            console.log('%c - Check for shield change', vars.console.callTo);
+            //console.log('%c - Check for shield change', vars.console.callTo);
             let pV = vars.player;
             let sV = pV.ship;
             let bW = sV.bodyWidths;
             let upgrades = sV.upgrades;
             let playerShields = constsPS;
-            let updateSize = false;
             let shieldChange = [false,0];
 
-            if (pV.hitpoints>=100) {  // green shield
-                if (pV.shield!==4) {
-                    console.log('%Green Shield Enabled', 'color: green');
-                    shieldChange = [true,100];
-                    pV.shield=4;
-                    player.setFrame(playerShields.GREEN_SHIELD + upgrades);
-                    updateSize=true;
+            // figure out if the shield needs to be changed
+            let hp = vars.player.hitpoints;
+            let shield = {};
+            for (shield in playerShields) {
+                let hpMin = constsPS[shield].hpLower;
+                let hpMax = constsPS[shield].hpUpper;
+                if (hp>=hpMin && hp<=hpMax) {
+                    shield = constsPS[shield];
+                    let shieldVar = shield.var;
+                    if (shieldVar!==pV.shield) {
+                        console.log('Setting shield to ' + shield);
+                        player.setFrame(shield.frame + upgrades);
+                        if (shield.strength!==undefined) { // undefined shield strength means the player has > 255 hp (ie shield extender)
+                            shieldChange = [true, shield.strength]
+                            player.setSize(bW[0][0],bW[0][1]);
+                            pV.shield = shieldVar;
+                        }
+                    }
+                    break;
                 }
-            } else if (pV.hitpoints<=25) {  // no shield
-                if (pV.shield!==0) {
-                    console.log('%No Shield Enabled', 'color: white');
-                    shieldChange = [true,0];
-                    pV.shield=0;
-                    player.setFrame(playerShields.NO_SHIELD + upgrades);
-                    updateSize=true;
-                }
-            } else if (pV.hitpoints<50) {  // low shield
-                if (pV.shield!==1) {
-                    console.log('%cLow Shield Enabled', 'color: pink');
-                    shieldChange = [true,25];
-                    pV.shield=1;
-                    player.setFrame(playerShields.LOW_SHIELD + upgrades);
-                    updateSize=true;
-                }
-            } else if (pV.hitpoints<75) {   // red shield
-                if (pV.shield!==2) {
-                    console.log('%cRed Shield Enabled', 'color: red');
-                    shieldChange = [true,50];
-                    pV.shield=2;
-                    player.setFrame(playerShields.RED_SHIELD + upgrades);
-                    updateSize=true;
-                }
-            } else if (pV.hitpoints<100) { // orange shield
-                if (pV.shield!==3) {
-                    console.log('%cOrange Shield!', 'color: orange');
-                    shieldChange = [true,75];
-                    pV.shield=3;
-                    player.setFrame(playerShields.ORANGE_SHIELD + upgrades);
-                    updateSize=true;
-                }
-            }
-            
-            // do we need to modify the hit box of the player?
-            if (updateSize===true) {
-                player.setSize(bW[0][0],bW[0][1]);
             }
 
             if (shieldChange[0]===true) { // the shield was changed. Fire sound effect for ...
-                if (_upgrade===true) {                                             // upgrades
+                if (_upgrade===true) { // upgrades
                     scene.sound.play('speechShieldUpgrade');
-                    setTimeout( function() {
-                        scene.sound.play('speechShield100'); // this always plays so we dont have to worry about stopping it on wave transition etc
-                    }, 1200);
-                } else {                                                           // drop in power
-                    switch (shieldChange[1]) {
-                        // case 100: scene.sound.play('speechShield100'); break; // removed because this shouldnt fire! You can only upgrade to full shields
-                        case  75: scene.sound.play('speechShield75'); break;
-                        case  50: scene.sound.play('speechShield50'); break;
-                        case  25: scene.sound.play('speechShield25'); break;
-                        case   0: scene.sound.play('speechShieldDestroyed'); break;
-                    }
+                    setTimeout( function() { scene.sound.play('speechShield100'); }, 1200);
+                } else { // drop in power
+                    scene.sound.play('speechShield' + shieldChange[1]);
                     scene.sound.play('playerShieldDrop');
                     vars.cameras.shake();
                 }
@@ -1809,6 +1776,21 @@ var vars = {
                     console.log('       %c... for ' + cS + ' cannon', vars.console.doing);
                     let currentSlot = ship.cannonSlots[cS];
                     currentSlot.currentWait = currentSlot.currentWaitMax = fps/currentSlot.firespeed;
+                }
+            },
+
+            shipDowngradeCheck: function() {
+                let pV = vars.player;
+                let cV = pV.ship.cannonSlots;
+                if (pV.hitpoints<=constsPS.ORANGE_SHIELD.hpLower && pV.hitpoints>=constsPS.NO_SHIELD.hpLower && pV.ship.upgrades!==1) {
+                    console.log('%cPLAYER >> Dropping upgrades to 1', vars.console.doing);
+                    pV.ship.upgrades=1;
+                    cV.l2r2.enabled=false;
+                } else if (pV.hitpoints<constsPS.NO_SHIELD.hpLower && pV.ship.upgrades!==0) {
+                    console.log('%cPLAYER >> Dropping upgrades to 0', vars.console.doing);
+                    pV.ship.upgrades=0;
+                    cV.l1r1.enabled=false;
+                    cV.l2r2.enabled=false;
                 }
             }
         },
@@ -2200,8 +2182,27 @@ var vars = {
         },
 
         hpUpdate: function() {
-            scene.children.getByName('hpTextIntS').setText(vars.player.hitpoints);
-            scene.children.getByName('hpTextInt').setText(vars.player.hitpoints);
+            let hp = vars.player.hitpoints;
+            scene.children.getByName('hpTextIntS').setText(hp);
+            scene.children.getByName('hpTextInt').setText(hp);
+            // update the hp bar
+            let hpPercent=0; let shieldPercent = 0;
+            if (hp>=constsPS.EXTRA_SHIELD.hpLower) { // extra visible
+                scene.children.getByName('hpPBOrange').setAlpha(1);
+                hpPercent=1; shieldPercent = 1;
+            } else { // hp<=250
+                if (hp>75) {
+                    hpPercent=1;
+                    shieldPercent = (hp-constsPS.NO_SHIELD.hpUpper)/(constsPS.GREEN_SHIELD.hpUpper-constsPS.NO_SHIELD.hpUpper);
+                } else {
+                    hpPercent=hp/constsPS.NO_SHIELD.hpUpper;
+                    shieldPercent = 0;
+                }
+                scene.children.getByName('hpPBOrange').setAlpha(0.2); // hide the orange over shield
+            }
+            // set the scale of the hp and shield bars
+            scene.children.getByName('hpPBRed').setScale(shieldPercent,1);
+            scene.children.getByName('hpPBBlue').setScale(hpPercent,1);
         }
     },
 

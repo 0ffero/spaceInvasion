@@ -123,7 +123,7 @@ function startGame() {
     let a = scene.add.image(116,y-24, 'hpBarPlayer', 'BG').setOrigin(0,0);
     let b = scene.add.image(117,y-23, 'hpBarPlayer', 'Red').setOrigin(0,0).setName('hpPBRed'); // we need to access these 3 when shields/hp change
     let c = scene.add.image(117,y-12, 'hpBarPlayer', 'Blue').setOrigin(0,0).setName('hpPBBlue');
-    let d = scene.add.image(208,y-23, 'hpBarPlayer', 'Orange').setOrigin(0,0).setName('hpPBOrange');
+    let d = scene.add.image(208,y-23, 'hpBarPlayer', 'Orange').setOrigin(0,0).setName('hpPBOrange').setAlpha(0.2);
     // add them to the group
     scene.groups.scoreGroup.addMultiple([a, b, c, d]);
     // draw the upgrades box
