@@ -623,7 +623,7 @@ function enemyBossShow(_tween, _target, _boss) {
     scene.children.getByName('hpI_' + bossName).setVisible(true);
     let bossType = _boss.getData('enemyType');
     _boss.play('e.hover' + bossType);
-    if (vars.player.ship.special.ADIUpgrade===false && vars.player.ship.special.SHADEUpgrade===false ) { // make sure there isnt a shader already running due to a player upgrade
+    if (vars.player.ship.special.ADI.collected===false && vars.player.ship.special.SHADE.collected===false ) { // make sure there isnt a shader already running due to a player upgrade
         if (bossType===5) { // cthulhu has his own shader which is only stopped upon his death
             // the cthulhu shader is started elsewhere
         } else {
@@ -952,9 +952,12 @@ function enemyUpgradeDrop(enemy) {
 
     // check to see if we should spawn a boss yet
     eV.bossSpawnTimeout[0]--;
+    let sSV = vars.player.ship.special;
     if (eV.bossSpawnTimeout[0]===2) { // warn that a boss is incoming
         scene.sound.play('speechIncomingBoss');
-        shaderType('warp',1);
+        if (sSV.ADI.collected===false && sSV.SHADE.collected===false) {
+            shaderType('warp',1);
+        }
     }
     if (eV.bossSpawnTimeout[0]<=0) {
         if (scene.groups.enemyBossGroup.children.size<eV.bossLimit) {

@@ -26,12 +26,12 @@ const constsM = { // mouse buttons
 }
 
 const constsPS = { // player shields frames
-    NO_SHIELD     : { frame: 12, hpLower:  1,  hpUpper:  75, strength: 0,   var: 0  },
-    LOW_SHIELD    : { frame: 9,  hpLower:  76, hpUpper:  99, strengthLower: 0, strength: 25,  var: 1  },
-    RED_SHIELD    : { frame: 6,  hpLower: 100, hpUpper: 124, strengthLower: 25, strength: 50,  var: 2  },
-    ORANGE_SHIELD : { frame: 3,  hpLower: 125, hpUpper: 149, strengthLower: 50, strength: 75,  var: 3  },
-    GREEN_SHIELD  : { frame: 0,  hpLower: 150, hpUpper: 250, strengthLower: 75, strength: 100, var: 4 },
-    EXTRA_SHIELD  : { frame: 12, hpLower: 251, hpUpper: 300 },
+    NO_SHIELD     : { frame: 12, hpLower:   1, hpUpper:  75, strength: 0,   var: 0  },
+    LOW_SHIELD    : { frame: 9,  hpLower:  76, hpUpper:  99, strengthLower:   0, strength: 25,  var: 1 },
+    RED_SHIELD    : { frame: 6,  hpLower: 100, hpUpper: 124, strengthLower:  25, strength: 50,  var: 2 },
+    ORANGE_SHIELD : { frame: 3,  hpLower: 125, hpUpper: 149, strengthLower:  50, strength: 75,  var: 3 },
+    GREEN_SHIELD  : { frame: 0,  hpLower: 150, hpUpper: 250, strengthLower:  75, strength: 100, var: 4 },
+    EXTRA_SHIELD  : { frame: 12, hpLower: 251, hpUpper: 300, strengthLower: 100 },
 }
 
 const constsD = { // depth of sprite groups
@@ -188,7 +188,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.082 (beta release)',
+    version : '0.9.093 (beta release)',
 
 
     audio: {
@@ -1037,6 +1037,32 @@ var vars = {
             gV.awaitingInput=false;
         }
 
+    },
+
+    intro: {
+        offeroGames: [
+            [1,1,1,1,0,1,1,1,2,1,1,1,2,1,1,1,2,1,1,1,0,0,0,1,1,0],
+            [1,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1],
+            [1,0,1,1,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0,0,1,0,0,1],
+            [1,1,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1],
+            [1,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1],
+            [1,1,1,1,2,1,0,0,0,1,0,0,0,1,1,1,0,1,0,0,1,2,2,1,1,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [1,1,1,1,0,0,1,1,1,0,0,1,0,0,0,1,0,1,1,1,1,0,1,1,1,1],
+            [1,0,0,0,0,1,0,0,0,1,0,1,1,0,1,1,0,1,0,0,0,0,1,0,0,0],
+            [1,0,1,1,0,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,0,0,1,1,1,1],
+            [1,0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,0,0,1],
+            [1,0,0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,1,0,0,1],
+            [1,1,1,1,2,1,0,0,0,1,2,1,0,0,0,1,2,1,1,1,1,2,1,1,1,1]
+        ],
+        ofour: [
+            [1,1,1,1,0,0,0,1,0,0],
+            [1,0,0,1,0,0,1,0,0,0],
+            [1,0,1,1,0,1,0,0,1,0],
+            [1,1,0,1,0,1,1,1,1,1],
+            [1,0,0,1,0,0,0,0,1,0],
+            [1,1,1,1,0,0,0,0,1,0]
+        ],
     },
 
     levels: {

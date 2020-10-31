@@ -184,6 +184,9 @@ function preload() {
     scene.load.image('hpBarInner', 'UI/hpBarInner.png');
     scene.load.image('hpBarOutline', 'UI/hpBarOutline.png');
     scene.load.atlas('hpBarPlayer', 'UI/hpBarPlayer.png', 'UI/hpBarPlayer.json');
+    scene.load.atlas('photoSButtons', 'UI/photosensitiveButtons.png', 'UI/photoS.json');
+    scene.load.image('photoSScreen', 'UI/siezure_warning.png');
+    scene.load.spritesheet('pixel', 'UI/pixels-ext.png', { frameWidth: 50, frameHeight: 50, margin: 1, spacing: 2 });
     scene.load.atlas('upgradesBar', 'UI/upgradesBar.png', 'UI/upgradesBar.json');
 
     // VIDEO
@@ -231,6 +234,7 @@ function create() {
     //let gV = vars.game;
     scene.groups = {};
     scene.groups.scoreGroup = scene.add.group();
+    scene.groups.logoGroup = scene.add.group();
 
     // player
     scene.groups.shipUpgradeGroup = scene.add.group();
@@ -301,6 +305,9 @@ function create() {
 
     preloadText.destroy(); preloadText=undefined;
 
+    setTimeout( function() { // normally I try not to use timeouts but the function its requesting is safe (ie it wont crash the game or do anything weird)
+        logo();
+    }, 7500)
 
     scene.children.getByName('loadingText').destroy();
 }

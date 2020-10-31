@@ -22,6 +22,18 @@ function gameLevelNext() {
     wavePopUp(); // show the wave pop up
 }
 
+function photoSWarningShow() {
+    scene.add.image(vars.canvas.cX,vars.canvas.cY,'photoSScreen').setName('photosMain');
+    scene.add.image(vars.canvas.cX,700,'photoSButtons', 'normal').setName('photoSNormal');
+    scene.add.image(vars.canvas.cX,940,'photoSButtons', 'limit').setName('photoSLimit');
+}
+
+function photoSWarningHide() {
+    scene.children.getByName('photosMain').destroy();
+    scene.children.getByName('photoSNormal').destroy();
+    scene.children.getByName('photoSLimit').destroy();
+}
+
 function powerUpUpdate() {
     // check to see if we should spawn a power up
     let eV = vars.enemies;

@@ -1,3 +1,99 @@
+function loadingImageFadeIn() {
+    // check if weve transitioned to playing the game
+    if (scene.children.getByName('loadingImage')===null) {
+        return false;
+    }
+    // empty out the logo group
+    if (scene.groups.logoGroup.children.entries.length===0) {
+        console.log('No children found');
+    } else {
+        scene.groups.logoGroup.clear();
+    }
+    // if we havent fade the loaded image back in
+    let a = scene.children.getByName('loadingImage');
+    scene.tweens.add({
+        delay: 500,
+        targets: a,
+        alpha: 1,
+        duration: 1000,
+        yoyo: true,
+        hold: 7500,
+        onComplete: logo
+    })
+}
+
+function logo() {
+    if (scene.children.getByName('loadingImage')===null) {
+        return false;
+    }
+    scene.children.getByName('loadingImage').setAlpha(0);
+    let ofour = vars.intro.ofour;
+
+    let startX = 120; let startY = 100;
+    let xInc = yInc = 50; let tOffset = 150;
+    let c = 0;
+    for (row of ofour) {
+        let y = startY + (c*yInc);
+        c++;
+        //console.log('NewRow');
+        for (let p=0; p<row.length; p++) {
+            let x = startX + (p * xInc);
+            let pixel = row[p];
+            //console.log(' Pixel ' + pixel + ' at ' + x + ',' + y);
+            if (pixel===1) {
+                let a = scene.add.image(x,y,'pixel').setAlpha(0);
+                scene.tweens.add({
+                    delay: c*tOffset+(p*tOffset),
+                    targets: a,
+                    alpha: 1,
+                    duration: 1000,
+                    yoyo: true,
+                    hold: 4000
+                })
+                scene.groups.logoGroup.add(a);
+            }
+        }
+    }
+
+    let offeroGames = vars.intro.offeroGames;
+    let scale=0.5
+    startX = 50;
+    xInc = yInc = 25;
+    tOffset = 75;
+    startY = 550;
+    c=0;
+    let lastOne = false;
+    for (row of offeroGames) {
+        let y = startY + (c*yInc);
+        c++;
+        //console.log('NewRow');
+        for (let p=0; p<row.length; p++) {
+            let x = startX + (p * xInc);
+            let pixel = row[p];
+            let onComplete = null;
+            if (p===row.length-1 && c===offeroGames.length-1) {
+                onComplete=loadingImageFadeIn;
+            }
+            //console.log(' Pixel ' + pixel + ' at ' + x + ',' + y);
+            if (pixel===1 || pixel===2 || lastOne===true) {
+                let a = scene.add.image(x,y,'pixel', pixel-1).setAlpha(0).setScale(scale);
+                scene.tweens.add({
+                    delay: (c*tOffset)+(p*tOffset),
+                    targets: a,
+                    ease: 'Quad.easeIn',
+                    alpha: 1,
+                    duration: 1000,
+                    yoyo: true,
+                    hold: 4000,
+                    onComplete: onComplete
+                })
+                scene.groups.logoGroup.add(a);
+            }
+        }
+    }
+
+}
+
 function uiGameOver() {
     // save the high score if applicable
     let gV = vars.game;
