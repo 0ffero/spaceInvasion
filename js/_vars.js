@@ -187,7 +187,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.131 (beta release)',
+    version : '0.9.134 (beta release)',
 
 
     audio: {

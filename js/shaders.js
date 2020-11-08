@@ -294,6 +294,10 @@ function shaderType(_shaderName='default', _cam=1) {
                     cam2.setRenderToTexture(scene.cSPipeline);
                 } else {
                     cam1.setRenderToTexture(scene.cSPipeline);
+                    enemies.children.each( (c)=> {
+                        c.clearTint();
+                    });
+                    player.clearTint();
                     cam2.setAlpha(1);
                     cam2.ignore(storyText);
                 }
@@ -317,6 +321,10 @@ function shaderType(_shaderName='default', _cam=1) {
                 cam2.setRenderToTexture(scene.gSPipeline);
             } else {
                 cam1.setRenderToTexture(scene.gSPipeline);
+                enemies.children.each( (c)=> {
+                    c.setTintFill(0xffffff);
+                });
+                player.setTintFill(0x000000);
                 cam2.setAlpha(1);
                 cam2.ignore(storyText);
             }
