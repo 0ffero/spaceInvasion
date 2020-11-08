@@ -99,6 +99,7 @@ function preload() {
     scene.load.spritesheet('alienPlanet', 'level/alienPlanet-ext.png', { frameWidth: 201, frameHeight: 101, margin: 1, spacing: 2 });
     scene.load.spritesheet('barn1', 'level/barn1_600x500.png', { frameWidth: 600, frameHeight: 500 });
     scene.load.spritesheet('barn2', 'level/barn2_600x500.png', { frameWidth: 600, frameHeight: 500 });
+    scene.load.atlas('carriers', 'level/carriers.png', 'level/carriers.json');
     scene.load.atlas('ships', 'level/ships.png', 'level/ships.json');
     scene.load.spritesheet('galaxies', 'level/galaxies.png', { frameWidth: 300, frameHeight: 200 });
     scene.load.spritesheet('nebulae', 'level/nebula-ext.jpg', { frameWidth: 720, frameHeight: 2160 });
@@ -123,6 +124,7 @@ function preload() {
     scene.load.atlas('rain', 'particles/rain.png', 'particles/rain.json');
 
     // FONT
+    scene.load.bitmapFont('azoRed', 'fonts/azo-red.png', 'fonts/azo-fire.xml');
     scene.load.bitmapFont('azo', 'fonts/azo-fire.png', 'fonts/azo-fire.xml');
 
     // SHADER PIPE LINES
@@ -130,13 +132,13 @@ function preload() {
     // gS = grayscale scaline
     // gSS = greenscreen scanline
     // warp = Incoming boss distortion
-    scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
-    scene.gSPipeline.setFloat2('resolution', game.config.width, game.config.height);
-    scene.gSPipeline.setFloat2('mouse', 0.0, 0.0);
-
     scene.cSPipeline = game.renderer.addPipeline('ColourScanline', new ColourScanlinePipeline(scene.game)); // <-- different variables!
     scene.cSPipeline.setFloat2('resolution', game.config.width, game.config.height);
     scene.cSPipeline.setFloat2('mouse', 0.0, 0.0);
+    
+    scene.gSPipeline = game.renderer.addPipeline('GrayScanline', new GrayScanlinePipeline(scene.game)); // <-- different variables!
+    scene.gSPipeline.setFloat2('resolution', game.config.width, game.config.height);
+    scene.gSPipeline.setFloat2('mouse', 0.0, 0.0);
 
     scene.gSSPipeline = game.renderer.addPipeline('GreenScreenScanline', new GreenScreenScanlinePipeline(scene.game)); // <-- different variables!
     scene.gSSPipeline.setFloat2('resolution', game.config.width, game.config.height);
@@ -145,13 +147,12 @@ function preload() {
     scene.warpPipeline = game.renderer.addPipeline('EnemyBossWarpPipeline', new EnemyBossWarpPipeline(scene.game));
     scene.warpPipeline.setFloat2('resolution', game.config.width, game.config.height);
 
-    scene.bossSpinnerPipeline = game.renderer.addPipeline('EnemyBossSpinnerPipeline', new enemyBossSpinnerPipeline(scene.game));
-    scene.bossSpinnerPipeline.setFloat2('resolution', game.config.width, game.config.height);
-    scene.bossSpinnerPipeline.setFloat2('mouse', 0.0, 0.0);
-
     // set up the shader pipelines time variables
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
     scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
+
+    // frag shaders
+    scene.load.glsl('bossSpinner', '/shaders/bossSpinner.frag');
 
     // SOUNDS
     scene.load.audio('enemyShoot',       'audio/enemyBlaster.ogg');
@@ -187,6 +188,7 @@ function preload() {
     scene.load.atlas('photoSButtons', 'UI/photosensitiveButtons.png', 'UI/photoS.json');
     scene.load.image('photoSScreen', 'UI/siezure_warning.png');
     scene.load.spritesheet('pixel', 'UI/pixels-ext.png', { frameWidth: 50, frameHeight: 50, margin: 1, spacing: 2 });
+    scene.load.image('title', 'UI/title.png');
     scene.load.atlas('upgradesBar', 'UI/upgradesBar.png', 'UI/upgradesBar.json');
 
     // VIDEO
@@ -203,6 +205,7 @@ function preload() {
 █████ █   █ █████ █   █   █   █████ 
 */
 function create() {
+    preloadText.destroy(); preloadText=undefined;
     scene.input.on('pointermove', function (pointer) { 
         scene.gSPipeline.setFloat2('mouse', pointer.x, pointer.y);
         scene.gSSPipeline.setFloat2('mouse', pointer.x, pointer.y);
@@ -221,7 +224,6 @@ function create() {
     scene.sound.setVolume(vars.audio.volume); // this volume is roughly equal to the volume of a standard youtube video.
 
     // INPUT
-    preloadText.setText('Setting up Input');
     vars.input.init(); // keys that control the game config (music etc)
     inputInit(); // game controls
 
@@ -229,19 +231,20 @@ function create() {
     animationInit('asteroids');
 
     //var gridEx = scene.add.grid(0,0,896,896,32,32,0x00ff00).setOrigin(0,0)
-    // set up the groups and colliders
-    // UI
-    //let gV = vars.game;
+    // SET UP THE GROUPS
     scene.groups = {};
     scene.groups.scoreGroup = scene.add.group();
     scene.groups.logoGroup = scene.add.group();
+
+    // levels
+    vars.levels.init();
 
     // player
     scene.groups.shipUpgradeGroup = scene.add.group();
     scene.groups.shipPowerUpGroup = scene.add.group();
     animationInit('shipUpgrades');
     animationInit('upgrades');
-    bullets             = scene.physics.add.group(); // there are lots of links to this, do later TODO, should be scene.groups.bullets
+    bullets = scene.physics.add.group(); // there are lots of links to this, do later TODO, should be scene.groups.bullets
 
     // enemies
     enemies = scene.physics.add.group(); // same with this one! Should be scene.groups.enemies
@@ -302,11 +305,11 @@ function create() {
     scene.children.getByName('loadingImage').destroy();
     let loadingImage = scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loadedImage').setName('loadingImage').setInteractive();
     loadingImage.on('pointerdown', vars.game.introStart);
-
-    preloadText.destroy(); preloadText=undefined;
+    // show the new title (space invasion blue)
+    scene.add.image(vars.canvas.cX, 745, 'title').setName('title');
 
     setTimeout( function() { // normally I try not to use timeouts but the function its requesting is safe (ie it wont crash the game or do anything weird)
-        logo();
+        vars.intro.logoDraw();
     }, 7500)
 
     scene.children.getByName('loadingText').destroy();

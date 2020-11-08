@@ -159,3 +159,67 @@ function create () {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// TUNNEL SHADER FULL SCRIPT
+
+var config = {
+    type: Phaser.WEBGL,
+    parent: 'phaser-example',
+    width: 720,
+    height: 1080,
+    scene: {
+        preload: preload,
+        create: create
+    }
+};
+
+var game = new Phaser.Game(config);
+
+function preload () {
+    this.load.image('alien', 'assets/textures/alien-metal.jpg');
+    this.load.image('rock-ore', 'assets/textures/rock-ore.jpg');
+    this.load.image('grass', 'assets/textures/grass.png');
+    this.load.image('marble', 'assets/textures/blue-marble.jpg');
+    this.load.image('soil', 'assets/textures/soil.png');
+
+    this.load.image('ice', 'assets/textures/ice.png');
+    this.load.image('grass2', 'assets/textures/grass2.png');
+    this.load.image('sand', 'assets/textures/sand2.png');
+    this.load.image('tiles', 'assets/textures/tiles2.png');
+    this.load.image('water', 'assets/textures/water2.png');
+
+    this.load.glsl('bundle', 'assets/shaders/bundle.glsl.js');
+}
+
+function create () {
+    var s = this.add.shader('Tunnel', 360, 540, 720, 1080, [ 'alien' ]);
+
+    s.setInteractive();
+
+    s.on('pointerdown', function () {
+        if (s.uniforms.iChannel0.textureKey === 'alien') {
+            s.setChannel0('rock-ore');
+        } else if (s.uniforms.iChannel0.textureKey === 'rock-ore') {
+            s.setChannel0('soil');
+        } else if (s.uniforms.iChannel0.textureKey === 'soil') {
+            s.setChannel0('grass2');
+        } else if (s.uniforms.iChannel0.textureKey === 'grass2') {
+            s.setChannel0('tiles');
+        } else if (s.uniforms.iChannel0.textureKey === 'tiles') {
+            s.setChannel0('water');
+        } else {
+            s.setChannel0('alien');
+        }
+    });
+}

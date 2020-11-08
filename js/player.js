@@ -249,13 +249,14 @@ class shipUpgrade { // these are created when a boss is killed
         }
 
         let spawnHealth = false;
-        sV.upgrades<2? sV.upgrades++ : spawnHealth=true;
+        let shipUpgrade = false;
+        sV.upgrades<2? shipUpgrade=true : spawnHealth=true;
 
         if (spawnHealth===true) { // player has fully upgraded ship, spawn them some health or better bullets instead
             healthBulletUpgradeSpawn(_spawnXY,forceUpgrade);
-        } else { // the player hasnt fully upgraded their ship, spawn ship upgrade crate
-            let upgradeBox = scene.physics.add.sprite(this.spawnX, this.spawnY, 'upgradeBox', 0).setScale(1).setData('upgrade', sV.upgrades);
-            upgradeBox.anims.play('shipGrade' + sV.upgrades);
+        } else if (shipUpgrade===true) { // the player hasnt fully upgraded their ship, spawn ship upgrade crate
+            let upgradeBox = scene.physics.add.sprite(this.spawnX, this.spawnY, 'upgradeBox', 0).setScale(1).setData('upgrade', sV.upgrades+1);
+            upgradeBox.anims.play('shipGrade' + (sV.upgrades+1));
             scene.groups.shipUpgradeGroup.add(upgradeBox);
             vars.cameras.ignore(cam2, upgradeBox);
             scene.tweens.add({
@@ -282,6 +283,7 @@ function shipUpgradePickUp(_pickup) {
     // enable guns for the ship upgrade and increase player to minimum health if necessary
     if (upgradeTo===1) { // ship upgrade 1
         // enable secondary guns
+        pV.ship.upgrades = upgradeTo;
         cV.l1r1.enabled=true; cV.l2r2.enabled=false;
         // upgrade 1: automatic 'full' orange shield
         if (pV.hitpoints<constsPS.GREEN_SHIELD.hpLower-5) { pV.hitpoints=constsPS.GREEN_SHIELD.hpLower-5; }
@@ -289,6 +291,7 @@ function shipUpgradePickUp(_pickup) {
         if (pV.hitpoints>=constsPS.GREEN_SHIELD.hpLower) { player.setFrame(upgradeTo); } else { player.setFrame(upgradeTo+3); }
     } else if (upgradeTo===2) { // ship upgrade 2
         // enable all guns
+        pV.ship.upgrades = upgradeTo;
         cV.l1r1.enabled=true; cV.l2r2.enabled=true;
         // automatic green shield
         if (pV.hitpoints < constsPS.GREEN_SHIELD.hpLower + 25) { pV.hitpoints=constsPS.GREEN_SHIELD.hpLower + 25; }

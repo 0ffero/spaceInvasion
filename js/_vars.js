@@ -26,7 +26,7 @@ const constsM = { // mouse buttons
 }
 
 const constsPS = { // player shields frames
-    NO_SHIELD     : { frame: 12, hpLower:   1, hpUpper:  75, strength: 0,   var: 0  },
+    NO_SHIELD     : { frame: 12, hpLower:   1, hpUpper:  75, strength: 0, var: 0 },
     LOW_SHIELD    : { frame: 9,  hpLower:  76, hpUpper:  99, strengthLower:   0, strength: 25,  var: 1 },
     RED_SHIELD    : { frame: 6,  hpLower: 100, hpUpper: 124, strengthLower:  25, strength: 50,  var: 2 },
     ORANGE_SHIELD : { frame: 3,  hpLower: 125, hpUpper: 149, strengthLower:  50, strength: 75,  var: 3 },
@@ -141,7 +141,6 @@ var vars = {
                 wave = vars.levels.wave+1;
             }
             var cWave = vars.levels.wave;
-            //let skipLevelCount = wave-cWave;
             var skip = setInterval( function() {
                 if (cWave<wave) {
                     vars.cheats.levelSkip();
@@ -188,7 +187,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.093 (beta release)',
+    version : '0.9.131 (beta release)',
 
 
     audio: {
@@ -698,13 +697,22 @@ var vars = {
         },
 
         hideSmallEnemies: function() {
+            // get the total enemy count
+            console.log('Hiding small enemies for wave ' + vars.levels.wave);
+            let last = enemies.children.size-1;
             enemies.children.each( (c, i)=>{
+                let onComplete = null;
+                if (i===last) {
+                    // start the new enemy paths
+                    onComplete = vars.enemies.availableAttackPatterns.pathPickNext;
+                }
                 c.disableBody(true,false); // stop the enemy
                 scene.tweens.add({
                     delay: i*100,
                     targets: c,
                     alpha: 0,
                     duration: 1000,
+                    onComplete: onComplete
                 })
             })
         },
@@ -872,6 +880,7 @@ var vars = {
             } else { // enemy movement after level 24
                 // enemies after level 24 are controlled by
                 // vars.enemies.availableAttackPatterns.pathPickNext();
+                // the above function is instantiated in hideSmallEnemies()
             }
             
         }
@@ -931,9 +940,10 @@ var vars = {
                 // fade out the loading screen
                 let loadingImage = scene.children.getByName('loadingImage');
                 let loaded = scene.children.getByName('loaded');
+                let title = scene.children.getByName('title');
                 scene.children.getByName('version').destroy();
                 scene.tweens.add({
-                    targets: loadingImage,
+                    targets: [loadingImage, title],
                     alpha: 0,
                     ease: 'linear',
                     duration: 1000,
@@ -945,6 +955,9 @@ var vars = {
                     duration: 1000,
                     onComplete: vars.game.loadingImageDestroy,
                 })
+
+                // make the logo invisible if it exists (it destroys itself)
+                scene.groups.logoGroup.setVisible(false);
 
                 // start the game
                 if (vars.audio.isEnabled===true) {
@@ -963,7 +976,7 @@ var vars = {
                 if (vars.DEBUGHIDE===false) {
                     vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
                     vars.DEBUGTEXT.setOrigin(0,0);
-                    vars.DEBUGTEXT.setStroke(0x000000,4)
+                    vars.DEBUGTEXT.setStroke(0x000000,4);
                 }
             }
         },
@@ -971,6 +984,7 @@ var vars = {
         loadingImageDestroy: function() {
             scene.children.getByName('loadingImage').destroy();
             scene.children.getByName('loaded').destroy();
+            scene.children.getByName('title').destroy();
         },
 
         pause: function() {
@@ -1009,9 +1023,8 @@ var vars = {
             scene.physics.resume();
             let vG = vars.game;
             vG.paused=false;
-            enemies.children.each( function(c) {
-                c.setVisible(true).setVelocityX(50);
-            })
+            // bring the enemies to the front and start them moving
+            enemies.children.each( function(c) { c.setVisible(true).setVelocityX(vars.enemies.speed).setDepth(1); })
             vars.cameras.ignore(cam2, enemies);
             vars.levels.wavePopupVisible=false;
             vars.canvas.setCursor('cross');
@@ -1040,6 +1053,85 @@ var vars = {
     },
 
     intro: {
+        loadingImageFadeIn() {
+            // check if weve transitioned to playing the game
+            vars.cameras.flash('white',1250);
+            if (scene.children.getByName('loadingImage')===null) {
+                return false;
+            }
+            // empty out the logo group
+            if (scene.groups.logoGroup.children.entries.length!==0) {
+                scene.groups.logoGroup.children.each( (c)=> {
+                    c.destroy();
+                })
+                scene.groups.logoGroup.clear(); // ok so clearing out the group, doesnt actually destroy the children... because OF COURSE IT DOESNT... fukn Phaser.
+            }
+            // if we havent fade the loaded image back in
+            let a = scene.children.getByName('loadingImage');
+            let b = scene.children.getByName('title');
+            scene.tweens.add({
+                delay: 500,
+                targets: [a,b],
+                alpha: 1,
+                duration: 1000,
+                yoyo: true,
+                hold: 7500,
+                onComplete: vars.intro.logoDraw
+            })
+        },
+
+        logoDraw: function() {
+            if (scene.children.getByName('loadingImage')===null) {
+                return false;
+            }
+            // before drawing the logo, we simply blink out the loading image and title
+            scene.children.getByName('loadingImage').setAlpha(0.001);
+            scene.children.getByName('title').setAlpha(0.001);
+            vars.cameras.flash('white', 1250);
+            let ofour = vars.intro.ofour;
+
+            let startX = 120; let startY = 100;
+            let xInc = yInc = 50; let tOffset = 150;
+            let c = 0;
+            for (row of ofour) {
+                let y = startY + (c*yInc);
+                c++;
+                //console.log('NewRow');
+                for (let p=0; p<row.length; p++) {
+                    let x = startX + (p * xInc);
+                    let pixel = row[p];
+                    //console.log(' Pixel ' + pixel + ' at ' + x + ',' + y);
+                    if (pixel===1) {
+                        let a = scene.add.image(x,y,'pixel').setAlpha(0);
+                        scene.tweens.add({ delay: c*tOffset+(p*tOffset), targets: a, alpha: 1, duration: 1000, yoyo: true, hold: 4000 })
+                        scene.groups.logoGroup.add(a);
+                    }
+                }
+            }
+
+            let offeroGames = vars.intro.offeroGames;
+            let scale=0.5; startX = 50; xInc = yInc = 25; tOffset = 75; startY = 550; c=0; let lastOne = false;
+            for (row of offeroGames) {
+                let y = startY + (c*yInc);
+                c++;
+                //console.log('NewRow');
+                for (let p=0; p<row.length; p++) {
+                    let x = startX + (p * xInc);
+                    let pixel = row[p];
+                    let onComplete = null;
+                    if (p===row.length-1 && c===offeroGames.length-1) {
+                        onComplete=vars.intro.loadingImageFadeIn;
+                    }
+                    //console.log(' Pixel ' + pixel + ' at ' + x + ',' + y);
+                    if (pixel===1 || pixel===2 || lastOne===true) {
+                        let a = scene.add.image(x,y,'pixel', pixel-1).setAlpha(0).setScale(scale);
+                        scene.tweens.add({ delay: (c*tOffset)+(p*tOffset), targets: a, ease: 'Quad.easeIn', alpha: 1, duration: 1000, yoyo: true, hold: 4000, onComplete: onComplete })
+                        scene.groups.logoGroup.add(a);
+                    }
+                }
+            }
+        },
+
         offeroGames: [
             [1,1,1,1,0,1,1,1,2,1,1,1,2,1,1,1,2,1,1,1,0,0,0,1,1,0],
             [1,0,0,1,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1],
@@ -1075,11 +1167,14 @@ var vars = {
             30: 'stellar',
             35: 'alienCities',
             45: 'boss',
+            51: 'final'
         },
         raining: false,
         rainCheck: [20*fps,20*fps],
         wave: 0,
-        
+        waveInitialisedList: {
+            // filed by init()
+        },
         wavePopupVisible: false,
 
         alienPlanetScroll: function(_tween, _object) {
@@ -1203,12 +1298,42 @@ var vars = {
         },
 
         finalChecks: function() { // this happens after the wave pop up/fly by
-            if (vars.levels.wave===25) {
-                vars.enemies.attackPatternsEnabled = true;
-                //fade out the enemies as they are going to be attached to a path instead of moving back and forth
-                vars.enemies.hideSmallEnemies();
+            let lV = vars.levels;
+            if (lV.waveInitialisedList['wave' + lV.wave].initialised===false) {
+                // set the level to intialised
+                lV.waveInitialisedList['wave' + lV.wave].initialised=true;
+
+                console.log('Final Checks for wave ' + vars.levels.wave);
+                if (lV.wave===25) {
+                    vars.enemies.attackPatternsEnabled = true;
+                    //fade out the enemies as they are going to be attached to a path instead of moving back and forth
+                    vars.enemies.hideSmallEnemies();
+                }
+                vars.game.unpause();
+                // if there are still bosses on screen, re-enable their hp bars
+                let eB = scene.groups.enemyBossGroup;
+                if (eB.children.size>0) {
+                    eB.children.each( (c)=> {
+                        let cName = c.name;
+                        let enemyName = cName.replace('f_','');
+                        scene.children.getByName('hpO_' + enemyName).setVisible(true);
+                        scene.children.getByName('hpI_' + enemyName).setVisible(true);
+                    })
+                }
             }
-            vars.game.unpause();
+        },
+
+        init: function() {
+            let lV = vars.levels;
+            let type = lV.waveBGs[0];
+            waveInitObject = lV.waveInitialisedList;
+            for (let w=1; w<=51; w++) {
+                if (lV.waveBGs[w]!==undefined) {
+                    if (vars.DEBUG===true) { console.log('Changing BG type in waveInitObject to ' + vars.levels.waveBGs[w]); }
+                    type = lV.waveBGs[w];
+                }
+                waveInitObject['wave' + w] = { initialised: false, type: type }
+            }
         },
 
         levelBGChange: function() {
@@ -1808,15 +1933,30 @@ var vars = {
             shipDowngradeCheck: function() {
                 let pV = vars.player;
                 let cV = pV.ship.cannonSlots;
+                let upgradeChange = false;
                 if (pV.hitpoints<=constsPS.ORANGE_SHIELD.hpLower && pV.hitpoints>=constsPS.NO_SHIELD.hpLower && pV.ship.upgrades!==1) {
                     console.log('%cPLAYER >> Dropping upgrades to 1', vars.console.doing);
                     pV.ship.upgrades=1;
                     cV.l2r2.enabled=false;
+                    upgradeChange = true;
                 } else if (pV.hitpoints<constsPS.NO_SHIELD.hpLower && pV.ship.upgrades!==0) {
                     console.log('%cPLAYER >> Dropping upgrades to 0', vars.console.doing);
                     pV.ship.upgrades=0;
                     cV.l1r1.enabled=false;
                     cV.l2r2.enabled=false;
+                    upgradeChange = true;
+                }
+
+                if (upgradeChange===true) { // if we have changed the upgrade number of the player ship we have to check if there are any ship upgrades on screen
+                    if (scene.groups.shipUpgradeGroup.children.size!==0) {
+                        let sUpGG = scene.groups.shipUpgradeGroup;
+                        sUpGG.children.each( (c)=> { // this should also work if we increase the amount of possible ship upgrades from 2 to 3 ++ etc
+                            let currentUpG = parseInt(c.getData('upgrade')); // Im gonna parse int this just to make sure the int isnt contained in a string
+                            let newUpG = currentUpG-1;
+                            c.setData(newUpG);
+                            c.anims.play('shipGrade' + newUpG);
+                        })
+                    }
                 }
             }
         },
@@ -1840,6 +1980,7 @@ var vars = {
         },
         asteroidXArray: [],
         asteroidsRunning: false,
+        boatsMaxY: 1400,
         pieceConnectors: {
             0: [1,2],
             1: [3],
@@ -1934,31 +2075,49 @@ var vars = {
         },
 
         carrierGenerate: function(_tween, _carrier) {
-            vars.scenery.shipsRunning=true;
+            let sV = vars.scenery;
+            sV.shipsRunning=true;
+            let startY = sV.yPosition-30;
+            let maxY = sV.boatsMaxY;
+            // i originally only had _carriers but now they should really be called something like boats or ships (although ships would be confusing)
             if (_carrier!==undefined) {
                 _carrier[0].destroy();
             }
             if (vars.levels.wave>19) { return false; }
             let x = Phaser.Math.RND.between(vars.canvas.cX-100,vars.canvas.cX+100);
-            let frameArray = [4,5,6,8];
             let xChange = [200,250,300,350,400,450,500];
             let xMod = 1;
+            let selectedType = ['ships', 'ship'];
+            let frameArray = [];
+            let finalScale = vars.game.scale;
+
+            // choose between carriers and ships
+            if (Phaser.Math.RND.sign()===1) {
+                selectedType = ['carriers', 'carrier'];
+                frameArray = [1,2,3,4];
+                finalScale*=1;
+            } else { // rnd sign was -1
+                frameArray = [4,5,6,8];
+                if (x<vars.canvas.cX) {
+                    frameArray = [1,2,3,7];
+                }
+                //console.log('x: ' + x + ', xChange: ' + xChange);
+            }
             if (x<vars.canvas.cX) {
-                frameArray = [1,2,3,7];
                 xMod = -1;
             }
             xChange = Phaser.Math.RND.pick(xChange) * xMod;
-            //console.log('x: ' + x + ', xChange: ' + xChange);
-            let frame = Phaser.Math.RND.pick(frameArray);
-        
-            let carrier = scene.add.image(x,800,'ships','ship' + frame).setScale(0.0);
+            let frame = Phaser.Math.RND.pick(frameArray).toString();
+            // due to the type of ease in (to simulate forward momentum/speed) the startY is modified slightly (from the grass levels). Basically I take 100 off here even though the bottom of the waves are ~792px
+            let carrier = scene.add.image(x, startY, selectedType[0], selectedType[1] + frame).setScale(0.0);
+
             scene.groups.sceneryGroup.add(carrier);
             vars.cameras.ignore(cam2, carrier);
             scene.tweens.add({
                 targets: carrier,
-                y: 1400,
+                y: maxY,
                 x: x+xChange,
-                scale: 0.4,
+                scale: finalScale,
                 duration: 7000,
                 ease: 'Cubic.easeIn',
                 onComplete: vars.scenery.carrierGenerate,
@@ -2153,6 +2312,10 @@ var vars = {
 
     shader: {
         current: 'default',
+
+        enemyBossSpinner: function() {
+            
+        }
     },
 
     story: {
@@ -2238,10 +2401,10 @@ var vars = {
             video.playWhenUnlocked=true;
             scene.tweens.add({
                 targets: video,
-                delay: 2000,
-                alpha: 0.07,
+                delay: 3000,
+                alpha: 0.04,
                 ease: 'linear',
-                duration: 3000,
+                duration: 10000,
             })
             scene.tweens.add({
                 targets: video,

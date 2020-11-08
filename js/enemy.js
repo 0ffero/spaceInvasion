@@ -762,6 +762,7 @@ function enemy25Hit(_follower, _bullet) {
         let position = [_follower.x, _follower.y];
         let enemyName = fName.replace('f25_','');
         let realEnemy = scene.children.getByName(enemyName);
+        if (realEnemy===null) { debugger; return false; }
         let particleTint = realEnemy.getData('colourIndex');
 
         // particles
@@ -782,8 +783,8 @@ function enemy25Hit(_follower, _bullet) {
             // make them explode
             enemy25Death(realEnemy);
             // hide the follower
-            _follower.remove();
-            debugger;
+            _follower.destroy();
+            //debugger;
         } else { // enemy is still alive, update its hp
             realEnemy.setData('hp', hp);
         }

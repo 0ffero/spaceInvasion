@@ -10,6 +10,16 @@ function gameLevelNext() {
     // remove all bosses on the screen if wave is less than 10
     if (vars.enemies.removeBosses===true) {
         vars.enemies.destroyAllBosses();
+    } else { // if the bosses arent destroyed between waves (eg wave 10+) then we should hide the hp bar as the bosses keep moving between waves
+        let eB = scene.groups.enemyBossGroup;
+        if (eB.children.size>0) {
+            eB.children.each( (c)=> {
+                let cName = c.name;
+                let enemyName = cName.replace('f_','');
+                scene.children.getByName('hpO_' + enemyName).setVisible(false);
+                scene.children.getByName('hpI_' + enemyName).setVisible(false);
+            })
+        }
     }
 
     // were moving on to a new wave, increase the bullet damage
@@ -51,7 +61,7 @@ function storyInit() {
 
     // START THE STORY SCROLLER
     vars.game.storyVisible = true;
-    storyText = scene.add.bitmapText(0, vars.canvas.height, 'azo', vars.story.introText, 48).setCenterAlign().setAlpha(0).setMaxWidth(vars.canvas.width-20).setName('introStory');
+    storyText = scene.add.bitmapText(0, vars.canvas.height, 'azoRed', vars.story.introText, 48).setCenterAlign().setAlpha(0).setMaxWidth(vars.canvas.width-20).setName('introStory');
     storyText.x=10;
     let scrollHeight = storyText.height;
     let duration = scrollHeight*15;
@@ -60,7 +70,7 @@ function storyInit() {
         targets: storyText,
         delay: 0,
         alpha: 0.7,
-        ease: 'Quad.easeIn',
+        ease: 'Cubic.easeIn',
         duration: 7000,
     })
 

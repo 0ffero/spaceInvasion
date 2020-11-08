@@ -141,44 +141,6 @@ var GreenScreenScanlinePipeline = new Phaser.Class({
     }
 });
 
-var enemyBossSpinnerPipeline = new Phaser.Class({
-
-    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
-
-    initialize:
-
-    function enemyBossSpinnerPipeline (game) {
-        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
-            game: game,
-            renderer: game.renderer,
-            fragShader:`
-            precision mediump float;
-
-            #extension GL_OES_standard_derivatives : enable
-            
-            uniform float time;
-            uniform vec2 resolution;
-
-            void main( void ) {
-                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y);
-                vec3 destColor = vec3(0.0, 0.6, 1.0);
-                float f = 0.0;
-                float radius = (sin(time)+1.0)*0.07;
-                for(float i = 0.0; i < 10.0; i++)
-                {
-                    float theta = 3.0*sin(time) + i * 0.628318;
-                    float s = sin(theta) * 0.3;
-                    float c = cos(theta) * 1.0;
-                    float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius);
-                    f += 0.0068 / equ*3.0;
-                }
-                gl_FragColor = vec4(vec3(destColor * f), 1.0);
-            }
-            `
-        });
-    }
-});
-
 var EnemyBossWarpPipeline = new Phaser.Class({
 
     Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
@@ -207,8 +169,7 @@ var EnemyBossWarpPipeline = new Phaser.Class({
                 float c = 1.0;
                 float inten = .05;
 
-                for (int n = 0; n < MAX_ITER; n++)
-                {
+                for (int n = 0; n < MAX_ITER; n++) {
                     float t = time * (1.0 - (3.0 / float(n+1)));
 
                     i = p + vec2(cos(t - i.x) + sin(t + i.y),
