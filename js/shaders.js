@@ -294,10 +294,6 @@ function shaderType(_shaderName='default', _cam=1) {
                     cam2.setRenderToTexture(scene.cSPipeline);
                 } else {
                     cam1.setRenderToTexture(scene.cSPipeline);
-                    enemies.children.each( (c)=> {
-                        c.clearTint();
-                    });
-                    player.clearTint();
                     cam2.setAlpha(1);
                     cam2.ignore(storyText);
                 }
@@ -321,10 +317,6 @@ function shaderType(_shaderName='default', _cam=1) {
                 cam2.setRenderToTexture(scene.gSPipeline);
             } else {
                 cam1.setRenderToTexture(scene.gSPipeline);
-                enemies.children.each( (c)=> {
-                    c.setTintFill(0xffffff);
-                });
-                player.setTintFill(0x000000);
                 cam2.setAlpha(1);
                 cam2.ignore(storyText);
             }
@@ -342,6 +334,22 @@ function shaderType(_shaderName='default', _cam=1) {
     }
 
     if (update===true) {
-        vars.shader.current = _shaderName;
+        if (_shaderName!=='gray' && _shaderName!=='grey' && _shaderName!=='grayscan' && _shaderName!=='greyscan' ) { // moving from grey scanline to some other shader
+            let shaderRegex = /gr[a,e]y/;
+            if (vars.shader.current.match(shaderRegex)!==null) { // regex for shader (currently catches grey,gray,greyscan and grayscan)
+                enemies.children.each( (c)=> {
+                    c.clearTint();
+                });
+                player.clearTint();
+            }
+        } else { // grey scaline enabled
+            enemies.children.each( (c)=> {
+                c.setTintFill(0xffffff);
+            });
+            player.setTintFill(0x000000);
+        }
     }
+    // update the shader variable
+    vars.shader.current = _shaderName;
+
 }

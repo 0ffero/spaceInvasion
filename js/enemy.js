@@ -743,6 +743,17 @@ function enemy25Death(enemy) {
     enemy.setVisible(false);
     enemy25Destroy(enemy);
 
+    // remove the enemy from the enemies list var
+    let i = 0;
+    for (nme of vars.enemies.list) {
+        if (nme.name===enemy.name) {
+            //console.log('Found the enemy in the list var... removing it');
+            vars.enemies.list.splice(i,1);
+            break;
+        }
+        i++;
+    }
+
     enemyUpgradeDrop(enemy);
 }
 

@@ -21,3 +21,11 @@ function shuffle(array) {
   
     return array;
 }
+
+function sortByKey(array, key, reverse=false) {
+    if (Array.isArray(array)===false) { console.log('Passed in array is not actually an array. It\'s typeof is ' + (typeof array)); return false; }
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        if (reverse===true) { return ((x > y) ? -1 : ((x < y) ? 1 : 0)); } else { return ((x < y) ? -1 : ((x > y) ? 1 : 0)); }
+    });
+}

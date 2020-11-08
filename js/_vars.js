@@ -187,7 +187,8 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.134 (beta release)',
+    version : '0.9.137 (beta release)',
+    versionCheckResult: -1,
 
 
     audio: {
@@ -288,11 +289,14 @@ var vars = {
                 let eV = vars.enemies;
                 eV.availableAttackPatterns.used.push(_pathName);
                 let delay = _pathData.delay; let duration=_pathData.duration;
-                if (delay<=0 || duration<=0) { return false; }
+                if (delay<=0 || duration<=0) { console.log('Error with path. The delay (' + delay + ') or duration (' + duration + ') was invalid!'); return false; }
                 let totalFollowers = _pathData.maxOnPath;
                 if (_maxFollowers===true) {
                     totalFollowers = ~~(duration/delay);
                 }
+                // limit the total followers in case we dont have enough enemies to fill the path (paths have their own max followers variable)
+                totalFollowers = Phaser.Math.Clamp(totalFollowers, 0, vars.enemies.list.length);
+                
                 let ease = 'Linear'; // if we need to modify the ease for a specific path (most paths WONT need this!)
                 /* if (_pathName==='lineToCircle') {
                     ease = 'Sine.easeInOut'
@@ -330,12 +334,23 @@ var vars = {
             },
 
             pathPickNext: function() {
+                // check that we have enemies left to add to the path
+                if (vars.enemies.list.length<=0) { // no enemies left to attach to paths (ie get next level)
+                    debugger; // <--- ive left this in, but in general we should be checking
+                              // the enemies left when an enemy dies, and going to the next
+                              // wave via that function. The only problem is that we may be
+                              // jumping to another wave. that means this will come back with
+                              // enemies = 0. Obviously ill be adding a function to check this
+                              // properly but this will do just now TODO
+                }
+                // first, sort the enemies by hp
+                sortByKey(vars.enemies.list, 'hp', true); // true = sort by highest hp
                 let aap = vars.enemies.availableAttackPatterns;
                 let rndPath = Phaser.Math.RND.between(0, aap.ready.length-1); // get array index
                 let pathNameArray = aap.ready.splice(rndPath,1); // get the path name
                 pathName = pathNameArray[0];
                 let pathData = vars.enemies.attackPatternsNonDynamic[pathName];
-                console.log(pathName);
+                //console.log(pathName);
 
                 if (aap.ready.length===0) { // this was the last available pattern move all used paths back into ready
                     console.log('All paths used. Resetting them');
@@ -717,7 +732,7 @@ var vars = {
             })
         },
 
-        increaseEnemySpeed() {
+        increaseEnemySpeed: function() {
             let eV = vars.enemies;
             eV.speed < eV.speeds.max ? eV.speed +=5 : eV.speed = eV.speeds.max;
             //console.log('Enemy speed is now ' + eV.speed);
@@ -890,7 +905,7 @@ var vars = {
     game: {
         graphics: null,
 
-        awaitingInput: false,
+        awaitingInput: true,
         bulletCheckTimeout: [fps/2, fps/2],
         bonusSpawnCount: [0,0,0,0,0,0,0,0,0,0], // basically used for debugging
         upgradeNames: ['  Hit Points: +25 hp','  Hit Points: +50 hp','  Hit Points: +75 hp','  Bullets - Double Fire Rate','  Bullets - Double Damage','  Points: +2000','  Points: +3000','  Points: +5000', 'Shade Field', 'Amstrad Defence Field'],
@@ -935,8 +950,8 @@ var vars = {
         },
 
         introStart: function() {
-            if (vars.game.awaitingInput===false) {
-                vars.game.awaitingInput=true;
+            if (vars.game.awaitingInput===true) {
+                vars.game.awaitingInput=false;
                 // fade out the loading screen
                 let loadingImage = scene.children.getByName('loadingImage');
                 let loaded = scene.children.getByName('loaded');
@@ -1053,12 +1068,12 @@ var vars = {
     },
 
     intro: {
-        loadingImageFadeIn() {
+        loadingImageFadeIn: function() {
             // check if weve transitioned to playing the game
-            vars.cameras.flash('white',1250);
             if (scene.children.getByName('loadingImage')===null) {
                 return false;
             }
+            vars.cameras.flash('white',1250);
             // empty out the logo group
             if (scene.groups.logoGroup.children.entries.length!==0) {
                 scene.groups.logoGroup.children.each( (c)=> {
@@ -1081,7 +1096,10 @@ var vars = {
         },
 
         logoDraw: function() {
-            if (scene.children.getByName('loadingImage')===null) {
+            if (scene.children.getByName('loadingImage')===null) { // the game has started before calling this function, return false
+                return false;
+            }
+            if (vars.game.awaitingInput===false) { // ignore this function if the game was started during the hold tween of loadingImage and title (loadingImageFadeIn())
                 return false;
             }
             // before drawing the logo, we simply blink out the loading image and title
@@ -1207,7 +1225,7 @@ var vars = {
             })
         },
 
-        changeBackground(_bgtype='grass') {
+        changeBackground: function(_bgtype='grass') {
             switch (_bgtype) {
                 case 'alienCities': // wave 35
                     // hide the stellar corona
@@ -2011,7 +2029,7 @@ var vars = {
             },
         },
 
-        asteroidGenerate(_tween, _asteroid) {
+        asteroidGenerate: function(_tween, _asteroid) {
             let setDepth=false;
             if (vars.scenery.asteroidsRunning===false) { vars.scenery.asteroidsRunning=true; setDepth=true; }
             let count=16;
@@ -2418,9 +2436,19 @@ var vars = {
     },
 
     versionCheck: function() {
-        if (Phaser.VERSION !== '3.24.1') {
-            console.warn('\n\nPhaser has been updated!\n\nIf the wave intro changes, this is probably why!\n\n')
-            alert('Phaser version has changed!\nIf the wave animation looks\nwrong, this will be why!');
+        if (vars.versionCheckResult===-1) {
+            let lookingFor = '3.24.1';
+            let thisVersion = Phaser.VERSION;
+            if (thisVersion !== lookingFor) {
+                let warning = '\n\nPhaser has been updated! (Looking for: ' + lookingFor + ' and found ' + thisVersion + ')\n\nIf the wave intro changes, this is probably why!\n(Also required by other functions, but this ones obvious)';
+                console.warn(warning);
+                alert(warning);
+                vars.versionCheckResult = false;
+            } else {
+                vars.versionCheckResult = true;
+            }
+        } else {
+            console.log('Version check has already been done. Result was ' + vars.versionCheckResult + '\nWhere false means failed');
         }
     }
 }
