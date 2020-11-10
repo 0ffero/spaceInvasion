@@ -357,24 +357,23 @@ class enemy {
     constructor(enemyType, row, xOffset, col) {
         this.enemyType = enemyType;
         this.name = 'enemy_' + generateRandomID();
-
         this.x = xOffset + (col*30);
-
         this.row = row;
-
-        switch (this.row) { // we currently dont do anything with this variable, but its good to get an idea of the enemy colour (if needed)
-            case 1: this.colour = 0xff0000; break;
-            case 2: this.colour = 0x00ff00; break;
-            case 3: this.colour = 0x0000ff; break;
-            case 4: this.colour = 0xA300D9; break;
-            case 5: this.colour = 0xffff00; break;
-            case 6: this.colour = 0xffff00; break;
-
-            default: this.colour = 0xffffff; break;
+        if (this.row===6) { // cthulhu's row
+            this.enemyType=1;
         }
+        this.colour = vars.enemies.colours[this.row-1][2];
+        this.colourName = vars.enemies.colours[this.row-1][0];
 
+        // this following code was originally used to look up the actual colour of the sprite,
+        // we now use 'colour' instead. Basically theres no point in doing a lookup every
+        // time a sprite is hit when we can just use the colour var.
         this.colourIndex = this.row-1;
         this.y = vars.game.rowStartY * this.row + (row*30);
+
+        let vgscale = vars.game.scale;
+        this.scale = ~~((vgscale-0.1)*1000)/1000; // quicker parseInt
+        this.xyScaled = [this.x*vgscale, this.y*vgscale];
 
         this.addEnemy(this.enemyType);
     }
@@ -387,11 +386,14 @@ class enemy {
         }
         this.points = this.hp * 10;
 
+        // level 25+ works differently. All enemies are attached to a path. In this state, enemies are too easy to kill, so we multiply their hp
+        let nextWave = vars.levels.wave+1;
+        if (nextWave>=25) { this.hp*=5; this.points*=2; }
+
         this.sprite = this.row-1;
 
-        let vgscale = vars.game.scale;
-        let thisSprite = scene.physics.add.sprite(this.x * vgscale, this.y * vgscale, 'enemies', this.sprite).setScale(vgscale-0.1).setVisible(false).setName('boss_' + generateRandomID);
-        thisSprite.setData({ hp: this.hp, row: this.row, enemyType: this.enemyType, dead: false, points: this.points, attacking: false, colour: this.colour, colourIndex: this.colourIndex }).setName(this.name);
+        let thisSprite = scene.physics.add.sprite(this.xyScaled[0], this.xyScaled[1], 'enemies', this.sprite).setScale(this.scale).setVisible(false).setName('boss_' + generateRandomID);
+        thisSprite.setData({ hp: this.hp, row: this.row, enemyType: this.enemyType, dead: false, points: this.points, attacking: false, colourName: this.colourName, colour: this.colour, colourIndex: this.colourIndex }).setName(this.name);
         thisSprite.anims.play('e.hover' + this.sprite);
         enemies.add(thisSprite);
     }
@@ -552,11 +554,10 @@ function enemyBossHit(_bullet, _boss) {
         bulletHitEnemy.emitParticleAt(_bullet.x, _bullet.y-20);
         scene.sound.play('enemyBossHit');
         let bulletStrength = _bullet.getData('hp');
-        let colourIndex = _boss.getData('colourIndex');
-        let tint = eV.colours[colourIndex];
+        let tint = _boss.getData('colour');
         _bullet.destroy();
         for (let d=0; d<3; d++) {
-            enemyPieceParticle.setTint(tint[1]);
+            enemyPieceParticle.setTint(tint);
             enemyPieceParticle.emitParticleAt(bossPosition[0], bossPosition[1]);
         }
         let hp = _boss.getData('hp');
@@ -757,13 +758,20 @@ function enemy25Death(enemy) {
     enemyUpgradeDrop(enemy);
 }
 
-function enemy25Destroy(enemy) {
+function enemy25Destroy(enemy) { // this function determines if there are enemies (phaser sprite) still alive
     console.log('Enemy25 Destroyed.');
     bulletHitEnemy.emitParticleAt(enemy.x, enemy.y); // explosion particle
     enemy.destroy();
-    // check if there are any enemies left on screen
+
+    // check if there are any enemies left to attach to paths
     if (enemies.children.entries.length===0) { // all enemies are dead!
         gameLevelNext();
+        return 'Next Wave';
+    }
+    // looks like we still have enemies available, check if there are still followers
+    if (scene.groups.enemyAttackingGroup25.children.size===1) {
+        // pick a new path
+        vars.enemies.availableAttackPatterns.pathPickNext();
     }
 }
 
@@ -773,13 +781,12 @@ function enemy25Hit(_follower, _bullet) {
         let position = [_follower.x, _follower.y];
         let enemyName = fName.replace('f25_','');
         let realEnemy = scene.children.getByName(enemyName);
-        if (realEnemy===null) { debugger; return false; }
-        let particleTint = realEnemy.getData('colourIndex');
+        if (realEnemy===null) { console.log('Real enemy not found. Ignoring the call'); return false; }
+        let tint = realEnemy.getData('colour');
 
         // particles
-        let tint = vars.enemies.colours[particleTint];
-        //console.log('Particle XY: ' + position[0] + ',' + position[1] + '. Tint (' + particleTint + '): ' + tint);
-        enemyPieceParticle.setTint(tint[1]);
+        //console.log('Particle XY: ' + position[0] + ',' + position[1] + '. Tint: ' + tint);
+        enemyPieceParticle.setTint(tint);
         enemyPieceParticle.emitParticleAt(position[0], position[1]);
         bulletHitEnemy.emitParticleAt(position[0], position[1]);
 
@@ -791,11 +798,8 @@ function enemy25Hit(_follower, _bullet) {
         let hp = realEnemy.getData('hp');
         hp-=bulletStrength;
         if (hp<=0) { // enemy is dead
-            // make them explode
-            enemy25Death(realEnemy);
-            // hide the follower
-            _follower.destroy();
-            //debugger;
+            enemy25Death(realEnemy); // make them explode
+            _follower.destroy(); // hide the follower
         } else { // enemy is still alive, update its hp
             realEnemy.setData('hp', hp);
         }
@@ -818,12 +822,8 @@ function enemyDeath(enemy) {
         vars.particles.generateFireEmitter(enemy);
     }
     scene.tweens.add({
-        targets: enemy,
-        y: 900,
-        x: xMove,
         //ease: 'linear',
-        duration: 1000,
-        onComplete: enemyDestroy,
+        targets: enemy, y: 900, x: xMove, duration: 1000, onComplete: enemyDestroy
     }, this);
 
     enemyUpgradeDrop(enemy);
@@ -901,9 +901,8 @@ function enemyHit(bullet, enemy, attacker=false) {
     
     // destroy the bullet and remove it from the bullets array
     if (enemy!==null) {
-        let enemyType = enemy.getData('colourIndex');
-        let tint = vars.enemies.colours[enemyType];
-        enemyPieceParticle.setTint(tint[1]);
+        let tint = enemy.getData('colour');
+        enemyPieceParticle.setTint(tint);
         if (attacker===true) {
             let aE = scene.groups.enemyAttackingGroup.children.get('name', 'f_' + enemy.name);
             if (aE!==undefined) {
@@ -950,7 +949,7 @@ function enemyHit(bullet, enemy, attacker=false) {
         }
     }
 
-    // enemy destroy has been moved to after its death animation: fn enemyDestroy
+    // enemy destroy has been moved to after its death animation: enemyDestroy()
 }
 
 function enemyUpgradeDrop(enemy) {

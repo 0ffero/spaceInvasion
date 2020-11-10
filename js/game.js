@@ -33,9 +33,9 @@ function gameLevelNext() {
 }
 
 function photoSWarningShow() {
-    scene.add.image(vars.canvas.cX,vars.canvas.cY,'photoSScreen').setName('photosMain');
-    scene.add.image(vars.canvas.cX,700,'photoSButtons', 'normal').setName('photoSNormal');
-    scene.add.image(vars.canvas.cX,940,'photoSButtons', 'limit').setName('photoSLimit');
+    scene.add.image(vars.canvas.cX, vars.canvas.cY, 'photoSScreen').setName('photosMain');
+    scene.add.image(vars.canvas.cX, vars.canvas.cY+160, 'photoSButtons', 'normal').setName('photoSNormal');
+    scene.add.image(vars.canvas.cX, vars.canvas.cY+400, 'photoSButtons', 'limit').setName('photoSLimit');
 }
 
 function photoSWarningHide() {
@@ -66,21 +66,8 @@ function storyInit() {
     let scrollHeight = storyText.height;
     let duration = scrollHeight*15;
 
-    scene.tweens.add({
-        targets: storyText,
-        delay: 0,
-        alpha: 0.7,
-        ease: 'Cubic.easeIn',
-        duration: 7000,
-    })
-
-    scene.tweens.add({
-        targets: storyText,
-        y: -scrollHeight,
-        ease: 'linear',
-        duration: duration,
-        onComplete: startGame,
-    })
+    scene.tweens.add({ targets: storyText, delay: 0, alpha: 0.7, ease: 'Cubic.easeIn', duration: 7000 })
+    scene.tweens.add({ targets: storyText, y: -scrollHeight, ease: 'linear', duration: duration, onComplete: startGame })
 
     // we fade out the loading image on click, so we need to set up a slight pause (3s) before enabling the intro skip
     setTimeout( function() { storySkipEnable(); }, 5000)
@@ -90,12 +77,7 @@ function storySkipEnable() {
     window.onmousedown = function(e) {
         if (vars.game.storyVisible===true) {
             let iV = scene.children.getByName('introVideo');
-            scene.tweens.add({
-                targets: [storyText, iV],
-                alpha: 0,
-                duration: 3000,
-                onComplete: storyTextSpeedUp,
-            })
+            scene.tweens.add({ targets: [storyText, iV], alpha: 0, duration: 3000, onComplete: storyTextSpeedUp })
             vars.game.storyVisible = false;
         }
     }

@@ -187,9 +187,8 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.137 (beta release)',
+    version : '0.9.139 (beta release)',
     versionCheckResult: -1,
-
 
     audio: {
         currentTrack: 0,
@@ -276,6 +275,10 @@ var vars = {
             ready: [],
             used: [],
 
+            getFollowerCount: function() { // this count is only dont when a follower reaches the end of the path
+                return scene.groups.enemyAttackingGroup25.children.size;
+            },
+
             init: function() {
                 console.log('%c  Setting up available attack patterns', vars.console.callTo);
                 let aAP = vars.enemies.availableAttackPatterns;
@@ -296,19 +299,16 @@ var vars = {
                 }
                 // limit the total followers in case we dont have enough enemies to fill the path (paths have their own max followers variable)
                 totalFollowers = Phaser.Math.Clamp(totalFollowers, 0, vars.enemies.list.length);
-                
-                let ease = 'Linear'; // if we need to modify the ease for a specific path (most paths WONT need this!)
-                /* if (_pathName==='lineToCircle') {
-                    ease = 'Sine.easeInOut'
-                } */
 
+                let ease = 'Linear'; // if we need to modify the ease for a specific path (most paths WONT need this!)
+                /* if (_pathName==='lineToCircle') { ease = 'Sine.easeInOut' } */
 
                 let actualPath = scene.paths[_pathName];
                 for (let f=0; f<totalFollowers; f++) {
                     // grab the next enemy and attach to the follower
                     let currentEnemy = vars.enemies.list.shift(); // grab the first available enemy
                     eV.list.push(currentEnemy); // push it to the end of the list
-                    let frame = currentEnemy.enemyType;
+                    let frame = currentEnemy.row;
                     let eName = currentEnemy.name;
                     let enemyFollower = scene.add.follower(actualPath, 0, 0, 'enemies', frame).setScale(0.4).setName('f25_' + eName);
                     scene.groups.enemyAttackingGroup25.add(enemyFollower);
@@ -373,14 +373,28 @@ var vars = {
         bossNext: -1,
         bossPaths: [], // these are built at run time. All boss paths are set, unlike standard enemy attack paths which start at the enemy xy
         bulletDamage: 1,
+
+        // NOTE: THE ORDER OF THIS LIST IS IMPORTANT!!
+        // If you add colours to the array, at run time they will be assimilated into the collective (CLUT colour lookup table)
         colours: [
-            ['red', 0xFF0000],
-            ['green', 0x00FF00],
-            ['blue', 0x00BFFF],
-            ['purple', 0xC926FF],
-            ['yellow', 0xFFFF00],
-            ['purple2', 0xC926FF] // cthulhu's bullets
+            ['red',     0xFF0000, 0XFF0000], // name of colour, bullet colour, enemyPiece tint
+            ['green',   0x00FF00, 0X00FF00],
+            ['blue',    0x00BFFF, 0X0000FF],
+            ['purple',  0xC926FF, 0xA300D9],
+            ['yellow',  0xFFFF00, 0xffff00],
+            ['purple2', 0xC926FF, 0xffff00], // cthulhu's bullets
+            ['white',   0xFFFFFF, 0xFFFFFF],
+            ['black',   0x000000, 0x000000]
         ],
+        CLUT: { // 
+            // filled by init
+
+            init: function() {
+                for (c of vars.enemies.colours) {
+                    vars.enemies.CLUT[c[0]] = { bullet: c[1], piece: c[2] }
+                }
+            }
+        },
         cthulhuSpotted: false,
         deadSinceLastPowerup: 0,
         deathTotal: 0,
@@ -425,21 +439,14 @@ var vars = {
 
         shootTimeout: [fps*0.5, fps*0.5],
         speed: 50,
-        speeds: {
-            min: 50,
-            max: 100,
-        },
+        speeds: { min: 50, max: 100 },
 
         spriteCount: -1,
         spritesGenerated: {},
 
         // these positions are used to determine when the enemies should move
         // down after moving left or right and hitting the edge of the screen
-        bounds: {
-            left: -1,
-            right: -1,
-            bottom: 10,
-        },
+        bounds: { left: -1, right: -1, bottom: 10, },
         updateTimeout: 10, // in frames. We use this to update the enemies velocity
         updateTimeoutMax: 10,
         width: -1,
@@ -812,7 +819,7 @@ var vars = {
 
             // how many enemy rows are we showing?
             let rows = 5; // early levels
-            if (eV.cthulhuSpotted===true && nextWave>=20) { rows = 6; } // if cthulhu has been seen we add him to the enemies
+            if (nextWave>=20) { rows = 6; } // add cthulhu to the enemies
 
             // and how many columns?
             let cols=9; // early levels
@@ -957,19 +964,8 @@ var vars = {
                 let loaded = scene.children.getByName('loaded');
                 let title = scene.children.getByName('title');
                 scene.children.getByName('version').destroy();
-                scene.tweens.add({
-                    targets: [loadingImage, title],
-                    alpha: 0,
-                    ease: 'linear',
-                    duration: 1000,
-                })
-                scene.tweens.add({
-                    targets: loaded,
-                    alpha: 0,
-                    ease: 'linear',
-                    duration: 1000,
-                    onComplete: vars.game.loadingImageDestroy,
-                })
+                scene.tweens.add({ targets: [loadingImage, title], alpha: 0, ease: 'linear', duration: 1000 })
+                scene.tweens.add({ targets: loaded, alpha: 0, ease: 'linear', duration: 1000, onComplete: vars.game.loadingImageDestroy })
 
                 // make the logo invisible if it exists (it destroys itself)
                 scene.groups.logoGroup.setVisible(false);
@@ -1084,15 +1080,7 @@ var vars = {
             // if we havent fade the loaded image back in
             let a = scene.children.getByName('loadingImage');
             let b = scene.children.getByName('title');
-            scene.tweens.add({
-                delay: 500,
-                targets: [a,b],
-                alpha: 1,
-                duration: 1000,
-                yoyo: true,
-                hold: 7500,
-                onComplete: vars.intro.logoDraw
-            })
+            scene.tweens.add({ delay: 500, targets: [a,b], alpha: 1, duration: 1000, yoyo: true, hold: 7500, onComplete: vars.intro.logoDraw })
         },
 
         logoDraw: function() {
@@ -1200,29 +1188,15 @@ var vars = {
                 // this is the first time weve entered this function
                 // fade in the alien planet
                 let alienBG = scene.children.getByName('alienBG');
-                scene.tweens.add({ // fade in the background
-                    targets: alienBG,
-                    ease: 'Linear',
-                    alpha: 1,
-                    duration: 3000,
-                })
-                scene.tweens.add({ // fade in the alien planet
-                    targets: alienPlanetContainer,
-                    ease: 'Linear',
-                    alpha: 1,
-                    duration: 10000,
-                })
+                // fade in the background
+                scene.tweens.add({ targets: alienBG, ease: 'Linear', alpha: 1, duration: 3000 })
+                // fade in the alien planet
+                scene.tweens.add({ targets: alienPlanetContainer, ease: 'Linear', alpha: 1, duration: 10000 })
             } else { // reset the alien planet
                 alienPlanetContainer.y = vars.scenery.alienPlanet.height;
             }
             // scroll the alien planet
-            scene.tweens.add({
-                targets: alienPlanetContainer,
-                ease: 'Linear',
-                y: 51,
-                duration: 15000,
-                onComplete: vars.levels.alienPlanetScroll
-            })
+            scene.tweens.add({ targets: alienPlanetContainer, ease: 'Linear', y: 51, duration: 15000, onComplete: vars.levels.alienPlanetScroll })
         },
 
         changeBackground: function(_bgtype='grass') {
@@ -1232,19 +1206,8 @@ var vars = {
                     vars.levels.stellarCorona();
 
                     // show the alien cities
-                    scene.tweens.add({
-                        targets: alienPlanetContainer,
-                        ease: 'Linear',
-                        alpha: 0.5,
-                        duration: 5000,
-                    })
-
-                    scene.tweens.add({
-                        targets: alienPlanetContainer,
-                        ease: 'Linear',
-                        y: 10000,
-                        duration: 180000,
-                    })
+                    scene.tweens.add({ targets: alienPlanetContainer, ease: 'Linear', alpha: 0.5, duration: 5000 })
+                    scene.tweens.add({ targets: alienPlanetContainer, ease: 'Linear', y: 10000, duration: 180000 })
                 break;
 
                 case 'boss': // wave 45
@@ -1294,12 +1257,7 @@ var vars = {
                     starEmitter.remove();
                     // hide any nebulae & galaxies (we just hide them as they have callbacks that destroy them)
                     scene.groups.nebulaGroup.children.each( (c)=> {
-                        scene.tweens.add({
-                            targets: c,
-                            alpha: 0,
-                            ease: 'linear',
-                            duration: 3000
-                        })
+                        scene.tweens.add({ targets: c, alpha: 0, ease: 'linear', duration: 3000 })
                     })
 
                     // show the stellar corona
@@ -1384,12 +1342,7 @@ var vars = {
             if (_inout==='in') {
                 alpha = 1;
             }
-            scene.tweens.add({
-                targets: nightTimeMask,
-                alpha: alpha,
-                ease: 'linear',
-                duration: 10000,
-            })
+            scene.tweens.add({ targets: nightTimeMask, alpha: alpha, ease: 'linear', duration: 10000 })
         },
 
         rain: function(_init=false) {
@@ -1887,12 +1840,7 @@ var vars = {
                         // highlight the bonus
                         vars.UI.highlightObject(upG,2);
                     }
-                    scene.tweens.add({
-                        paused: paused,
-                        targets: upG,
-                        y: 1000,
-                        duration: 2000,
-                    })
+                    scene.tweens.add({ paused: paused, targets: upG, y: 1000, duration: 2000 })
                 },
 
                 SHADEPickUp: function() {
@@ -2065,14 +2013,7 @@ var vars = {
                 vars.cameras.ignore(cam2, asteroid);
                 scene.groups.sceneryGroup.add(asteroid);
                 asteroid.anims.play(anim);
-                scene.tweens.add({
-                    targets: asteroid,
-                    delay: delay,
-                    y: defaultEndY,
-                    duration: duration,
-                    ease: 'Linear',
-                    onComplete: vars.scenery.asteroidGenerate,
-                })
+                scene.tweens.add({ targets: asteroid, delay: delay, y: defaultEndY, duration: duration, ease: 'Linear', onComplete: vars.scenery.asteroidGenerate })
             }
         },
 
@@ -2151,12 +2092,7 @@ var vars = {
             let rMax = 4;
             let cMax = 100;
             let randomPiece = -1;
-            let colData = {
-                0: [],
-                1: [],
-                2: [],
-                3: [],
-            }
+            let colData = { 0: [], 1: [], 2: [], 3: [] }
             for (let r=0; r<rMax; r++) {
                 for (let c=0; c<cMax; c++) {
                     if (randomPiece===-1) { // this is the first piece, pick a random one
@@ -2218,16 +2154,8 @@ var vars = {
                 scene.groups.nebulaGroup.add(nG);
                 vars.cameras.ignore(cam2, nG);
 
-                scene.tweens.add({
-                    targets: nG,
-                    delay: g*delay,
-                    y: 1180,
-                    angle: finalAngle,
-                    ease: 'linear',
-                    blendMode: 'MULTIPLY',
-                    duration: duration/speed, // larger galaxies move faster to emulate distance from camera
-                    onComplete: vars.scenery.generateNewGalaxy,
-                })
+                // larger galaxies move faster to emulate distance from camera onComplete: vars.scenery.generateNewGalaxy, 
+                scene.tweens.add({ targets: nG, delay: g*delay, y: 1180, angle: finalAngle, ease: 'linear', blendMode: 'MULTIPLY', duration: duration/speed })
             }
         },
 
@@ -2247,14 +2175,7 @@ var vars = {
                 vars.cameras.ignore(cam2, nO0);
                 scene.groups.nebulaGroup.add(nO0);
 
-                scene.tweens.add({
-                    delay: duration/2,
-                    targets: nO0,
-                    ease: 'linear',
-                    y: vars.canvas.height+1080,
-                    duration: duration*1.5,
-                    onComplete: vars.scenery.generateNewNebula,
-                })
+                scene.tweens.add({ delay: duration/2, targets: nO0, ease: 'linear', y: vars.canvas.height+1080, duration: duration*1.5, onComplete: vars.scenery.generateNewNebula })
             } else {
                 // we need to join two nebulae together
                 let frames = [Phaser.Math.RND.between(0,5),Phaser.Math.RND.between(0,5)];
@@ -2263,21 +2184,8 @@ var vars = {
                 scene.groups.nebulaGroup.addMultiple([nO0, nO1]);
                 vars.cameras.ignore(cam2, nO0); vars.cameras.ignore(cam2, nO1);
 
-                scene.tweens.add({
-                    targets: nO0,
-                    y: vars.canvas.height+1080,
-                    ease: 'linear',
-                    duration: duration,
-                    onComplete: vars.scenery.generateNewNebula,
-                })
-                scene.tweens.add({
-                    delay: duration/2,
-                    targets: nO1,
-                    ease: 'linear',
-                    y: vars.canvas.height+1080,
-                    duration: duration*1.5,
-                    onComplete: vars.scenery.generateNewNebula,
-                })
+                scene.tweens.add({ targets: nO0, y: vars.canvas.height+1080, ease: 'linear', duration: duration, onComplete: vars.scenery.generateNewNebula })
+                scene.tweens.add({ delay: duration/2, targets: nO1, ease: 'linear', y: vars.canvas.height+1080, duration: duration*1.5, onComplete: vars.scenery.generateNewNebula })
             }
         },
 
@@ -2417,21 +2325,8 @@ var vars = {
         play: function() {
             let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(21*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0).setName('introVideo').setLoop(true);
             video.playWhenUnlocked=true;
-            scene.tweens.add({
-                targets: video,
-                delay: 3000,
-                alpha: 0.04,
-                ease: 'linear',
-                duration: 10000,
-            })
-            scene.tweens.add({
-                targets: video,
-                rotation: -21*(Math.PI/180),
-                y: -300,
-                ease: 'linear',
-                duration: 35000,
-                repeat: -1,
-            })
+            scene.tweens.add({ targets: video, delay: 3000, alpha: 0.04, ease: 'linear', duration: 10000, })
+            scene.tweens.add({ targets: video, rotation: -21*(Math.PI/180), y: -300, ease: 'linear', duration: 35000, repeat: -1 })
         }
     },
 

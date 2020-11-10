@@ -180,16 +180,16 @@ function preload() {
     scene.load.audio('speechShieldUpgrade',   'speech/shieldUpgrade.ogg');
 
     // UI
-    scene.load.image('loaded', 'UI/loaded.png');
-    scene.load.image('loadedImage', 'UI/loadedImage.png');
-    scene.load.image('hpBarInner', 'UI/hpBarInner.png');
-    scene.load.image('hpBarOutline', 'UI/hpBarOutline.png');
-    scene.load.atlas('hpBarPlayer', 'UI/hpBarPlayer.png', 'UI/hpBarPlayer.json');
+    scene.load.image('loaded',        'UI/loaded.png');
+    scene.load.image('loadedImage',   'UI/loadedImage.png');
+    scene.load.image('hpBarInner',    'UI/hpBarInner.png');
+    scene.load.image('hpBarOutline',  'UI/hpBarOutline.png');
+    scene.load.atlas('hpBarPlayer',   'UI/hpBarPlayer.png', 'UI/hpBarPlayer.json');
     scene.load.atlas('photoSButtons', 'UI/photosensitiveButtons.png', 'UI/photoS.json');
-    scene.load.image('photoSScreen', 'UI/siezure_warning.png');
-    scene.load.spritesheet('pixel', 'UI/pixels-ext.png', { frameWidth: 50, frameHeight: 50, margin: 1, spacing: 2 });
-    scene.load.image('title', 'UI/title.png');
-    scene.load.atlas('upgradesBar', 'UI/upgradesBar.png', 'UI/upgradesBar.json');
+    scene.load.image('photoSScreen',  'UI/siezure_warning.png');
+    scene.load.spritesheet('pixel',   'UI/pixels-ext.png', { frameWidth: 50, frameHeight: 50, margin: 1, spacing: 2 });
+    scene.load.image('title',         'UI/title.png');
+    scene.load.atlas('upgradesBar',   'UI/upgradesBar.png', 'UI/upgradesBar.json');
 
     // VIDEO
     scene.load.video('introVideo', 'video/spaceinvaders.mp4');
@@ -213,14 +213,7 @@ function create() {
     vars.cameras.preInit();
 
     let loaded = scene.add.image(vars.canvas.cX, vars.canvas.height-95, 'loaded').setName('loaded');
-    scene.tweens.add({
-        targets: loaded,
-        scale: 0.69,
-        ease: 'Bounce',
-        duration: 3000,
-        repeat: -1,
-        yoyo: true
-    })
+    scene.tweens.add({ targets: loaded, scale: 0.69, ease: 'Bounce', duration: 3000, repeat: -1, yoyo: true })
     scene.sound.setVolume(vars.audio.volume); // this volume is roughly equal to the volume of a standard youtube video.
 
     // INPUT

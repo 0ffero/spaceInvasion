@@ -45,13 +45,6 @@ function wavePopUp() {
     vars.audio.levelMusicStart();
 
     // tween the wave popup
-    scene.tweens.add({
-        targets: myText,
-        scale: 9,
-        x: myText.x+860,
-        ease: 'linear',
-        duration: 2500,
-        onComplete: vars.levels.finalChecks
-    });
+    scene.tweens.add({ targets: myText, scale: 9, x: myText.x+860, ease: 'linear', duration: 2500, onComplete: vars.levels.finalChecks });
     player.setDepth(1);
 }
