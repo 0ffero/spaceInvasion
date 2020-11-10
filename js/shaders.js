@@ -344,9 +344,9 @@ function shaderType(_shaderName='default', _cam=1) {
             }
         } else { // grey scaline enabled
             enemies.children.each( (c)=> {
-                c.setTintFill(0xffffff);
+                c.setTintFill(scene.consts.colours.white);
             });
-            player.setTintFill(0x000000);
+            player.setTintFill(scene.consts.colours.black);
         }
     }
     // update the shader variable

@@ -77,9 +77,9 @@ class bullet {
 
         if (vars.DEBUG===true) {
             let graphics = scene.add.graphics();
-            graphics.lineStyle(1, 0xffff00, 1);
+            graphics.lineStyle(1, scene.consts.colours.yellow, 1);
             path1.draw(graphics, 128);
-            graphics.lineStyle(1, 0xff1010, 1);
+            graphics.lineStyle(1, scene.consts.colours.red, 1);
             path2.draw(graphics, 128);
         }
     

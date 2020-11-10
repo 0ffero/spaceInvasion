@@ -187,7 +187,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.139 (beta release)',
+    version : '0.9.142 (beta release)',
     versionCheckResult: -1,
 
     audio: {
@@ -265,7 +265,7 @@ var vars = {
             debugPathDraw: function(_path) {
                 if (typeof scene.paths[_path] !== 'undefined') {
                     graphics  = scene.add.graphics();
-                    let colour = Phaser.Math.RND.between(0,0xffffff);
+                    let colour = Phaser.Math.RND.between(0, scene.consts.colours.white);
                     graphics.lineStyle(1, colour, 1);
                     scene.paths[_path].draw(graphics, 128);
                 }
@@ -377,21 +377,26 @@ var vars = {
         // NOTE: THE ORDER OF THIS LIST IS IMPORTANT!!
         // If you add colours to the array, at run time they will be assimilated into the collective (CLUT colour lookup table)
         colours: [
-            ['red',     0xFF0000, 0XFF0000], // name of colour, bullet colour, enemyPiece tint
-            ['green',   0x00FF00, 0X00FF00],
-            ['blue',    0x00BFFF, 0X0000FF],
-            ['purple',  0xC926FF, 0xA300D9],
-            ['yellow',  0xFFFF00, 0xffff00],
-            ['purple2', 0xC926FF, 0xffff00], // cthulhu's bullets
-            ['white',   0xFFFFFF, 0xFFFFFF],
-            ['black',   0x000000, 0x000000]
+            ['red',     0xFF0000, 0xFF0000, '#ff0000'], // name of colour, bullet colour, enemyPiece tint
+            ['green',   0x00FF00, 0x00FF00, '#00ff00'],
+            ['blue',    0x00BFFF, 0x0000FF, '#0000ff'],
+            ['purple',  0xC926FF, 0xA300D9, '#C926FF'],
+            ['yellow',  0xFFFF00, 0xffff00, '#FFFF00'],
+            ['purple2', 0xC926FF, 0xC926FF, '#C926FF'], // cthulhu's bullets
+            ['white',   0xFFFFFF, 0xFFFFFF, '#FFFFFF'],
+            ['black',   0x000000, 0x000000, '#000000']
         ],
         CLUT: { // 
             // filled by init
 
             init: function() {
+                scene.consts = {} 
+                scene.consts.colours = {}
                 for (c of vars.enemies.colours) {
-                    vars.enemies.CLUT[c[0]] = { bullet: c[1], piece: c[2] }
+                    // convert the colours to glsl format
+                    let glslC = convertHexToRGB(c[3]);
+                    vars.enemies.CLUT[c[0]] = { bullet: c[1], piece: c[2], glslColourVector: glslC }
+                    scene.consts.colours[c[0]] = c[1];
                 }
             }
         },
@@ -679,7 +684,7 @@ var vars = {
 
         debugBossPatterns: function() {
             let graphics = scene.add.graphics();
-            graphics.lineStyle(1, 0xffffff, 1);
+            graphics.lineStyle(1, scene.consts.colours.white, 1);
             let bP = vars.enemies.bossPaths;
             for (let path=0; path<bP.length; path++){
                 bP[path][1].draw(graphics, 128);
@@ -987,7 +992,7 @@ var vars = {
                 if (vars.DEBUGHIDE===false) {
                     vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
                     vars.DEBUGTEXT.setOrigin(0,0);
-                    vars.DEBUGTEXT.setStroke(0x000000,4);
+                    vars.DEBUGTEXT.setStroke(scene.consts.colours.black,4);
                 }
             }
         },
@@ -2238,10 +2243,6 @@ var vars = {
 
     shader: {
         current: 'default',
-
-        enemyBossSpinner: function() {
-            
-        }
     },
 
     story: {
@@ -2260,7 +2261,7 @@ var vars = {
             let gameScale = vars.game.scale;
             let gV = vars.game;
             gV.graphics = scene.add.graphics();
-            gV.graphics.lineStyle(2, 0xffffff, 1);
+            gV.graphics.lineStyle(2, scene.consts.colours.white, 1);
 
             // sanity check
             if (_frame===-1) {

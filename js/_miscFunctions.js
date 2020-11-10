@@ -1,3 +1,13 @@
+function convertHexToRGB(_colourHex) {
+    if (_colourHex.startsWith('#')===true) {
+        _colourHex = _colourHex.replace('#', '');
+    }
+    let bigint = parseInt(_colourHex, 16);
+    let r = (bigint >> 16) & 255; let g = (bigint >> 8) & 255; let b = bigint & 255;
+
+    return { red: ~~((r/255)*1000)/1000, green: ~~((g/255)*1000)/1000, blue: ~~((b/255)*1000)/1000 }; // 3dp for glsl
+}
+
 function generateRandomID() {
     generatedID = '';
     for (let i=0; i<8; i++) {
@@ -29,3 +39,4 @@ function sortByKey(array, key, reverse=false) {
         if (reverse===true) { return ((x > y) ? -1 : ((x < y) ? 1 : 0)); } else { return ((x < y) ? -1 : ((x > y) ? 1 : 0)); }
     });
 }
+

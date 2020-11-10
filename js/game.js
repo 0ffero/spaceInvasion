@@ -98,16 +98,17 @@ function startGame() {
 
     // UI
     // text shadows
-    let shadowOffset = sO = [5,3];
+    let sO = [5,3]; // shadowOffset
     let alpha = 0.3;
-    let scoreTitleShadow = scene.add.bitmapText(10+sO[0], 5+sO[1], 'azo', 'Score:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
-    let scoreShadow = scene.add.bitmapText(120+sO[0], 5+sO[1], 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextIntS').setTint(0x000000).setAlpha(alpha);
-    let waveTitleShadow = scene.add.bitmapText(vars.canvas.width*0.69+sO[0], 5+sO[1], 'azo', 'Wave:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
-    let waveShadow = scene.add.bitmapText(vars.canvas.width*0.69+105+sO[0], 5+sO[1], 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextIntS').setTint(0x000000).setAlpha(alpha);
-    let deathsTitleShadow = scene.add.bitmapText(vars.canvas.width*0.4+sO[0], 1080-29+sO[1], 'azo', 'Enemies destroyed:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
-    let deathsShadow = scene.add.bitmapText(vars.canvas.width*0.4+300+sO[0], 1080-29+sO[1], 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextIntS').setTint(0x000000).setAlpha(alpha);
-    let hpTitleShadow = scene.add.bitmapText(5+sO[0], 1080-30+sO[1], 'azo', 'HP:', 24).setOrigin(0).setTint(0x000000).setAlpha(alpha);
-    let hpShadow = scene.add.bitmapText(60+sO[0], 1080-30+sO[1], 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextIntS').setTint(0x000000).setAlpha(alpha);
+    let black = scene.consts.colours.black;
+    let scoreTitleShadow = scene.add.bitmapText(10+sO[0], 5+sO[1], 'azo', 'Score:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+    let scoreShadow = scene.add.bitmapText(120+sO[0], 5+sO[1], 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextIntS').setTint(black).setAlpha(alpha);
+    let waveTitleShadow = scene.add.bitmapText(vars.canvas.width*0.69+sO[0], 5+sO[1], 'azo', 'Wave:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+    let waveShadow = scene.add.bitmapText(vars.canvas.width*0.69+105+sO[0], 5+sO[1], 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextIntS').setTint(black).setAlpha(alpha);
+    let deathsTitleShadow = scene.add.bitmapText(vars.canvas.width*0.4+sO[0], 1080-29+sO[1], 'azo', 'Enemies destroyed:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+    let deathsShadow = scene.add.bitmapText(vars.canvas.width*0.4+300+sO[0], 1080-29+sO[1], 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextIntS').setTint(black).setAlpha(alpha);
+    let hpTitleShadow = scene.add.bitmapText(5+sO[0], 1080-30+sO[1], 'azo', 'HP:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+    let hpShadow = scene.add.bitmapText(60+sO[0], 1080-30+sO[1], 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextIntS').setTint(black).setAlpha(alpha);
     scene.groups.scoreGroup.addMultiple([scoreTitleShadow, scoreShadow, waveTitleShadow, waveShadow, deathsTitleShadow, deathsShadow, hpTitleShadow, hpShadow]);
 
     // actual text

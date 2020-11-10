@@ -154,7 +154,7 @@ vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on th
         // DEBUG
         if (vars.DEBUG===true) { // draw the spline so we can make sure it looks ok
             graphics = scene.add.graphics();
-            graphics.lineStyle(1, 0xffffff, 1);
+            graphics.lineStyle(1, scene.consts.colours.white, 1);
             path1.draw(graphics, 128);
         }
         // END

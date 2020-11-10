@@ -54,6 +54,7 @@ var game = new Phaser.Game(config);
 */
 function preload() {
     scene = this;
+    vars.enemies.CLUT.init(); // these colurs are used throughout the code and need setting up first.
     scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loadingImage').setName('loadingImage');
     scene.add.image(vars.canvas.cX, vars.canvas.height-100, 'loadingText').setName('loadingText');
     scene.load.setPath('assets');
@@ -152,7 +153,7 @@ function preload() {
     scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
 
     // frag shaders
-    scene.load.glsl('bossSpinner', '/shaders/bossSpinner.frag');
+    scene.load.glsl('bossSpinner', '/shaders/bossSpinners.glsl.js');
 
     // SOUNDS
     scene.load.audio('enemyShoot',       'audio/enemyBlaster.ogg');
