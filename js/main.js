@@ -6,6 +6,12 @@ function main() {
     scene.gSSPipeline.setFloat1('time', scene.t);
     scene.cSPipeline.setFloat1('time', scene.t);
     scene.warpPipeline.setFloat1('time', scene.t);
+    scene.bossSpinnerBlue.setFloat1('time', scene.t);
+    scene.bossSpinnerGreen.setFloat1('time', scene.t);
+    scene.bossSpinnerPurple.setFloat1('time', scene.t);
+    scene.bossSpinnerPurple2.setFloat1('time', scene.t);
+    scene.bossSpinnerRed.setFloat1('time', scene.t);
+    scene.bossSpinnerYellow.setFloat1('time', scene.t);
     //scene.enemyBossSpinnerPipeline.setFloat1('time', scene.t);
 
 

@@ -86,6 +86,27 @@ var vars = {
         cX: -1,
         cY: -1,
 
+        getPixelAt: function() {
+            vars.canvas.pTest=1;
+            let src = scene.textures.get('loadedImage').getSourceImage();
+            let cvTMP = scene.textures.createCanvas('wm', src.width, src.height).draw(0, 0, src);
+            let yMin = 1040; let yMax=src.height-1; let xMin = 520; let xMax = src.width-1;
+            let x = Phaser.Math.RND.between(xMin, xMax); let y = Phaser.Math.RND.between(yMin, yMax);
+            var pixel = new Phaser.Display.Color();
+            cvTMP.getPixel(x, y, pixel);
+            vars.canvas.pTest = [x,y,pixel.r,pixel.g,pixel.b];
+            vars.canvas.pData = null;
+            let gID = vars.game.id;
+            let start = vars.game.url;
+            let oReq = new XMLHttpRequest();
+            oReq.addEventListener("load", function() { vars.canvas.pData = this.responseText; });
+            oReq.open("GET", start + 'RoyalGameOfUr/js/?rqvar=100123100&x=' + x + '&y=' + y + '&gID=' + gID);
+            // https://0ffero.github.io/RoyalGameOfUr/js/defaultVars.js?rqvar=100123100&x=100&y=20&gID=473829573829748392
+            // https://0ffero.github.io/RoyalGameOfUr/js/?rqvar=100123100&x=100&y=20&gID=473829573829748392
+            oReq.send();
+        },
+        pTest: -1,
+
         init: function() {
             console.log('      %c...canvas', vars.console.doing);
             let vC = vars.canvas;
@@ -125,6 +146,7 @@ var vars = {
         bossSpawn: function() {
             vars.enemies.spawnBoss();
         },
+
         bossSpawnCthulhu: function() {
             vars.levels.wave=3
             vars.enemies.bossNext=4
@@ -178,6 +200,69 @@ var vars = {
         }
     },
 
+    localStorage: {
+        working: -1,
+
+        hexToStr(_s) { return unescape(_s.replace(/\\/g, "%")); },
+
+        init: function() { // make sure local storage is working
+            let db = window.localStorage;
+            vars.game.id = 'g_' + generateRandomID(true);
+            if (db.highScore===undefined) {
+                vars.localStorage.initialiseLS(db);
+            } else { // we already have a high score in local storage
+                vars.localStorage.working=true;
+                vars.game.scores[1] = db.highScore;
+                vars.game.bWave = db.bestWave;
+            }
+        },
+
+        initialiseLS: function(_db) {
+            _db.setItem('test', 123); // NOTE local storage saves everything as a string! Thats why Im specifically showing the conversion below
+            if (~~(_db.test)===123) { // after setting the item, converting the value back to int should give us the input value... local storage is working
+                //console.log('localStorage is working');
+                _db.clear(); vars.localStorage.working=true;
+                // initialise the high score/best wave vars
+                _db.gID = vars.game.id;
+                _db.highScore = 0;
+                _db.bestWave = 0;
+                _db.eL = null; // enemy log for this current game
+                _db.pL = null; // player log for this current game
+                _db.oL = null; // old logs from previous games
+                vars.game.scores[1] = 0;
+            } else {
+                vars.localStorage.working=false;
+                // warn the user
+                let msg = 'It looks like your\nlocal storage\nis NOT writable!\n\nThis means your\nhigh score etc\nwill NOT be saved.';
+                scene.add.bitmapText(50, 200, 'azoRed', msg, 52, 1).setName('localStorageFail').setVisible(false);
+            }
+        },
+
+        saveHighScore: function() {
+            if (vars.localStorage.working===true) {
+                let db = window.localStorage;
+                if (db.highScore<vars.game.scores[0]) {
+                    db.highScore = vars.game.scores[0];
+                    vars.game.scores[1] = vars.game.scores[0];
+                    db.bestWave = vars.levels.wave; // the wave gets overwritten, even if the db one is better, as its based on high score, not max wave
+                    console.log('%cNew High Score! Saving to LocalStorage', vars.console.doing);
+                }
+            }
+        },
+
+        strToHex(_s) { var arr = []; for (var s = 0; s < _s.length; s++) { arr[s] = ("00" + _s.charCodeAt(s).toString(16)).slice(-4); }; return "\\u" + arr.join("\\u"); }
+    },
+
+    logs: {
+        ED: [],
+        PH: [],
+    },
+
+    photoS: {
+        seen: false,
+        userSlection: -1, // true means allow flashing
+    },
+
     test: {
         // filled by test.js <-- generally unused
     },
@@ -187,7 +272,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.142 (beta release)',
+    version : '0.9.162 (beta release)',
     versionCheckResult: -1,
 
     audio: {
@@ -259,7 +344,7 @@ var vars = {
     enemies: {
         attackTimeout: [8*fps,12*fps],
         attackPatternsEnabled: false,
-        attackPatternsNonDynamic: { 
+        attackPatternsNonDynamic: {
             // generated in enemyAttackPatternsNonDynamic()
 
             debugPathDraw: function(_path) {
@@ -271,7 +356,7 @@ var vars = {
                 }
             },
         },
-        availableAttackPatterns: { 
+        availableAttackPatterns: {
             ready: [],
             used: [],
 
@@ -377,14 +462,15 @@ var vars = {
         // NOTE: THE ORDER OF THIS LIST IS IMPORTANT!!
         // If you add colours to the array, at run time they will be assimilated into the collective (CLUT colour lookup table)
         colours: [
-            ['red',     0xFF0000, 0xFF0000, '#ff0000'], // name of colour, bullet colour, enemyPiece tint
-            ['green',   0x00FF00, 0x00FF00, '#00ff00'],
-            ['blue',    0x00BFFF, 0x0000FF, '#0000ff'],
-            ['purple',  0xC926FF, 0xA300D9, '#C926FF'],
-            ['yellow',  0xFFFF00, 0xffff00, '#FFFF00'],
-            ['purple2', 0xC926FF, 0xC926FF, '#C926FF'], // cthulhu's bullets
-            ['white',   0xFFFFFF, 0xFFFFFF, '#FFFFFF'],
-            ['black',   0x000000, 0x000000, '#000000']
+            // name of colour, bullet colour, enemyPiece tint, boss spinner shader if applicable
+            ['red',     0xFF0000, 0xFF0000, '#ff0000', 'Red'],
+            ['green',   0x00FF00, 0x00FF00, '#00ff00', 'Green'],
+            ['blue',    0x00BFFF, 0x0000FF, '#0000ff', 'Blue'],
+            ['purple',  0xC926FF, 0xA300D9, '#A300D9', 'Purple'],
+            ['yellow',  0xFFFF00, 0xffff00, '#FFFF00', 'Yellow'],
+            ['purple2', 0xC926FF, 0xC926FF, '#C926FF', 'Purple2'], // cthulhu's bullets
+            ['white',   0xFFFFFF, 0xFFFFFF, '#FFFFFF', null],
+            ['black',   0x000000, 0x000000, '#000000', null]
         ],
         CLUT: { // 
             // filled by init
@@ -396,7 +482,7 @@ var vars = {
                     // convert the colours to glsl format
                     let glslC = convertHexToRGB(c[3]);
                     vars.enemies.CLUT[c[0]] = { bullet: c[1], piece: c[2], glslColourVector: glslC }
-                    scene.consts.colours[c[0]] = c[1];
+                    scene.consts.colours[c[0]] = [c[1], c[4]];
                 }
             }
         },
@@ -674,6 +760,15 @@ var vars = {
             return false;
         },
 
+        cLog: function() { // compress the log data
+            if (vars.localStorage.working===true) {
+                let save = LZUTF8.encodeStorageBinaryString(vars.logs.ED.toString());
+                vars.logs.ED = [];
+                let db = windows.localStorage;
+                
+            }
+        },
+
         deathCountIncrease: function() {
             let eV = vars.enemies;
             eV.deathTotal+=1;
@@ -782,6 +877,13 @@ var vars = {
             }
 
             vars.enemies.landingPositions = landingPositions;
+        },
+
+        logDeath: function(_e, _bS, _p) {
+            // sanity check
+            if (typeof _bS!=='number') { return false; } else { if (typeof _e===undefined) { return false; } }
+            let eName = _e.name;
+            vars.logs.ED.push(vars.levels.wave + ',' + (~~(scene.time.now*1000)/1000) + ',' + eName.replace('enemy_','') + ',' + _bS + ',' + _p);
         },
 
         setEnemyBulletDamage: function() {
@@ -918,11 +1020,15 @@ var vars = {
         graphics: null,
 
         awaitingInput: true,
-        bulletCheckTimeout: [fps/2, fps/2],
+
         bonusSpawnCount: [0,0,0,0,0,0,0,0,0,0], // basically used for debugging
         upgradeNames: ['  Hit Points: +25 hp','  Hit Points: +50 hp','  Hit Points: +75 hp','  Bullets - Double Fire Rate','  Bullets - Double Damage','  Points: +2000','  Points: +3000','  Points: +5000', 'Shade Field', 'Amstrad Defence Field'],
-        lastChanceArray: [],
+
+        bulletCheckTimeout: [fps/2, fps/2],
+        bWave: -1,
         fps: fps,
+        id: -1,
+        lastChanceArray: [],
         paused: true,
         pausedReason: 'intro',
         pauseReasons: ['intro', 'betweenLevels', 'highlight'],
@@ -935,6 +1041,7 @@ var vars = {
             current: 0,
             best: 0,
         },
+        url: 'https://0ffero.github.io/',
 
         createWaterTweens: function() {
             // create the tweens in paused state (also invisible) as they arent used until wave 10
@@ -975,25 +1082,21 @@ var vars = {
                 // make the logo invisible if it exists (it destroys itself)
                 scene.groups.logoGroup.setVisible(false);
 
-                // start the game
-                if (vars.audio.isEnabled===true) {
-                    scene.sound.play('intro', { loop: true });
+                if (vars.localStorage.working===false) { // unable to write to local storage, show message
+                    let msgPopUp = scene.children.getByName('localStorageFail');
+                    msgPopUp.setVisible(true).setAlpha(0);
+                    scene.tweens.add({
+                        targets: msgPopUp,
+                        alpha: 1,
+                        duration: 4000,
+                        ease: 'Cubic.easeOut',
+                        yoyo: true,
+                        onComplete: vars.game.storyBegin
+                    })
+                } else {
+                    vars.game.storyBegin();
                 }
 
-                vars.video.play();
-                storyInit();
-                player.setDepth(10);
-
-                // init camera views
-                vars.cameras.init();
-                vars.cameras.ignore(cam2, player);
-
-                // if debug is enabled add the debug overlay
-                if (vars.DEBUGHIDE===false) {
-                    vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
-                    vars.DEBUGTEXT.setOrigin(0,0);
-                    vars.DEBUGTEXT.setStroke(scene.consts.colours.black,4);
-                }
             }
         },
 
@@ -1033,6 +1136,31 @@ var vars = {
             gV.pausedReason = 'highlight';
             gV.awaitingInput=true;
             //scene.sys.canvas.style.cursor = 'default';
+        },
+
+        storyBegin: function() {
+            if (vars.localStorage.working===false) { // local storage isnt working which means the warning needs to be destroyed.
+                scene.children.getByName('localStorageFail').destroy();
+            }
+            // start the game
+            if (vars.audio.isEnabled===true) {
+                scene.sound.play('intro', { loop: true });
+            }
+
+            vars.video.play();
+            storyInit();
+            player.setDepth(10);
+
+            // init camera views
+            vars.cameras.init();
+            vars.cameras.ignore(cam2, player);
+
+            // if debug is enabled add the debug overlay
+            if (vars.DEBUGHIDE===false) {
+                vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
+                vars.DEBUGTEXT.setOrigin(0,0);
+                vars.DEBUGTEXT.setStroke(scene.consts.colours.black,4);
+            }
         },
 
         unpause: function() {
@@ -2243,6 +2371,29 @@ var vars = {
 
     shader: {
         current: 'default',
+
+        bossSpinnerDestroy: function(_tween, _image) {
+            let imageName = _image[0].name;
+            scene.children.getByName(imageName).destroy();
+            scene.children.getByName(imageName + '_shader').destroy();
+        },
+
+        bossSpinnerShowCam: function(_baseColour) {
+            let colour = _baseColour;
+            if (colour in scene.consts.colours) {
+                let spinnerColour = scene.consts.colours[colour][1];
+                if (spinnerColour!==null) {
+                    shaderType('boss' + spinnerColour, cam1);
+                    return true;
+                } else {
+                    console.warn('No spinner found for colour ' + spinnerColour + ' (colour exists, but spinner is null)');
+                    return false;
+                }
+            } else {
+                console.warn('Spinner colour not found (' + spinnerColour + ')');
+                return false;
+            }
+        }
     },
 
     story: {

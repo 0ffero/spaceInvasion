@@ -148,12 +148,32 @@ function preload() {
     scene.warpPipeline = game.renderer.addPipeline('EnemyBossWarpPipeline', new EnemyBossWarpPipeline(scene.game));
     scene.warpPipeline.setFloat2('resolution', game.config.width, game.config.height);
 
+    // boss spinners
+    scene.bossSpinnerBlue = game.renderer.addPipeline('bossSpinnerBlue', new bossSpinnerBlue(scene.game));
+    scene.bossSpinnerBlue.setFloat2('resolution', game.config.width, game.config.height);
+
+    scene.bossSpinnerGreen = game.renderer.addPipeline('bossSpinnerGreen', new bossSpinnerGreen(scene.game));
+    scene.bossSpinnerGreen.setFloat2('resolution', game.config.width, game.config.height);
+
+    scene.bossSpinnerPurple = game.renderer.addPipeline('bossSpinnerPurple', new bossSpinnerPurple(scene.game));
+    scene.bossSpinnerPurple.setFloat2('resolution', game.config.width, game.config.height);
+
+    scene.bossSpinnerPurple2 = game.renderer.addPipeline('bossSpinnerPurple2', new bossSpinnerPurple2(scene.game));
+    scene.bossSpinnerPurple2.setFloat2('resolution', game.config.width, game.config.height);
+
+    scene.bossSpinnerRed = game.renderer.addPipeline('bossSpinnerRed', new bossSpinnerRed(scene.game));
+    scene.bossSpinnerRed.setFloat2('resolution', game.config.width, game.config.height);
+
+    scene.bossSpinnerYellow = game.renderer.addPipeline('bossSpinnerYellow', new bossSpinnerYellow(scene.game));
+    scene.bossSpinnerYellow.setFloat2('resolution', game.config.width, game.config.height);
+
     // set up the shader pipelines time variables
     scene.t = 0; // only needed for shaders that change over time (such as waves etc)
     scene.tIncrement = 0.03; // see above + basic increment used in main() for shaders
 
     // frag shaders
-    scene.load.glsl('bossSpinner', '/shaders/bossSpinners.glsl.js');
+    //scene.load.glsl('bossSpinnerSprites', 'shaders/sprites/bossSpinners.glsl.js'); // these can be attached to sprites
+    //scene.load.glsl('bossSpinnerCamera', 'shaders/cameras/bossSpinners.glsl.js'); // these can be attached to cameras
 
     // SOUNDS
     scene.load.audio('enemyShoot',       'audio/enemyBlaster.ogg');
@@ -307,4 +327,6 @@ function create() {
     }, 7500)
 
     scene.children.getByName('loadingText').destroy();
+
+    vars.localStorage.init();
 }

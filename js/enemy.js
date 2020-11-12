@@ -412,6 +412,8 @@ class enemyBoss {
             shaderType('gray',1);
         }
         this.sprite = eV.bossNext;
+        this.colour = vars.enemies.colours[this.sprite][2];
+        this.colourName = vars.enemies.colours[this.sprite][0];
 
         this.hp = 40 + (vars.levels.wave*5) + (this.sprite * 5);
 
@@ -438,20 +440,23 @@ class enemyBoss {
         vars.cameras.ignore(cam2,hpO); vars.cameras.ignore(cam2,hpI);
 
         var thisSprite = scene.physics.add.sprite(this.startPosition[0], this.startPosition[1], 'enemies', this.sprite).setScale(this.scale).setAlpha(0);
-        thisSprite.setData({ name: bossName, hp: this.hp, hpOriginal: this.hp, damageSinceLastExplosion: 0, explosionOffset: explosionOffset, explosionArray: explosionArray, enemyType: this.sprite, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
+        thisSprite.setData({ name: bossName, hp: this.hp, hpOriginal: this.hp, damageSinceLastExplosion: 0, explosionOffset: explosionOffset, explosionArray: explosionArray, enemyType: this.sprite, colourName: this.colourName, colour: this.colour, colourIndex: this.sprite, dead: false, points: this.points, firerate: this.firerate, fireratepattern: this.fireratepattern });
         let thisSpriteBody = thisSprite.body;
         scene.groups.enemyBossGroup.add(boss);
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
         boss.data = thisSprite.data; // and data after adding it to the group.. because Phaser :S
         vars.cameras.ignore(cam2, boss);
+        // generate boss spinner shader
+        vars.shader.bossSpinnerShowCam(this.colourName);
+
+        // fade the boss in over 5 seconds
         scene.tweens.add({
             targets: thisSprite,
             alpha: 1,
-            //ease: 'linear',
-            duration: 50,
-            repeat: 8,
-            yoyo: true,
+            ease: 'Cubic.easeIn',
+            duration: 2500,
             onComplete: enemyBossShow,
+            yoyo: true,
             onCompleteParams: [boss],
         });
         boss.setVisible(false);
@@ -619,6 +624,8 @@ function enemyBossHit(_bullet, _boss) {
 
 function enemyBossShow(_tween, _target, _boss) {
     _boss.setVisible(true);
+    if (vars.shader.current.includes('boss')===true) { shaderType(); }
+
     let bossName = _boss.getData('name');
     scene.children.getByName('hpO_' + bossName).setVisible(true);
     scene.children.getByName('hpI_' + bossName).setVisible(true);
@@ -937,7 +944,9 @@ function enemyHit(bullet, enemy, attacker=false) {
         // check for enemy death
         let retValue = false;
         if (enemyHP<=0) { // enemy is dead
-            scoreTotal += enemy.getData('points'); // give the player the points for this enemy
+            let eP = enemy.getData('points');
+            scoreTotal += eP; // give the player the points for this enemy
+            vars.enemies.logDeath(enemy, strength, eP);
             enemyDeath(enemy);
             retValue = true;
         } else {

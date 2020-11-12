@@ -8,11 +8,13 @@ function convertHexToRGB(_colourHex) {
     return { red: ~~((r/255)*1000)/1000, green: ~~((g/255)*1000)/1000, blue: ~~((b/255)*1000)/1000 }; // 3dp for glsl
 }
 
-function generateRandomID() {
+function generateRandomID(_g=false) {
     generatedID = '';
-    for (let i=0; i<8; i++) {
+    let maxC = 8;
+    if (_g!==false) { maxC = 16; }
+    for (let i=0; i<maxC; i++) {
         generatedID +=~~((Math.random()*9)+1).toString();
-        if (i===2 || i===4) {
+        if ((i===2 || i===4) && _g===false) {
             generatedID += '-';
         }
     }
@@ -39,4 +41,3 @@ function sortByKey(array, key, reverse=false) {
         if (reverse===true) { return ((x > y) ? -1 : ((x < y) ? 1 : 0)); } else { return ((x < y) ? -1 : ((x > y) ? 1 : 0)); }
     });
 }
-

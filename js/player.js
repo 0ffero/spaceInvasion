@@ -179,6 +179,7 @@ function playerHit(_player, _bullet) {
             enemiesLand();
             vars.game.started=false; // this tells us that we have died, now using the variable pV.isDead
             pV.dead();
+            vars.localStorage.saveHighScore(); // chack for high score
         }
     } // else the ADI field is in effect, player takes no damage.
 }

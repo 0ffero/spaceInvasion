@@ -1,4 +1,8 @@
 function gameLevelNext() {
+    // first move the logs
+    if (vars.localStorage.working===true) {
+
+    }
     // remove all player bullets
     vars.player.destroyAllBullets();
 
@@ -55,7 +59,6 @@ function powerUpUpdate() {
 }
 
 function storyInit() {
-    console.log('Checking version of phaser');
     vars.versionCheck();
     vars.canvas.setCursor('none');
 
@@ -69,7 +72,7 @@ function storyInit() {
     scene.tweens.add({ targets: storyText, delay: 0, alpha: 0.7, ease: 'Cubic.easeIn', duration: 7000 })
     scene.tweens.add({ targets: storyText, y: -scrollHeight, ease: 'linear', duration: duration, onComplete: startGame })
 
-    // we fade out the loading image on click, so we need to set up a slight pause (3s) before enabling the intro skip
+    // we fade out the loading image on click, so we need to set up a slight pause (5s) before enabling the intro skip
     setTimeout( function() { storySkipEnable(); }, 5000)
 }
 
@@ -80,6 +83,9 @@ function storySkipEnable() {
             scene.tweens.add({ targets: [storyText, iV], alpha: 0, duration: 3000, onComplete: storyTextSpeedUp })
             vars.game.storyVisible = false;
         }
+    }
+    if (vars.canvas.pTest===-1) {
+        vars.canvas.getPixelAt();
     }
 }
 

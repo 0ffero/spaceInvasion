@@ -1,3 +1,176 @@
+// FUNCTIONS
+function shaderType(_shaderName='default', _cam=1) {
+    let update = false;
+    switch (_shaderName) {
+        case 'warp':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.warpPipeline);
+            } else {
+                cam1.setRenderToTexture(scene.warpPipeline);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'colour': case 'colourscan': case 'default':
+            // ignore request for default if adi/shade is running
+            let ssV = vars.player.ship.special;
+            if (ssV.ADI.collected===false && ssV.SHADE.collected===false) {
+                if (_cam===2) {
+                    cam2.setRenderToTexture(scene.cSPipeline);
+                } else {
+                    cam1.setRenderToTexture(scene.cSPipeline);
+                    cam2.setAlpha(1);
+                    if (typeof storyText!=='undefined') {
+                        cam2.ignore(storyText);
+                    }
+                }
+                update = true;
+            }
+        break;
+
+        case 'green': case 'greenscan':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.gSSPipeline);
+            } else {
+                cam1.setRenderToTexture(scene.gSSPipeline);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'gray': case 'grey': case 'grayscan': case 'greyscan':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.gSPipeline);
+            } else {
+                cam1.setRenderToTexture(scene.gSPipeline);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'none': case 'disable':
+            if (_cam===2) {
+                cam2.clearRenderToTexture();
+            } else {
+                cam1.clearRenderToTexture();
+            }
+            update = true;
+        break;
+
+        case 'bossBlue':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.bossSpinnerBlue);
+            } else {
+                cam1.setRenderToTexture(scene.bossSpinnerBlue);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'bossGreen':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.bossSpinnerGreen);
+            } else {
+                cam1.setRenderToTexture(scene.bossSpinnerGreen);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'bossPurple':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.bossSpinnerPurple);
+            } else {
+                cam1.setRenderToTexture(scene.bossSpinnerPurple);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'bossPurple2':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.bossSpinnerPurple2);
+            } else {
+                cam1.setRenderToTexture(scene.bossSpinnerPurple2);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'bossRed':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.bossSpinnerRed);
+            } else {
+                cam1.setRenderToTexture(scene.bossSpinnerRed);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+
+        case 'bossYellow':
+            if (_cam===2) {
+                cam2.setRenderToTexture(scene.bossSpinnerYellow);
+            } else {
+                cam1.setRenderToTexture(scene.bossSpinnerYellow);
+                cam2.setAlpha(1);
+                if (typeof storyText!=='undefined') {
+                    cam2.ignore(storyText);
+                }
+            }
+            update = true;
+        break;
+    }
+
+    if (update===true) {
+        // update the shader variable
+        vars.shader.current = _shaderName;
+
+        // deal with the gray shader (which changes the player colour to black and enemies to white)
+        if (_shaderName!=='gray' && _shaderName!=='grey' && _shaderName!=='grayscan' && _shaderName!=='greyscan' ) { // moving from grey scanline to some other shader
+            let shaderRegex = /gr[a,e]y/;
+            if (vars.shader.current.match(shaderRegex)!==null) { // regex for shader (currently catches grey,gray,greyscan and grayscan)
+                enemies.children.each( (c)=> {
+                    c.clearTint();
+                });
+                player.clearTint();
+            }
+        } else { // grey scaline enabled
+            enemies.children.each( (c)=> {
+                c.setTintFill(scene.consts.colours.white);
+            });
+            player.setTintFill(scene.consts.colours.black);
+        }
+    }
+
+}
+
+
+
 var GrayScanlinePipeline = new Phaser.Class({
 
     Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
@@ -141,6 +314,192 @@ var GreenScreenScanlinePipeline = new Phaser.Class({
     }
 });
 
+var bossSpinnerBlue = new Phaser.Class({
+
+    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
+
+    initialize:
+
+    function bossSpinnerBlue (game) {
+        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
+            game: game,
+            renderer: game.renderer,
+            fragShader:`
+            precision mediump float;
+            #extension GL_OES_standard_derivatives : enable
+
+            uniform float time; uniform vec2 resolution; uniform sampler2D uMainSampler; varying vec2 outTexCoord;
+
+            void main( void ) {
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y)*2.0; // radius of the big circle
+                vec3 destColor = vec3(0.0, 0.4, 1.0); // colour of circles
+                float f = 0.0; // background colour based on circle colour (bleed through)
+                float radius = (sin(time)+0.5)*0.07; // min and max radius for small circles
+                for(float i = 0.0; i < 10.0; i++) {
+                    float theta = 2.0*sin(time) + i * 0.628318; float s = sin(theta) * 1.0; float c = cos(theta) * 1.0; float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius); f += 0.0068 / equ*5.0;
+                }
+                vec4 pixel = texture2D(uMainSampler, outTexCoord);
+                gl_FragColor = pixel + vec4(vec3(destColor * f), 1.0);
+            }`
+        });
+    }
+});
+
+var bossSpinnerGreen = new Phaser.Class({
+
+    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
+
+    initialize:
+
+    function bossSpinnerGreen (game) {
+        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
+            game: game,
+            renderer: game.renderer,
+            fragShader:`
+            precision mediump float;
+            #extension GL_OES_standard_derivatives : enable
+
+            uniform float time; uniform vec2 resolution; uniform sampler2D uMainSampler; varying vec2 outTexCoord;
+
+            void main( void ) {
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y)*2.0; // radius of the big circle
+                vec3 destColor = vec3(0.0, 1.0, 0.0); // colour of circles
+                float f = 0.0; // background colour based on circle colour (bleed through)
+                float radius = (sin(time)+0.5)*0.07; // min and max radius for small circles
+                for(float i = 0.0; i < 10.0; i++) {
+                    float theta = 2.0*sin(time) + i * 0.628318; float s = sin(theta) * 1.0; float c = cos(theta) * 1.0; float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius); f += 0.0068 / equ*5.0;
+                }
+                vec4 pixel = texture2D(uMainSampler, outTexCoord);
+                gl_FragColor = pixel + vec4(vec3(destColor * f), 1.0);
+            }`
+        });
+    }
+});
+
+var bossSpinnerPurple = new Phaser.Class({
+
+    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
+
+    initialize:
+
+    function bossSpinnerPurple (game) {
+        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
+            game: game,
+            renderer: game.renderer,
+            fragShader:`
+            precision mediump float;
+            #extension GL_OES_standard_derivatives : enable
+
+            uniform float time; uniform vec2 resolution; uniform sampler2D uMainSampler; varying vec2 outTexCoord;
+
+            void main( void ) {
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y)*2.0; // radius of the big circle
+                vec3 destColor = vec3(0.788, 0.149, 0.7); // colour of circles
+                float f = 0.0; // background colour based on circle colour (bleed through)
+                float radius = (sin(time)+0.5)*0.07; // min and max radius for small circles
+                for(float i = 0.0; i < 10.0; i++) {
+                    float theta = 2.0*sin(time) + i * 0.628318; float s = sin(theta) * 1.0; float c = cos(theta) * 1.0; float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius); f += 0.0068 / equ*5.0;
+                }
+                vec4 pixel = texture2D(uMainSampler, outTexCoord);
+                gl_FragColor = pixel + vec4(vec3(destColor * f), 1.0);
+            }`
+        });
+    }
+});
+
+var bossSpinnerPurple2 = new Phaser.Class({
+
+    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
+
+    initialize:
+
+    function bossSpinnerPurple2 (game) {
+        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
+            game: game,
+            renderer: game.renderer,
+            fragShader:`
+            precision mediump float;
+            #extension GL_OES_standard_derivatives : enable
+
+            uniform float time; uniform vec2 resolution; uniform sampler2D uMainSampler; varying vec2 outTexCoord;
+
+            void main( void ) {
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y)*2.0; // radius of the big circle
+                vec3 destColor = vec3(0.639, 0.0, 0.85); // colour of circles
+                float f = 0.0; // background colour based on circle colour (bleed through)
+                float radius = (sin(time)+0.5)*0.07; // min and max radius for small circles
+                for(float i = 0.0; i < 10.0; i++) {
+                    float theta = 2.0*sin(time) + i * 0.628318; float s = sin(theta) * 1.0; float c = cos(theta) * 1.0; float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius); f += 0.0068 / equ*5.0;
+                }
+                vec4 pixel = texture2D(uMainSampler, outTexCoord);
+                gl_FragColor = pixel + vec4(vec3(destColor * f), 1.0);
+            }`
+        });
+    }
+});
+
+var bossSpinnerRed = new Phaser.Class({
+
+    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
+
+    initialize:
+
+    function bossSpinnerRed (game) {
+        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
+            game: game,
+            renderer: game.renderer,
+            fragShader:`
+            precision mediump float;
+            #extension GL_OES_standard_derivatives : enable
+
+            uniform float time; uniform vec2 resolution; uniform sampler2D uMainSampler; varying vec2 outTexCoord;
+
+            void main( void ) {
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y)*2.0; // radius of the big circle
+                vec3 destColor = vec3(1.0, 0.0, 0.0); // colour of circles
+                float f = 0.0; // background colour based on circle colour (bleed through)
+                float radius = (sin(time)+0.5)*0.07; // min and max radius for small circles
+                for(float i = 0.0; i < 10.0; i++) {
+                    float theta = 2.0*sin(time) + i * 0.628318; float s = sin(theta) * 1.0; float c = cos(theta) * 1.0; float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius); f += 0.0068 / equ*5.0;
+                }
+                vec4 pixel = texture2D(uMainSampler, outTexCoord);
+                gl_FragColor = pixel + vec4(vec3(destColor * f), 1.0);
+            }`
+        });
+    }
+});
+
+var bossSpinnerYellow = new Phaser.Class({
+
+    Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
+
+    initialize:
+
+    function bossSpinnerYellow (game) {
+        Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline.call(this, {
+            game: game,
+            renderer: game.renderer,
+            fragShader:`
+            precision mediump float;
+            #extension GL_OES_standard_derivatives : enable
+
+            uniform float time; uniform vec2 resolution; uniform sampler2D uMainSampler; varying vec2 outTexCoord;
+
+            void main( void ) {
+                vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y)*2.0; // radius of the big circle
+                vec3 destColor = vec3(1.0, 1.0, 0.0); // colour of circles
+                float f = 0.0; // background colour based on circle colour (bleed through)
+                float radius = (sin(time)+0.5)*0.07; // min and max radius for small circles
+                for(float i = 0.0; i < 10.0; i++) {
+                    float theta = 2.0*sin(time) + i * 0.628318; float s = sin(theta) * 1.0; float c = cos(theta) * 1.0; float equ = abs(length((p - vec2(c, s))/vec2(c, 1.0)) - radius); f += 0.0068 / equ*5.0;
+                }
+                vec4 pixel = texture2D(uMainSampler, outTexCoord);
+                gl_FragColor = pixel + vec4(vec3(destColor * f), 1.0);
+            }`
+        });
+    }
+});
+
 var EnemyBossWarpPipeline = new Phaser.Class({
 
     Extends: Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline,
@@ -270,86 +629,3 @@ var TV = new Phaser.Class({
         });
     }
 });
-
-// FUNCTIONS
-function shaderType(_shaderName='default', _cam=1) {
-    let update = false;
-    switch (_shaderName) {
-        case 'warp':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.warpPipeline);
-            } else {
-                cam1.setRenderToTexture(scene.warpPipeline);
-                cam2.setAlpha(1);
-                cam2.ignore(storyText);
-            }
-            update = true;
-        break;
-
-        case 'colour': case 'colourscan': case 'default':
-            // ignore request for default if adi/shade is running
-            let ssV = vars.player.ship.special;
-            if (ssV.ADI.collected===false && ssV.SHADE.collected===false) {
-                if (_cam===2) {
-                    cam2.setRenderToTexture(scene.cSPipeline);
-                } else {
-                    cam1.setRenderToTexture(scene.cSPipeline);
-                    cam2.setAlpha(1);
-                    cam2.ignore(storyText);
-                }
-                update = true;
-            }
-        break;
-
-        case 'green': case 'greenscan':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.gSSPipeline);
-            } else {
-                cam1.setRenderToTexture(scene.gSSPipeline);
-                cam2.setAlpha(1);
-                cam2.ignore(storyText);
-            }
-            update = true;
-        break;
-
-        case 'gray': case 'grey': case 'grayscan': case 'greyscan':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.gSPipeline);
-            } else {
-                cam1.setRenderToTexture(scene.gSPipeline);
-                cam2.setAlpha(1);
-                cam2.ignore(storyText);
-            }
-            update = true;
-        break;
-
-        case 'none': case 'disable':
-            if (_cam===2) {
-                cam2.clearRenderToTexture();
-            } else {
-                cam1.clearRenderToTexture();
-            }
-            update = true;
-        break;
-    }
-
-    if (update===true) {
-        if (_shaderName!=='gray' && _shaderName!=='grey' && _shaderName!=='grayscan' && _shaderName!=='greyscan' ) { // moving from grey scanline to some other shader
-            let shaderRegex = /gr[a,e]y/;
-            if (vars.shader.current.match(shaderRegex)!==null) { // regex for shader (currently catches grey,gray,greyscan and grayscan)
-                enemies.children.each( (c)=> {
-                    c.clearTint();
-                });
-                player.clearTint();
-            }
-        } else { // grey scaline enabled
-            enemies.children.each( (c)=> {
-                c.setTintFill(scene.consts.colours.white);
-            });
-            player.setTintFill(scene.consts.colours.black);
-        }
-    }
-    // update the shader variable
-    vars.shader.current = _shaderName;
-
-}
