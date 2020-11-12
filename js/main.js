@@ -59,7 +59,9 @@ function main() {
         // update any bosses (even if the player is dead the boss will continue to animate)
         if (scene.groups.enemyBossGroup.children.size>0) {
             scene.groups.enemyBossGroup.children.each( (c)=> {
-                enemyBossUpdate(c);
+                if (c.visible===true) {
+                    enemyBossUpdate(c);
+                }
             })
         }
 

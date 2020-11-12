@@ -408,9 +408,6 @@ class enemyBoss {
         if (vars.levels.wave<3 && eV.bossNext===5) { // for the first 2 waves we dont show the real enemy (cthulhu)
             eV.bossNext=0;
         }
-        if (eV.bossNext===5) { // this is the cthulhu boss, he has his own special camera filter
-            shaderType('gray',1);
-        }
         this.sprite = eV.bossNext;
         this.colour = vars.enemies.colours[this.sprite][2];
         this.colourName = vars.enemies.colours[this.sprite][0];
@@ -446,19 +443,6 @@ class enemyBoss {
         boss.body = thisSpriteBody;  // youll never guess this.. but you have to add the body
         boss.data = thisSprite.data; // and data after adding it to the group.. because Phaser :S
         vars.cameras.ignore(cam2, boss);
-        // generate boss spinner shader
-        vars.shader.bossSpinnerShowCam(this.colourName);
-
-        // fade the boss in over 5 seconds
-        scene.tweens.add({
-            targets: thisSprite,
-            alpha: 1,
-            ease: 'Cubic.easeIn',
-            duration: 2500,
-            onComplete: enemyBossShow,
-            yoyo: true,
-            onCompleteParams: [boss],
-        });
         boss.setVisible(false);
         boss.startFollow({
             positionOnPath: true,
@@ -466,6 +450,20 @@ class enemyBoss {
             yoyo: true,
             repeat: -1,
             ease: 'Quad.easeInOut',
+        });
+
+        // generate boss spinner shader
+        vars.shader.bossSpinnerShowCam(this.colourName);
+
+        // fade the boss in over 3 seconds
+        scene.tweens.add({
+            targets: thisSprite,
+            alpha: 1,
+            ease: 'Cubic.easeIn',
+            duration: 1500,
+            onComplete: enemyBossShow,
+            yoyo: true,
+            onCompleteParams: [boss],
         });
     }
 }
@@ -624,9 +622,18 @@ function enemyBossHit(_bullet, _boss) {
 
 function enemyBossShow(_tween, _target, _boss) {
     _boss.setVisible(true);
-    if (vars.shader.current.includes('boss')===true) { shaderType(); }
-
+    
     let bossName = _boss.getData('name');
+    if (bossName===undefined) { // this can happen if the boss doesnt spawn before the wave ends
+        return false;
+    }
+    if (vars.enemies.bossNext===5) { // this is the cthulhu boss, he has his own special camera filter
+        //if (vars.shader.current.includes('boss')===true) {
+            shaderType('gray',1); 
+        //}
+    } else {
+        shaderType(); 
+    }
     scene.children.getByName('hpO_' + bossName).setVisible(true);
     scene.children.getByName('hpI_' + bossName).setVisible(true);
     let bossType = _boss.getData('enemyType');

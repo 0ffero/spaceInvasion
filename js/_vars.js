@@ -71,8 +71,8 @@ var vars = {
         
         preInit: function() {
             cam1 = scene.cameras.main;
-            cam2 = scene.cameras.add(0, 0, vars.canvas.width, vars.canvas.height); // used for switching between shaders smoothly
-            cam2.setAlpha(0);
+            cam2 = scene.cameras.add(0, 0, vars.canvas.width, vars.canvas.height).setAlpha(0); // used for HUD/UI
+            cam3 = scene.cameras.add(0, 0, vars.canvas.width, vars.canvas.height).setAlpha(0); // used for boss spinner shaders
         },
 
         shake: function(_cam=cam1, _duration=200) {
@@ -272,7 +272,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.162 (beta release)',
+    version : '0.9.165 (beta release)',
     versionCheckResult: -1,
 
     audio: {
@@ -2383,14 +2383,14 @@ var vars = {
             if (colour in scene.consts.colours) {
                 let spinnerColour = scene.consts.colours[colour][1];
                 if (spinnerColour!==null) {
-                    shaderType('boss' + spinnerColour, cam1);
+                    shaderType('boss' + spinnerColour, 3);
                     return true;
                 } else {
                     console.warn('No spinner found for colour ' + spinnerColour + ' (colour exists, but spinner is null)');
                     return false;
                 }
             } else {
-                console.warn('Spinner colour not found (' + spinnerColour + ')');
+                console.warn('Spinner colour not found (' + colour + ')');
                 return false;
             }
         }

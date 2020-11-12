@@ -1,7 +1,7 @@
 vars.test.bossSpinnerTest = function() {
     shaders = ['Blue','Green','Purple','Purple2','Red','Yellow']
     sTest = setInterval( function() {
-        shaderType('none'); if (shaders.length>0) { let cS = shaders.pop(); shaderType('boss' + cS,cam1); } else { clearInterval(sTest); }
+        shaderType('none'); if (shaders.length>0) { let cS = shaders.pop(); shaderType('boss' + cS,1); } else { clearInterval(sTest); }
     }, 3000)
 }
 

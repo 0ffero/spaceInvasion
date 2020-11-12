@@ -68,82 +68,40 @@ function shaderType(_shaderName='default', _cam=1) {
         break;
 
         case 'bossBlue':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.bossSpinnerBlue);
-            } else {
-                cam1.setRenderToTexture(scene.bossSpinnerBlue);
-                cam2.setAlpha(1);
-                if (typeof storyText!=='undefined') {
-                    cam2.ignore(storyText);
-                }
-            }
+            cam3.setRenderToTexture(scene.bossSpinnerBlue);
             update = true;
         break;
 
         case 'bossGreen':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.bossSpinnerGreen);
-            } else {
-                cam1.setRenderToTexture(scene.bossSpinnerGreen);
-                cam2.setAlpha(1);
-                if (typeof storyText!=='undefined') {
-                    cam2.ignore(storyText);
-                }
-            }
+            cam3.setRenderToTexture(scene.bossSpinnerGreen);
             update = true;
         break;
 
         case 'bossPurple':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.bossSpinnerPurple);
-            } else {
-                cam1.setRenderToTexture(scene.bossSpinnerPurple);
-                cam2.setAlpha(1);
-                if (typeof storyText!=='undefined') {
-                    cam2.ignore(storyText);
-                }
-            }
+            cam3.setRenderToTexture(scene.bossSpinnerPurple);
             update = true;
         break;
 
         case 'bossPurple2':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.bossSpinnerPurple2);
-            } else {
-                cam1.setRenderToTexture(scene.bossSpinnerPurple2);
-                cam2.setAlpha(1);
-                if (typeof storyText!=='undefined') {
-                    cam2.ignore(storyText);
-                }
-            }
+            cam3.setRenderToTexture(scene.bossSpinnerPurple2);
             update = true;
         break;
 
         case 'bossRed':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.bossSpinnerRed);
-            } else {
-                cam1.setRenderToTexture(scene.bossSpinnerRed);
-                cam2.setAlpha(1);
-                if (typeof storyText!=='undefined') {
-                    cam2.ignore(storyText);
-                }
-            }
+            cam3.setRenderToTexture(scene.bossSpinnerRed);
             update = true;
         break;
 
         case 'bossYellow':
-            if (_cam===2) {
-                cam2.setRenderToTexture(scene.bossSpinnerYellow);
-            } else {
-                cam1.setRenderToTexture(scene.bossSpinnerYellow);
-                cam2.setAlpha(1);
-                if (typeof storyText!=='undefined') {
-                    cam2.ignore(storyText);
-                }
-            }
+            cam3.setRenderToTexture(scene.bossSpinnerYellow);
             update = true;
         break;
+    }
+
+    if (update===true && _cam===3) { // cam 3 is used for boss spinners
+        cam3.setAlpha(1);
+    } else {
+        cam3.setAlpha(0);
     }
 
     if (update===true) {
