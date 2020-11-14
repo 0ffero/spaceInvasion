@@ -5,6 +5,10 @@ vars.test.bossSpinnerTest = function() {
     }, 3000)
 }
 
+function clampetyClampClampetyClampClampetyClampClampetyClamp(_val,_min,_max) { // to the tune of blankety blank (obviously)
+    return Phaser.Math.Clamp(_val,_min,_max);
+}
+
 vars.test.glass = function() {
     scene.add.image(400,300,'bossShield','innerRed_frame1').setScale(0.4,0.2);
     scene.add.image(400,300,'bossShield','outer').setScale(0.4,0.2);

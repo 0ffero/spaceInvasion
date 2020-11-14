@@ -100,6 +100,13 @@ function shaderType(_shaderName='default', _cam=1) {
 
     if (update===true && _cam===3) { // cam 3 is used for boss spinners
         cam3.setAlpha(1);
+        scene.tweens.add({
+            targets: cam3,
+            alpha: 0.75,
+            duration: 1000,
+            yoyo: true,
+            onComplete: vars.cameras.cam3alpha,
+        })
     } else {
         cam3.setAlpha(0);
     }
@@ -111,17 +118,17 @@ function shaderType(_shaderName='default', _cam=1) {
         // deal with the gray shader (which changes the player colour to black and enemies to white)
         if (_shaderName!=='gray' && _shaderName!=='grey' && _shaderName!=='grayscan' && _shaderName!=='greyscan' ) { // moving from grey scanline to some other shader
             let shaderRegex = /gr[a,e]y/;
-            if (vars.shader.current.match(shaderRegex)!==null) { // regex for shader (currently catches grey,gray,greyscan and grayscan)
+            /* if (vars.shader.current.match(shaderRegex)!==null) { // regex for shader (currently catches grey,gray,greyscan and grayscan)
                 enemies.children.each( (c)=> {
                     c.clearTint();
                 });
                 player.clearTint();
-            }
+            } */
         } else { // grey scaline enabled
-            enemies.children.each( (c)=> {
+            /* enemies.children.each( (c)=> {
                 c.setTintFill(scene.consts.colours.white);
             });
-            player.setTintFill(scene.consts.colours.black);
+            player.setTintFill(scene.consts.colours.black); */
         }
     }
 

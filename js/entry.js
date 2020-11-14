@@ -1,4 +1,4 @@
-console.log('Initialising...');
+if (vars.DEBUG===true) { console.log('Initialising...'); }
 init();
 
 var config = {

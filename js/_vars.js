@@ -45,16 +45,12 @@ var vars = {
     cameras: {
         init: false,
 
-        flash: function(_flashColour='white', duration=100) {
-            let r,g,b;
-            if (_flashColour==='white') {
-                r=g=b=255;
-            } else if (_flashColour==='red') {
-                r=255; g=b=0;
-            } else if (_flashColour==='green') {
-                g=255; r=b=0;
-            }
+        cam3alpha: function() {
+            if (cam3.alpha!==0) { cam3.setAlpha(0); }
+        },
 
+        flash: function(_flashColour='white', duration=100) {
+            let r,g,b; if (_flashColour==='white') { r=g=b=255; } else if (_flashColour==='red') { r=255; g=b=0; } else if (_flashColour==='green') { g=255; r=b=0; }
             cam1.flash(duration,r,g,b);
         },
 
@@ -108,7 +104,7 @@ var vars = {
         pTest: -1,
 
         init: function() {
-            console.log('      %c...canvas', vars.console.doing);
+            if (vars.DEBUG===true) { console.log('      %c...canvas', vars.console.doing); }
             let vC = vars.canvas;
             vC.cX = vC.width/2;
             vC.cY = vC.height/2;
@@ -122,7 +118,7 @@ var vars = {
             } else if (_type==='def') {
                 scene.sys.canvas.style.cursor = 'default';
             } else {
-                console.log('Unknown Cursor Type');
+                if (vars.DEBUG===true) { console.log('Unknown Cursor Type'); }
             }
         }
     },
@@ -170,7 +166,7 @@ var vars = {
                 } else {
                     clearInterval(skip);
                 }
-            },333, this)
+            },100, this)
         },
 
         removeOldLevelScenery: function(_level) {
@@ -212,7 +208,7 @@ var vars = {
                 vars.localStorage.initialiseLS(db);
             } else { // we already have a high score in local storage
                 vars.localStorage.working=true;
-                vars.game.scores[1] = db.highScore;
+                vars.game.scores.best = db.highScore;
                 vars.game.bWave = db.bestWave;
             }
         },
@@ -226,10 +222,10 @@ var vars = {
                 _db.gID = vars.game.id;
                 _db.highScore = 0;
                 _db.bestWave = 0;
-                _db.eL = null; // enemy log for this current game
-                _db.pL = null; // player log for this current game
-                _db.oL = null; // old logs from previous games
-                vars.game.scores[1] = 0;
+                _db.eL = ''; // enemy log for this current game
+                _db.pL = ''; // player log for this current game
+                _db.oL = ''; // old logs from previous games. There was no db found, so we're initialising it.
+                vars.game.scores.best = 0;
             } else {
                 vars.localStorage.working=false;
                 // warn the user
@@ -238,12 +234,27 @@ var vars = {
             }
         },
 
+        logClear: function() {
+            let lV = vars.logs;
+            lV.ED = []; lV.PD = [];
+        },
+
+        logMove: function() {
+            let lV = vars.logs;
+            let edString = lV.ED.toString();
+            let pdString = lV.PD.toString();
+            // move them
+            let db = window.localStorage;
+            db.eL+=edString;
+            db.pL+=pdString;
+        },
+
         saveHighScore: function() {
             if (vars.localStorage.working===true) {
                 let db = window.localStorage;
-                if (db.highScore<vars.game.scores[0]) {
-                    db.highScore = vars.game.scores[0];
-                    vars.game.scores[1] = vars.game.scores[0];
+                if (db.highScore<vars.game.scores.current) {
+                    db.highScore = vars.game.scores.current;
+                    vars.game.scores.best = vars.game.scores.current;
                     db.bestWave = vars.levels.wave; // the wave gets overwritten, even if the db one is better, as its based on high score, not max wave
                     console.log('%cNew High Score! Saving to LocalStorage', vars.console.doing);
                 }
@@ -255,7 +266,7 @@ var vars = {
 
     logs: {
         ED: [],
-        PH: [],
+        PD: [],
     },
 
     photoS: {
@@ -272,7 +283,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.165 (beta release)',
+    version : '0.9.176 (beta release)',
     versionCheckResult: -1,
 
     audio: {
@@ -342,6 +353,7 @@ var vars = {
     },
 
     enemies: {
+        alive25: -1,
         attackTimeout: [8*fps,12*fps],
         attackPatternsEnabled: false,
         attackPatternsNonDynamic: {
@@ -365,16 +377,15 @@ var vars = {
             },
 
             init: function() {
-                console.log('%c  Setting up available attack patterns', vars.console.callTo);
+                if (vars.DEBUG===true) { console.log('%c  Setting up available attack patterns', vars.console.callTo); }
                 let aAP = vars.enemies.availableAttackPatterns;
-                for (p in scene.paths) {
-                    aAP.ready.push(p);
-                }
+                for (p in scene.paths) { scene.paths[p].name = p; aAP.ready.push(p); }
             },
 
-            pathAddFollowers: function(_pathName='none', _pathData, _maxFollowers = false) {
-                if (pathName==='none') { return false; }
+            pathAddFollowers: function(_pathName='none', _pathData, _maxFollowers = false) { // enemy 25 patterns
+                if (_pathName==='none') { return false; }
                 let eV = vars.enemies;
+                eV.e25PathInUse = _pathName;
                 eV.availableAttackPatterns.used.push(_pathName);
                 let delay = _pathData.delay; let duration=_pathData.duration;
                 if (delay<=0 || duration<=0) { console.log('Error with path. The delay (' + delay + ') or duration (' + duration + ') was invalid!'); return false; }
@@ -384,6 +395,7 @@ var vars = {
                 }
                 // limit the total followers in case we dont have enough enemies to fill the path (paths have their own max followers variable)
                 totalFollowers = Phaser.Math.Clamp(totalFollowers, 0, vars.enemies.list.length);
+                eV.alive25 = totalFollowers;
 
                 let ease = 'Linear'; // if we need to modify the ease for a specific path (most paths WONT need this!)
                 /* if (_pathName==='lineToCircle') { ease = 'Sine.easeInOut' } */
@@ -397,28 +409,22 @@ var vars = {
                     let eName = currentEnemy.name;
                     let enemyFollower = scene.add.follower(actualPath, 0, 0, 'enemies', frame).setScale(0.4).setName('f25_' + eName);
                     scene.groups.enemyAttackingGroup25.add(enemyFollower);
-                    if (f===totalFollowers-1) {
-                        enemyFollower.startFollow({
-                            positionOnPath: true,
-                            delay: f*delay,
-                            duration: duration,
-                            repeat: _pathData.repeat,
-                            ease: ease,
-                            onComplete: vars.enemies.availableAttackPatterns.pathPickNext
-                        });
-                    } else {
-                        enemyFollower.startFollow({
-                            positionOnPath: true,
-                            delay: f*delay,
-                            duration: duration,
-                            repeat: _pathData.repeat,
-                            ease: ease
-                        });
-                    }
+                    enemyFollower.startFollow({
+                        positionOnPath: true,
+                        delay: f*delay,
+                        duration: duration,
+                        repeat: _pathData.repeat,
+                        ease: ease,
+                        onComplete: vars.enemies.alive25MadeIt,
+                        onCompleteParams: ['f25_' + eName]
+                    });
                 }
             },
 
-            pathPickNext: function() {
+            pathPickNext: function() { // enemy 25 path, pick next
+                // first, destroy the old path followers
+                let a25g = scene.groups.enemyAttackingGroup25;
+                if (a25g.children.size!==0) { a25g.children.each( (e)=> { e.destroy(); }) }
                 // check that we have enemies left to add to the path
                 if (vars.enemies.list.length<=0) { // no enemies left to attach to paths (ie get next level)
                     debugger; // <--- ive left this in, but in general we should be checking
@@ -428,17 +434,17 @@ var vars = {
                               // enemies = 0. Obviously ill be adding a function to check this
                               // properly but this will do just now TODO
                 }
-                // first, sort the enemies by hp
+                // sort the alive enemies by hp
                 sortByKey(vars.enemies.list, 'hp', true); // true = sort by highest hp
                 let aap = vars.enemies.availableAttackPatterns;
                 let rndPath = Phaser.Math.RND.between(0, aap.ready.length-1); // get array index
                 let pathNameArray = aap.ready.splice(rndPath,1); // get the path name
-                pathName = pathNameArray[0];
+                let pathName = pathNameArray[0];
                 let pathData = vars.enemies.attackPatternsNonDynamic[pathName];
                 //console.log(pathName);
 
                 if (aap.ready.length===0) { // this was the last available pattern move all used paths back into ready
-                    console.log('All paths used. Resetting them');
+                    if (vars.DEBUG===true) { console.log('All paths used. Resetting them'); }
                     aap.ready = aap.used;
                     aap.used = [];
                 }
@@ -489,6 +495,7 @@ var vars = {
         cthulhuSpotted: false,
         deadSinceLastPowerup: 0,
         deathTotal: 0,
+        e25PathInUse: '',
         landingPositions: [],
         isLanding: false,
         list: [],
@@ -542,13 +549,21 @@ var vars = {
         updateTimeoutMax: 10,
         width: -1,
 
+        alive25MadeIt: function(_tween,_follower, _fName) { // when an enemy gets to the end of a tween they should be removed from the enemy25 var
+            scene.children.getByName(_fName).destroy();
+            let eV = vars.enemies;
+            eV.alive25--;
+            if (eV.alive25===0 && enemies.children.entries.length>0) { vars.enemies.availableAttackPatterns.pathPickNext(); }
+            console.log('Followers left: ' + eV.alive25);
+        },
+
         attackersFireUpdate: function(_enemyCount) {
             scene.groups.enemyAttackingGroup.children.each( (c)=> {
                 let progress = c.pathTween.totalProgress;
                 //console.log('Current Progress: ' + progress);
 
                 if (progress===1) {
-                    console.log('Enemy progress is 1. Deleting child');
+                    if (vars.DEBUG===true) { console.log('Enemy progress is 1. Deleting child'); }
                     // get the original and re-enable it if it isnt dead
                     let phaserObject = scene.children.getByName(c.name.replace('f_', ''));
                     if (phaserObject!==null) {
@@ -628,7 +643,7 @@ var vars = {
                         duration=9000;
                     }
                     if (enemy.x>vars.canvas.cX) { selectedPath+='Reversed'; }
-                    console.log('Selected Path: ' + selectedPath);
+                    if (vars.DEBUG===true) { console.log('Selected Path: ' + selectedPath); }
 
                     // get the fire timings for the attack type
                     let fireTimings = eV.enemyPatterns.splines.fireTimings;
@@ -683,11 +698,11 @@ var vars = {
                 } else if (vars.levels.wave>=3) {
                     spreadLimit=0.25;
                 }
-                console.log('Original Spread: ' + bulletSpreadSpeed + ', Spread Limit: ' + spreadLimit);
+                if (vars.DEBUG===true) { console.log('Original Spread: ' + bulletSpreadSpeed + ', Spread Limit: ' + spreadLimit); }
                 bulletSpreadSpeed*=spreadLimit; // reduce the spread at lower levels
 
                 bulletSpreadSpeed = ~~(bulletSpreadSpeed/5)*5; // drop the sread to the closest mult of 5
-                console.log('New Spread: ' + bulletSpreadSpeed);
+                if (vars.DEBUG===true) { console.log('New Spread: ' + bulletSpreadSpeed); }
                 let startSpeed = bulletSpreadSpeed;
                 let xI = ~~(startSpeed*2 / _bulletCount); // gives us the xVel increment
                 startSpeed*=-1;
@@ -743,7 +758,7 @@ var vars = {
                 vars.cameras.ignore(cam2, theBullet);
             }
             if (_xSpeed!==0 && vars.DEBUG===true) { // if x speed isnt 0 - this is only used by bosses after wave 1
-                console.log('Boss Bullet - Setting xSpeed: ' + _xSpeed);
+                if (vars.DEBUG===true) { console.log('Boss Bullet - Setting xSpeed: ' + _xSpeed); }
             }
             theBullet.setVelocity(_xSpeed, _speed);
         },
@@ -760,12 +775,10 @@ var vars = {
             return false;
         },
 
-        cLog: function() { // compress the log data
+        cLog: function() { // compress the log data (before sending it to server)
             if (vars.localStorage.working===true) {
-                let save = LZUTF8.encodeStorageBinaryString(vars.logs.ED.toString());
-                vars.logs.ED = [];
-                let db = windows.localStorage;
-                
+                let db = window.localStorage;
+                //let save = LZUTF8.encodeStorageBinaryString();
             }
         },
 
@@ -830,10 +843,10 @@ var vars = {
                 }
                 c.disableBody(true,false); // stop the enemy
                 scene.tweens.add({
-                    delay: i*100,
+                    delay: i*20,
                     targets: c,
                     alpha: 0,
-                    duration: 1000,
+                    duration: 2000,
                     onComplete: onComplete
                 })
             })
@@ -866,7 +879,7 @@ var vars = {
             let requiredRows = ~~(maxEnemies/positionsPerRow)+1;
             let y = vars.canvas.height-50;
 
-            console.log('Setting up landing positions..\n  total possible enemies: ' + maxEnemies + ', required rows: ' + requiredRows);
+            if (vars.DEBUG===true) { console.log('      %cSetting up landing positions.. Total possible enemies: ' + maxEnemies + ', required rows: ' + requiredRows, vars.console.doing); }
 
             let landingPositions = [];
             for (let r=0; r<requiredRows; r++) {
@@ -1413,7 +1426,7 @@ var vars = {
                 lV.waveInitialisedList['wave' + lV.wave].initialised=true;
 
                 console.log('Final Checks for wave ' + vars.levels.wave);
-                if (lV.wave===25) {
+                if (lV.wave>=25) {
                     vars.enemies.attackPatternsEnabled = true;
                     //fade out the enemies as they are going to be attached to a path instead of moving back and forth
                     vars.enemies.hideSmallEnemies();
@@ -1710,12 +1723,12 @@ var vars = {
         },
 
         init: function() {
-            console.log('      %c...player', vars.console.doing);
+            if (vars.DEBUG===true) { console.log('      %c...player', vars.console.doing); }
             let pV = vars.player;
             pV.startPosition.x = vars.canvas.cX;
             pV.startPosition.y = vars.canvas.height - (111*vars.game.scale)*3;
 
-            console.log('    %cship... >', vars.console.callFrom);
+            if (vars.DEBUG===true) { console.log('    %cship... >', vars.console.callFrom); }
             pV.ship.init();
         },
 
@@ -2020,10 +2033,10 @@ var vars = {
             },
 
             init: function() {
-                console.log('      %c...init ship...', vars.console.doing);
+                if (vars.DEBUG===true) { console.log('      %c...init ship...', vars.console.doing); }
                 let ship = vars.player.ship;
                 for (cS in ship.cannonSlots) {
-                    console.log('       %c... for ' + cS + ' cannon', vars.console.doing);
+                    if (vars.DEBUG===true) { console.log('       %c... for ' + cS + ' cannon', vars.console.doing); }
                     let currentSlot = ship.cannonSlots[cS];
                     currentSlot.currentWait = currentSlot.currentWaitMax = fps/currentSlot.firespeed;
                 }
@@ -2162,7 +2175,7 @@ var vars = {
             xArray.push(wOC+100-points);
             */
            // The code above creates this Array.name.. its static so no point of generating it every time
-           console.log('%cInitialising Asteroid Field', vars.console.callTo);
+           if (vars.DEBUG===true) { console.log('%cInitialising Asteroid Field', vars.console.callTo); }
            vars.scenery.asteroidXArray = [31, 93, 155, 217, 279, 341, 403, 465, 527, 589, 651, 658];
         },
 
@@ -2323,7 +2336,7 @@ var vars = {
         },
 
         init: function() {
-            console.log('      %c...scenery', vars.console.doing);
+            if (vars.DEBUG===true) { console.log('      %c...scenery', vars.console.doing); }
             let sV = vars.scenery;
             let cX = vars.canvas.cX;
             let min = cX - (cX/2);
@@ -2495,20 +2508,25 @@ var vars = {
                 vars.versionCheckResult = true;
             }
         } else {
-            console.log('Version check has already been done. Result was ' + vars.versionCheckResult + '\nWhere false means failed');
+            if (vars.vShown===false) {
+                vars.vShown=true;
+                if (vars.DEBUG===true) { console.log('%cVersion check has already been done. Result was ' + vars.versionCheckResult + ' (where false means failed)', vars.console.errorResolved); }
+            }
         }
-    }
+    },
+    vShown: false
 }
 
 function init() {
-    console.log('  >%cInitialising', vars.console.callTo);
-
-    console.log('    %cCanvas >', vars.console.callFrom);
+    if (vars.DEBUG===true) { 
+        console.log('  >%cInitialising', vars.console.callTo);
+        console.log('    %cCanvas >', vars.console.callFrom);
+    }
     vars.canvas.init();
-    console.log('    %cPlayer >', vars.console.callFrom);
+    if (vars.DEBUG===true) { console.log('    %cPlayer >', vars.console.callFrom); }
     vars.player.init();
-    console.log('    %cEnemies >', vars.console.callFrom);
+    if (vars.DEBUG===true) { console.log('    %cEnemies >', vars.console.callFrom); }
     vars.enemies.init();
-    console.log('    %cScenery >', vars.console.callFrom);
+    if (vars.DEBUG===true) { console.log('    %cScenery >', vars.console.callFrom); }
     vars.scenery.init();
 }

@@ -7,7 +7,7 @@
 */
 
 function enemyBossPatternsCreate() { // these are built at runtime as they are static in nature, unlike the standard enemy patterns which start at the enemies xy position
-    console.log('Building Enemy Boss Paths!');
+    if (vars.DEBUG===true) { console.log('      %cBuilding Enemy Boss Paths!', vars.console.doing); }
     let start = [50,400];
     let paths = ['bezier1','bezier2','horizontal','circle','ellipse']
 
@@ -54,7 +54,7 @@ function enemyBossPatternsCreate() { // these are built at runtime as they are s
         newpath.name = pathName;
         vars.enemies.bossPaths.push([pathName, newpath])
     }
-    console.log('  ... finished setting up the boss paths.');
+    if (vars.DEBUG===true) { console.log('%c        ... finished setting up the boss paths.',vars.console.doing); }
 }
 
 vars.enemies.enemyPatterns = { // these patterns are dynamic and are based on the selected enemies xy start position
@@ -260,8 +260,8 @@ function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. Th
     let start = [-50,300]; let offsets = [150,50]; let yMinMax = [3,5];
     let positions = [];
     positions.push(cW/2-300, start[1]+offsets[1]); positions.push(cW-100, start[1]-offsets[1]); positions.push(cW-100, start[1]-offsets[1]+200); positions.push(100, start[1]-offsets[1]+400); positions.push(100, start[1]-offsets[1]+600); positions.push(cW+100, start[1]-offsets[1]+400);
-    scene.paths.backAndForth = new Phaser.Curves.Path(cW-100,-50).splineTo(positions);
-    vars.enemies.attackPatternsNonDynamic.backAndForth    = { maxOnPath: 10, duration: 6000, repeat: 1, delay: 200 };
+    scene.paths.backAndForth = new Phaser.Curves.Path(cW-100,-50).splineTo(positions);//.setName('backAndForth');
+    vars.enemies.attackPatternsNonDynamic.backAndForth = { maxOnPath: 10, duration: 6000, repeat: 1, delay: 200 };
 
     let sineWaves = ['sineWaveMinMax', 'sineWaveSlow', 'sineWaveFast', 'sineWaveClose'];
     for (let p=0; p<sineWaves.length; p++) {
@@ -276,7 +276,7 @@ function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. Th
 
         // create the sine wave
         x=positions.shift(); y=positions.shift();
-        scene.paths[selected] = new Phaser.Curves.Path(x, y).splineTo(positions);
+        scene.paths[selected] = new Phaser.Curves.Path(x, y).splineTo(positions);//.setName(selected);
 
         if (selected==='sineWaveSlow') {
             defaultData.delay = 200;
@@ -294,22 +294,22 @@ function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. Th
         vars.enemies.attackPatternsNonDynamic[selected]   = defaultData;
     }
 
-    scene.paths.lineToCircle = new Phaser.Curves.Path(-40, cCY).lineTo(cCX+150, cCY).circleTo(150,true).circleTo(150,true).lineTo(cW+40, cCY);
+    scene.paths.lineToCircle = new Phaser.Curves.Path(-40, cCY).lineTo(cCX+150, cCY).circleTo(150,true).circleTo(150,true).lineTo(cW+40, cCY);//.setName('lineToCircle');
     vars.enemies.attackPatternsNonDynamic['lineToCircle'] = { maxOnPath: 14, duration: 8000, repeat: 1, delay: 200 };
 
-    scene.paths.simpleM = new Phaser.Curves.Path(-40, cCY+150).lineTo(cCX-(cCX/2), cCY-300).lineTo(cCX,cCY).lineTo(cCX+(cCX/2),cCY-300).lineTo(cW+50, cCY+150);
+    scene.paths.simpleM = new Phaser.Curves.Path(-40, cCY+150).lineTo(cCX-(cCX/2), cCY-300).lineTo(cCX,cCY).lineTo(cCX+(cCX/2),cCY-300).lineTo(cW+50, cCY+150);//.setName('simpleM');
     vars.enemies.attackPatternsNonDynamic['simpleM']      = { maxOnPath: 10, duration: 4000, repeat: 1, delay: 200 };
-    scene.paths.simpleMDeep = new Phaser.Curves.Path(-40, cCY+150).lineTo(cCX-(cCX/2), cCY-300).lineTo(cCX,cCY+250).lineTo(cCX+(cCX/2),cCY-300).lineTo(cW+50, cCY+150);
+    scene.paths.simpleMDeep = new Phaser.Curves.Path(-40, cCY+150).lineTo(cCX-(cCX/2), cCY-300).lineTo(cCX,cCY+250).lineTo(cCX+(cCX/2),cCY-300).lineTo(cW+50, cCY+150);//.setName('simpleMDeep');
     vars.enemies.attackPatternsNonDynamic['simpleMDeep']  = { maxOnPath: 10, duration: 5000, repeat: 1, delay: 200 };
 
-    scene.paths.simpleW = new Phaser.Curves.Path(-40, cCY-150).lineTo(cCX-(cCX/2), cCY+250).lineTo(cCX,cCY).lineTo(cCX+(cCX/2),cCY+250).lineTo(cW+50, cCY-150);
+    scene.paths.simpleW = new Phaser.Curves.Path(-40, cCY-150).lineTo(cCX-(cCX/2), cCY+250).lineTo(cCX,cCY).lineTo(cCX+(cCX/2),cCY+250).lineTo(cW+50, cCY-150);//.setName('simpleW');
     vars.enemies.attackPatternsNonDynamic['simpleW']      = { maxOnPath: 10, duration: 4000, repeat: 1, delay: 200 };
-    scene.paths.simpleWHigh = new Phaser.Curves.Path(-40, cCY-450).lineTo(cCX-(cCX/2), cCY+50).lineTo(cCX,cCY-300).lineTo(cCX+(cCX/2),cCY+50).lineTo(cW+50, cCY-450);
+    scene.paths.simpleWHigh = new Phaser.Curves.Path(-40, cCY-450).lineTo(cCX-(cCX/2), cCY+50).lineTo(cCX,cCY-300).lineTo(cCX+(cCX/2),cCY+50).lineTo(cW+50, cCY-450);//.setName('simpleWHigh');
     vars.enemies.attackPatternsNonDynamic['simpleWHigh']  = { maxOnPath: 10, duration: 4000, repeat: 1, delay: 200 };
 
-    scene.paths.simpleX = new Phaser.Curves.Path(-40, cCY).lineTo(cW-50, 100).lineTo(0+50,100).lineTo(cW+50,cCY);
+    scene.paths.simpleX = new Phaser.Curves.Path(-40, cCY).lineTo(cW-50, 100).lineTo(0+50,100).lineTo(cW+50,cCY);//.setName('simpleX');
     vars.enemies.attackPatternsNonDynamic['simpleX']      = { maxOnPath: 13, duration: 5000, repeat: 1, delay: 150 };
-    scene.paths.simpleX2 = new Phaser.Curves.Path(-40, 100).lineTo(cW-50, cCY).lineTo(0+50,cCY).lineTo(cW+50,100);
+    scene.paths.simpleX2 = new Phaser.Curves.Path(-40, 100).lineTo(cW-50, cCY).lineTo(0+50,cCY).lineTo(cW+50,100);//.setName('simpleX2');
     vars.enemies.attackPatternsNonDynamic['simpleX2']     = { maxOnPath: 13, duration: 5000, repeat: 1, delay: 150 };
 
     // square wave
@@ -317,14 +317,13 @@ function enemyAttackPatternsNonDynamic() { // these patterns are NOT dynamic. Th
     let x1 = start[0]; let y1 = start[1]; let yMod = 1; let p=0;
     while (x1<vars.canvas.width) {
         if (p%4===0 || p%4===2) { x1+=inc[0]; } else { yMod*=-1; y1+=yMod*inc[1] }
-        positions.push([x1,y1]);
-        p++;
+        positions.push([x1,y1]); p++;
     }
-    scene.paths.squareWave = new Phaser.Curves.Path(start[0], start[1]);
+    scene.paths.squareWave = new Phaser.Curves.Path(start[0], start[1]);//.setName('squareWave');
     for (pos of positions) { scene.paths.squareWave.lineTo(pos[0], pos[1]); }
     vars.enemies.attackPatternsNonDynamic['squareWave']   = { maxOnPath: 28, duration: 7000, repeat: 1, delay: 250 };
 
-    console.log('%cEnemy Attack Patterns: NON Dynamic - created. Stored in scene.paths', vars.console.callTo);
+    if (vars.DEBUG===true) { console.log('%cEnemy Attack Patterns: NON Dynamic - created. Stored in scene.paths', vars.console.callTo); }
     // add all the paths to the enemy var
     vars.enemies.availableAttackPatterns.init();
 
@@ -460,7 +459,7 @@ class enemyBoss {
             targets: thisSprite,
             alpha: 1,
             ease: 'Cubic.easeIn',
-            duration: 1500,
+            duration: 1000,
             onComplete: enemyBossShow,
             yoyo: true,
             onCompleteParams: [boss],
@@ -529,14 +528,9 @@ function enemyBossExplosionCheck(__strength, __boss) {
             selectedMatrix[0]*=xMod; selectedMatrix[1]*=yMod;
             if (test===false) { // if we ever needed the exact xy position, generally we only require the offset
                 addVector = new Phaser.Math.Vector2(selectedMatrix[0],selectedMatrix[1]);
-                if (vars.DEBUG===true) {
-                    console.log('Original xy: ' + bossVector.x + ', ' + bossVector.y);
-                    console.log('Add Vector - x: ' + addVector.x + ', y: ' + addVector.y);
-                }
+                if (vars.DEBUG===true) { console.log('Original xy: ' + bossVector.x + ', ' + bossVector.y); console.log('Add Vector - x: ' + addVector.x + ', y: ' + addVector.y); }
                 bossVector.add(addVector);
-                if (vars.DEBUG===true) {
-                    console.log('New xy: ' + bossVector.x + ', ' + bossVector.y);
-                }
+                if (vars.DEBUG===true) { console.log('New xy: ' + bossVector.x + ', ' + bossVector.y); }
             } else { // offset only
                  // this sends the offsets only
                  vars.particles.bossFireEmitter(selectedMatrix[0], selectedMatrix[1], foundPosition, __boss);
@@ -595,7 +589,7 @@ function enemyBossHit(_bullet, _boss) {
                     partV.currentEmitters[p].remove();
                 }
             }
-            console.log('The boss is dead! Make him to explody things...');
+            if (vars.DEBUG===true) { console.log('The boss is dead! Make him to explody things...'); }
             scene.sound.play('enemyBossExplode');
             vars.cameras.flash('white', 2500);
             let points = _boss.getData('points');
@@ -727,7 +721,7 @@ function enemyBossUpdate(_boss) {
 */
 
 function enemyAttackingHit(_enemy, _bullet) {
-    console.log('Enemy attacker has been hit.');
+    if (vars.DEBUG===true) { console.log('Enemy attacker has been hit.'); }
     // get the original enemy (the one thats hidden)
     let enemyName = _enemy.name.replace('f_','');
     let enemyPhaser = scene.children.getByName(enemyName);
@@ -768,25 +762,33 @@ function enemy25Death(enemy) {
         }
         i++;
     }
-
     enemyUpgradeDrop(enemy);
 }
 
 function enemy25Destroy(enemy) { // this function determines if there are enemies (phaser sprite) still alive
-    console.log('Enemy25 Destroyed.');
-    bulletHitEnemy.emitParticleAt(enemy.x, enemy.y); // explosion particle
+    console.log('Enemy25 Destroyed (' + enemy.name + ')');
+    let enemyFName = 'f25_' + enemy.name;
     enemy.destroy();
+    let f = scene.children.getByName(enemyFName);
+    bulletHitEnemy.emitParticleAt(f.x, f.y); // explosion particle
+    f.destroy();
 
     // check if there are any enemies left to attach to paths
     if (enemies.children.entries.length===0) { // all enemies are dead!
         gameLevelNext();
         return 'Next Wave';
     }
+    /* 
+    The function alive25MadeIt deals with new patterns now. Alive 25 Made it is also fired when an enemy25 dies
     // looks like we still have enemies available, check if there are still followers
-    if (scene.groups.enemyAttackingGroup25.children.size===1) {
+    console.log('Enemy25\'s left: ' + scene.groups.enemyAttackingGroup25.children.size);
+    if (scene.groups.enemyAttackingGroup25.children.size===0) {
+        // destroy the current path?
+
         // pick a new path
+        console.log('All enemy 25s dead... picking new path');
         vars.enemies.availableAttackPatterns.pathPickNext();
-    }
+    } */
 }
 
 function enemy25Hit(_follower, _bullet) {
@@ -813,6 +815,9 @@ function enemy25Hit(_follower, _bullet) {
         hp-=bulletStrength;
         if (hp<=0) { // enemy is dead
             enemy25Death(realEnemy); // make them explode
+            _follower.stopFollow(); // this should call alive25MadeIt() - it doesnt! Glad I checked... fukn Phaser :S
+            vars.enemies.alive25--;
+            if (vars.enemies.alive25===0 && enemies.children.entries.length>0) { vars.enemies.availableAttackPatterns.pathPickNext(); }
             _follower.destroy(); // hide the follower
         } else { // enemy is still alive, update its hp
             realEnemy.setData('hp', hp);

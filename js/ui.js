@@ -1,8 +1,10 @@
 function uiGameOver() {
     // save the high score if applicable
     let gV = vars.game;
-    if (gV.scores.current>gV.scores.best) { console.log('High Score!'); gV.scores.best = gV.scores.current; }
-    gV.scores.current = 0;
+    if (gV.scores.current>gV.scores.best) {
+        vars.localStorage.saveHighScore();
+    }
+    //gV.scores.current = 0;
 
     // hide any upgrades left on the screen
     scene.groups.shipUpgradeGroup.setVisible(false);

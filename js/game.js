@@ -1,8 +1,10 @@
 function gameLevelNext() {
     // first move the logs
     if (vars.localStorage.working===true) {
-
+        vars.localStorage.logMove();
     }
+    vars.localStorage.logClear();
+    if (cam3.alpha!==0) { vars.cameras.cam3alpha(); }
     // remove all player bullets
     vars.player.destroyAllBullets();
 

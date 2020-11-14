@@ -3,7 +3,7 @@ function animationInit(_spriteName) {
 
     if (selectedSprite==='asteroids') {
         selectedSprite = 'asteroid1';
-        console.log('%cSetting Up Asteroid 1 Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Asteroid 1 Animations', vars.console.animSetUp); }
         // build the frame names
         let frameNames = Phaser.Utils.Array.NumberArray(1,12,'a1frame');
         scene.anims.create({
@@ -22,7 +22,7 @@ function animationInit(_spriteName) {
         });
 
         selectedSprite = 'asteroid2';
-        console.log('%cSetting Up Asteroid 2 Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Asteroid 2 Animations', vars.console.animSetUp); }
         // build the frame names
         frameNames = Phaser.Utils.Array.NumberArray(1,12,'a2frame');
         scene.anims.create({
@@ -34,7 +34,7 @@ function animationInit(_spriteName) {
     }
 
     if (selectedSprite==='enemies') {
-        console.log('%cSetting Up Player Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Player Animations', vars.console.animSetUp); }
         let sC = vars.enemies.spriteCount;
         for (let nme=0; nme<sC; nme++) {
             scene.anims.create({
@@ -48,7 +48,7 @@ function animationInit(_spriteName) {
 
     if (selectedSprite==='shipUpgrades') {
         selectedSprite = 'upgradeBox';
-        console.log('%cSetting Up Ship Upgrade Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Ship Upgrade Animations', vars.console.animSetUp); }
         let fC = 2;
         scene.anims.create({
             key: 'shipGrade1',
@@ -65,7 +65,7 @@ function animationInit(_spriteName) {
     }
 
     if (selectedSprite==='upgrades') {
-        console.log('%cSetting Up Health Pickup Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Health Pickup Animations', vars.console.animSetUp); }
         let inc = 25;
         let sC = 3*inc;
         let fC = 2; // frame count for each animation
@@ -80,7 +80,7 @@ function animationInit(_spriteName) {
             hpUpgrade++;
         }
 
-        console.log('%cSetting Up Bullet Pickup Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Bullet Pickup Animations', vars.console.animSetUp); }
         scene.anims.create({
             key: 'bulletRate',
             frames: scene.anims.generateFrameNumbers('upgradesB', { start: 0, end: 1 } ),
@@ -94,7 +94,7 @@ function animationInit(_spriteName) {
             repeat: -1
         });
 
-        console.log('%cSetting Up Bonus Points Pickup Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Bonus Points Pickup Animations', vars.console.animSetUp); }
         scene.anims.create({
             key: 'score_2000',
             frames: scene.anims.generateFrameNumbers('upgradesP', { start: 0, end: 1 } ),
@@ -114,7 +114,7 @@ function animationInit(_spriteName) {
             repeat: -1
         });
 
-        console.log('%cSetting Up Field Animations', vars.console.animSetUp);
+        if (vars.DEBUG===true) { console.log('%cSetting Up Field Animations', vars.console.animSetUp); }
         // fields
         scene.anims.create({
             key: 'amstradField',

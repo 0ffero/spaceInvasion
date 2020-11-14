@@ -196,21 +196,21 @@ function shipPowerUpPickUp(_upgrade) {
     }
 
     if (upgradeType==='hp') {
-        console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade);
+        if (vars.DEBUG===true) { console.log('%cUpgrade HP: +' + upgradeValue, vars.console.playerUpgrade); }
         scene.sound.play('speechHP');
         pV.hitpoints+=upgradeValue;
         vars.UI.hpUpdate();
         pV.shieldChange(true);
     } else if (upgradeType==='b') { // bullet upgrades last for 5 seconds
         if (upgradeValue===0) { // double damage
-            console.log('%cUpgrade Bullet: Double Damage', vars.console.playerUpgrade);
+            if (vars.DEBUG===true) { console.log('%cUpgrade Bullet: Double Damage', vars.console.playerUpgrade); }
             scene.sound.play('speechDoubleDamage');
             ssV.doubleDamageEnabled = true;
             // swap the current bullet on ui
             scene.children.getByName('UI_bulletTypeN').setVisible(false);
             scene.children.getByName('UI_bulletTypeDD').setVisible(true);
         } else if (upgradeValue===1) { // double fire rate
-            console.log('%cUpgrade Bullet: Double Fire Rate. Setting Timeout to 5 seconds instead of 3', vars.console.playerUpgrade);
+            if (vars.DEBUG===true) { console.log('%cUpgrade Bullet: Double Fire Rate. Setting Timeout to 5 seconds instead of 3', vars.console.playerUpgrade); }
             scene.sound.play('speechDoubleFireRate');
             ssV.doubleFireRate = true;
             ssV.upgradeTimeout[0] = 5*vars.game.fps;
