@@ -46,6 +46,22 @@ function animationInit(_spriteName) {
         }
     }
 
+    if (selectedSprite==='3D') {
+        let frameNames = Phaser.Utils.Array.NumberArray(0,23,'frame');
+        scene.anims.create({
+            key: '3DGreen',
+            frames: scene.anims.generateFrameNumbers(selectedSprite + 'Green', { frames: frameNames }),
+            frameRate: 24,
+            repeat: -1
+        });
+        scene.anims.create({
+            key: '3DRed',
+            frames: scene.anims.generateFrameNumbers(selectedSprite + 'Red', { frames: frameNames }),
+            frameRate: 24,
+            repeat: -1
+        });
+    }
+
     if (selectedSprite==='shipUpgrades') {
         selectedSprite = 'upgradeBox';
         if (vars.DEBUG===true) { console.log('%cSetting Up Ship Upgrade Animations', vars.console.animSetUp); }

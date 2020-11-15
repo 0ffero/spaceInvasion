@@ -746,18 +746,18 @@ function enemy25Death(enemy) { // the real enemy is being passed in here (not th
     // disable and hide the original enemy
     let eV = vars.enemies;
     let enemyName = enemy.name;
-    enemy.setData('dead', true); // i dont think we even need this
+    enemy.setData('dead', true); // i dont think we even need this - see the next line...
     enemy.destroy();
     eV.deathCountIncrease();
     eV.alive25--;
-    
+
     // sound
     scene.sound.play('enemyExplode');
     vars.cameras.flash('white', 100);
-    
+
     // remove enemy from list var
     let i = 0; for (nme of vars.enemies.list) { if (nme.name===enemy.name) { vars.enemies.list.splice(i,1); break; }; i++; }
-    
+
     // kill the follower
     let f = scene.children.getByName('f25_' + enemyName);
     f.stopFollow(); // this should call alive25MadeIt() - it doesnt! Glad I checked... fukn Phaser :S

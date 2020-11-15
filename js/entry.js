@@ -211,6 +211,9 @@ function preload() {
     scene.load.spritesheet('pixel',   'UI/pixels-ext.png', { frameWidth: 50, frameHeight: 50, margin: 1, spacing: 2 });
     scene.load.image('title',         'UI/title.png');
     scene.load.atlas('upgradesBar',   'UI/upgradesBar.png', 'UI/upgradesBar.json');
+    // UI = 3D Anims
+    scene.load.atlas('3DGreen', 'UI/__3DEnemies/eGreen.png', 'UI/__3DEnemies/eGreen.json');
+    scene.load.atlas('3DRed', 'UI/__3DEnemies/eRed.png', 'UI/__3DEnemies/eRed.json');
 
     // VIDEO
     scene.load.video('introVideo', 'video/spaceinvaders.mp4');
@@ -284,6 +287,7 @@ function create() {
         debugger;
     }
     animationInit('enemies');
+    animationInit('3D');
     generateSprites(); // spriteGenerator.js
     enemyAttackPatternsNonDynamic(); // enemy.js
 

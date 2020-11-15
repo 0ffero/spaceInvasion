@@ -30,3 +30,13 @@ vars.test.initiateLevel25 = function() {
     vars.cheats.levelSkipTo(25);
     vars.enemies.availableAttackPatterns.pathPickNext();
 }
+
+vars.test.test3DSpritesFullSize = function() {
+    scene.add.sprite(360,400,'3DRed').anims.play('3DRed');
+    scene.add.sprite(360,640,'3DGreen').anims.play('3DGreen');
+}
+
+vars.test.test3DSpritesMini = function() {
+    scene.add.sprite(vars.canvas.cX - 30,1025,'3DGreen').setScale(0.2).setName('3DGreen').anims.play('3DGreen');
+    scene.add.sprite(vars.canvas.cX + 30,1025,'3DRed').setScale(0.2).setName('3DRed').anims.play('3DRed');
+}

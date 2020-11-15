@@ -2491,7 +2491,7 @@ var vars = {
         play: function() {
             let video = scene.add.video(vars.canvas.cX, 1500, 'introVideo').setRotation(21*(Math.PI/180)).setVolume(0.01).setScale(1.5).setAlpha(0).setName('introVideo').setLoop(true);
             video.playWhenUnlocked=true;
-            scene.tweens.add({ targets: video, delay: 3000, alpha: 0.04, ease: 'linear', duration: 10000, })
+            scene.tweens.add({ targets: video, alpha: 0.04, ease: 'Cubic.easeIn', duration: 7000, })
             scene.tweens.add({ targets: video, rotation: -21*(Math.PI/180), y: -300, ease: 'linear', duration: 35000, repeat: -1 })
         }
     },
