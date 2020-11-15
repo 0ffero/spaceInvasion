@@ -740,56 +740,40 @@ function enemyAttackingHit(_enemy, _bullet) {
     }
 }
 
-function enemy25Death(enemy) {
+function enemy25Death(enemy) { // the real enemy is being passed in here (not the follower)
     console.log('Enemy25 has died, hiding and destroying...');
+
+    // disable and hide the original enemy
     let eV = vars.enemies;
-    enemy.disableBody(); // disable interaction with bullets
-    enemy.setData('dead', true); // set the enemy to dead so it doesnt get counted in enemy win condition
+    let enemyName = enemy.name;
+    enemy.setData('dead', true); // i dont think we even need this
+    enemy.destroy();
     eV.deathCountIncrease();
+    eV.alive25--;
+    
+    // sound
     scene.sound.play('enemyExplode');
     vars.cameras.flash('white', 100);
-
-    enemy.setVisible(false);
-    enemy25Destroy(enemy);
-
-    // remove the enemy from the enemies list var
-    let i = 0;
-    for (nme of vars.enemies.list) {
-        if (nme.name===enemy.name) {
-            //console.log('Found the enemy in the list var... removing it');
-            vars.enemies.list.splice(i,1);
-            break;
-        }
-        i++;
-    }
-    enemyUpgradeDrop(enemy);
-}
-
-function enemy25Destroy(enemy) { // this function determines if there are enemies (phaser sprite) still alive
-    console.log('Enemy25 Destroyed (' + enemy.name + ')');
-    let enemyFName = 'f25_' + enemy.name;
-    enemy.destroy();
-    let f = scene.children.getByName(enemyFName);
+    
+    // remove enemy from list var
+    let i = 0; for (nme of vars.enemies.list) { if (nme.name===enemy.name) { vars.enemies.list.splice(i,1); break; }; i++; }
+    
+    // kill the follower
+    let f = scene.children.getByName('f25_' + enemyName);
+    f.stopFollow(); // this should call alive25MadeIt() - it doesnt! Glad I checked... fukn Phaser :S
     bulletHitEnemy.emitParticleAt(f.x, f.y); // explosion particle
+    enemyUpgradeDrop(f);
     f.destroy();
 
     // check if there are any enemies left to attach to paths
-    if (enemies.children.entries.length===0) { // all enemies are dead!
-        gameLevelNext();
-        return 'Next Wave';
+    if (vars.enemies.alive25===0 && enemies.children.size>0) { 
+        vars.enemies.availableAttackPatterns.pathPickNext(); 
+    } else if (enemies.children.size===0) { 
+        gameLevelNext(); return 'Next Wave'; 
     }
-    /* 
-    The function alive25MadeIt deals with new patterns now. Alive 25 Made it is also fired when an enemy25 dies
-    // looks like we still have enemies available, check if there are still followers
-    console.log('Enemy25\'s left: ' + scene.groups.enemyAttackingGroup25.children.size);
-    if (scene.groups.enemyAttackingGroup25.children.size===0) {
-        // destroy the current path?
 
-        // pick a new path
-        console.log('All enemy 25s dead... picking new path');
-        vars.enemies.availableAttackPatterns.pathPickNext();
-    } */
 }
+
 
 function enemy25Hit(_follower, _bullet) {
     if (_bullet!==null) {
@@ -815,10 +799,6 @@ function enemy25Hit(_follower, _bullet) {
         hp-=bulletStrength;
         if (hp<=0) { // enemy is dead
             enemy25Death(realEnemy); // make them explode
-            _follower.stopFollow(); // this should call alive25MadeIt() - it doesnt! Glad I checked... fukn Phaser :S
-            vars.enemies.alive25--;
-            if (vars.enemies.alive25===0 && enemies.children.entries.length>0) { vars.enemies.availableAttackPatterns.pathPickNext(); }
-            _follower.destroy(); // hide the follower
         } else { // enemy is still alive, update its hp
             realEnemy.setData('hp', hp);
         }

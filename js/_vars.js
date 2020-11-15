@@ -550,10 +550,11 @@ var vars = {
         width: -1,
 
         alive25MadeIt: function(_tween,_follower, _fName) { // when an enemy gets to the end of a tween they should be removed from the enemy25 var
-            scene.children.getByName(_fName).destroy();
+            let follower = scene.children.getByName(_fName);
+            if (follower!==null) { scene.children.getByName(_fName).destroy(); }
             let eV = vars.enemies;
             eV.alive25--;
-            if (eV.alive25===0 && enemies.children.entries.length>0) { vars.enemies.availableAttackPatterns.pathPickNext(); }
+            if (eV.alive25===0 && enemies.children.size>0) { vars.enemies.availableAttackPatterns.pathPickNext(); }
             console.log('Followers left: ' + eV.alive25);
         },
 
