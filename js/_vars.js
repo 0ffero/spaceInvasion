@@ -283,7 +283,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.176 (beta release)',
+    version : '0.9.188 (beta release)',
     versionCheckResult: -1,
 
     audio: {

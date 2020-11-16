@@ -65,6 +65,18 @@ function animationInit(_spriteName) {
             frameRate: 24,
             repeat: -1
         });
+        scene.anims.create({
+            key: '3DPurple',
+            frames: scene.anims.generateFrameNumbers(selectedSprite + 'Purple', { frames: frameNames }),
+            frameRate: 24,
+            repeat: -1
+        });
+        scene.anims.create({
+            key: '3DYellow',
+            frames: scene.anims.generateFrameNumbers(selectedSprite + 'Yellow', { frames: frameNames }),
+            frameRate: 24,
+            repeat: -1
+        });
     }
 
     if (selectedSprite==='shipUpgrades') {

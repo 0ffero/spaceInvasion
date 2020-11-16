@@ -62,9 +62,11 @@ vars.test.test3DSprite = function() {
         //spinner.destroy();
         let bgColour = null;
         switch (sC) {
-            case 'red':   animName = '3DGreen'; bgColour = 'green'; enemyName = 'garryGreenNamePlate'; break;
-            case 'green': animName = '3DBlue';  bgColour = 'blue';  enemyName = 'brianBlueNamePlate';  break;
-            default:      animName = '3DRed';   bgColour = 'red';   enemyName = 'rubyRedNamePlate';    break;
+            case 'red':    animName = '3DGreen';  bgColour = 'green';  enemyName = 'garryGreenNamePlate';  break;
+            case 'green':  animName = '3DBlue';   bgColour = 'blue';   enemyName = 'brianBlueNamePlate';   break;
+            case 'blue':   animName = '3DPurple'; bgColour = 'purple'; enemyName = 'peterPurpleNamePlate'; break;
+            case 'purple': animName = '3DYellow'; bgColour = 'yellow'; enemyName = 'alexAmberNamePlate';   break;
+            default:       animName = '3DRed';    bgColour = 'red';    enemyName = 'rubyRedNamePlate';     break;
         }
         realColour = scene.consts.colours[bgColour][0];
         scene.children.getByName('3DBG').setTint(realColour);

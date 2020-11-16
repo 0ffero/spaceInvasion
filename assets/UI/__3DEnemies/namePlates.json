@@ -59,6 +59,46 @@
 				"w": 615,
 				"h": 67
 			}
+		},
+		"peterPurpleNamePlate": {
+			"frame": {
+				"x": 1519,
+				"y": 1,
+				"w": 661,
+				"h": 67
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 661,
+				"h": 67
+			},
+			"sourceSize": {
+				"w": 661,
+				"h": 67
+			}
+		},
+		"alexAmberNamePlate": {
+			"frame": {
+				"x": 2180,
+				"y": 1,
+				"w": 479,
+				"h": 67
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 479,
+				"h": 67
+			},
+			"sourceSize": {
+				"w": 479,
+				"h": 67
+			}
 		}
 	},
 	"meta": {
@@ -67,8 +107,8 @@
 		"image": "namePlates.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 1519,
-			"h": 69
+			"w": 2656,
+			"h": 67
 		},
 		"scale": "1"
 	}

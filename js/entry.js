@@ -219,6 +219,8 @@ function preload() {
     scene.load.atlas('3DBlue', 'UI/__3DEnemies/eBlue.png', 'UI/__3DEnemies/eBlue.json');
     scene.load.atlas('3DGreen', 'UI/__3DEnemies/eGreen.png', 'UI/__3DEnemies/eGreen.json');
     scene.load.atlas('3DRed', 'UI/__3DEnemies/eRed.png', 'UI/__3DEnemies/eRed.json');
+    scene.load.atlas('3DPurple', 'UI/__3DEnemies/ePurple.png', 'UI/__3DEnemies/ePurple.json');
+    scene.load.atlas('3DYellow', 'UI/__3DEnemies/eYellow.png', 'UI/__3DEnemies/eYellow.json');
 
     // VIDEO
     scene.load.video('introVideo', 'video/spaceinvaders.mp4');
