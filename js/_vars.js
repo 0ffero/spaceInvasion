@@ -1218,11 +1218,19 @@ var vars = {
             }
             vars.cameras.flash('white',1250);
             // empty out the logo group
-            if (scene.groups.logoGroup.children.entries.length!==0) {
+            if (scene.groups.logoGroup.children.size!==0) {
                 scene.groups.logoGroup.children.each( (c)=> {
                     c.destroy();
                 })
                 scene.groups.logoGroup.clear(); // ok so clearing out the group, doesnt actually destroy the children... because OF COURSE IT DOESNT... fukn Phaser.
+            }
+            if (scene.groups.enemy3DGroup.children.size!==0) {
+                scene.groups.enemy3DGroup.children.each( (c)=> {
+                    switch (c.name) {
+                        case '3DBG': case 'namePlateShadow': c.setVisible(false); break;
+                        case 'spin3D': case '3DBGShadow': case 'namePlate': c.destroy(); break;
+                    }
+                })
             }
             // if we havent fade the loaded image back in
             let a = scene.children.getByName('loadingImage');
@@ -1241,6 +1249,7 @@ var vars = {
             scene.children.getByName('loadingImage').setAlpha(0.001);
             scene.children.getByName('title').setAlpha(0.001);
             vars.cameras.flash('white', 1250);
+            vars.test.test3DSprite();
             let ofour = vars.intro.ofour;
 
             let startX = 120; let startY = 100;

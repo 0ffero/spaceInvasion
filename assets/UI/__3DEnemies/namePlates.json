@@ -1,0 +1,75 @@
+{
+	"frames": {
+		"rubyRedNamePlate": {
+			"frame": {
+				"x": 1,
+				"y": 1,
+				"w": 408,
+				"h": 67
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 408,
+				"h": 67
+			},
+			"sourceSize": {
+				"w": 408,
+				"h": 67
+			}
+		},
+		"brianBlueNamePlate": {
+			"frame": {
+				"x": 411,
+				"y": 1,
+				"w": 490,
+				"h": 67
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 490,
+				"h": 67
+			},
+			"sourceSize": {
+				"w": 490,
+				"h": 67
+			}
+		},
+		"garryGreenNamePlate": {
+			"frame": {
+				"x": 903,
+				"y": 1,
+				"w": 615,
+				"h": 67
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 615,
+				"h": 67
+			},
+			"sourceSize": {
+				"w": 615,
+				"h": 67
+			}
+		}
+	},
+	"meta": {
+		"app": "http://www.codeandweb.com/texturepacker",
+		"version": "1.0",
+		"image": "namePlates.png",
+		"format": "RGBA8888",
+		"size": {
+			"w": 1519,
+			"h": 69
+		},
+		"scale": "1"
+	}
+}

@@ -212,6 +212,11 @@ function preload() {
     scene.load.image('title',         'UI/title.png');
     scene.load.atlas('upgradesBar',   'UI/upgradesBar.png', 'UI/upgradesBar.json');
     // UI = 3D Anims
+    scene.load.image('3DBG', 'UI/__3DEnemies/3DBG.png');
+    scene.load.image('3DBGShadow', 'UI/__3DEnemies/3DBGShadow.png');
+    scene.load.atlas('namePlates', 'UI/__3DEnemies/namePlates.png', 'UI/__3DEnemies/namePlates.json');
+    scene.load.image('namePlateShadow', 'UI/__3DEnemies/namePlateShadow.png');
+    scene.load.atlas('3DBlue', 'UI/__3DEnemies/eBlue.png', 'UI/__3DEnemies/eBlue.json');
     scene.load.atlas('3DGreen', 'UI/__3DEnemies/eGreen.png', 'UI/__3DEnemies/eGreen.json');
     scene.load.atlas('3DRed', 'UI/__3DEnemies/eRed.png', 'UI/__3DEnemies/eRed.json');
 
@@ -269,6 +274,7 @@ function create() {
     scene.groups.enemyBullets = scene.physics.add.group();
     scene.groups.enemyAttackingGroup = scene.physics.add.group();
     scene.groups.enemyAttackingGroup25 = scene.physics.add.group();
+    scene.groups.enemy3DGroup = scene.add.group();
 
     // scenery
     alienPlanetContainer = scene.add.container();
