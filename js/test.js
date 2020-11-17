@@ -38,7 +38,7 @@ vars.test.test3DSprite = function() {
     let realColour = null;
     let xy = {
         enemyShadow: { y: 1000, offsetX: 160, offsetY: 160 },
-        namePlateShadow: { y: 1050 },
+        namePlateShadow: { y: 1060 },
         namePlates: { y: 975 },
     }
     let esvar = xy.enemyShadow;
@@ -49,7 +49,7 @@ vars.test.test3DSprite = function() {
         spinner = scene.add.sprite(vars.canvas.cX-esvar.offsetX,vars.canvas.cY-esvar.offsetY,'3DRed').anims.play('3DRed').setName('spin3D').setData('colour', 'red');
         enemyShadow = scene.add.image(vars.canvas.cX-esvar.offsetX, esvar.y,'3DBGShadow').setTint(realColour).setName('3DBGShadow').setAlpha(0.05).setScale(0.2);
         namePlate = scene.add.image(vars.canvas.cX, xy.namePlates.y, 'namePlates', 'rubyRedNamePlate').setName('namePlate');
-        let nPS = scene.add.image(vars.canvas.cX, xy.namePlateShadow.y, 'namePlateShadow').setName('namePlateShadow').setAlpha(0.5);
+        let nPS = scene.add.image(vars.canvas.cX, xy.namePlateShadow.y, 'namePlateShadow').setName('namePlateShadow').setAlpha(0.5).setScale(0.85,1);
         // add everything to a group so we can access it easily
         scene.groups.enemy3DGroup.addMultiple([BG, spinner, enemyShadow, namePlate, nPS]);
         scene.groups.enemy3DGroup.name='red';
@@ -61,18 +61,20 @@ vars.test.test3DSprite = function() {
         let sC = scene.groups.enemy3DGroup.name;
         //spinner.destroy();
         let bgColour = null;
+        let xScale = 1;
         switch (sC) {
-            case 'red':    animName = '3DGreen';  bgColour = 'green';  enemyName = 'garryGreenNamePlate';  break;
-            case 'green':  animName = '3DBlue';   bgColour = 'blue';   enemyName = 'brianBlueNamePlate';   break;
-            case 'blue':   animName = '3DPurple'; bgColour = 'purple'; enemyName = 'peterPurpleNamePlate'; break;
-            case 'purple': animName = '3DYellow'; bgColour = 'yellow'; enemyName = 'alexAmberNamePlate';   break;
-            default:       animName = '3DRed';    bgColour = 'red';    enemyName = 'rubyRedNamePlate';     break;
+            case 'red':    animName = '3DGreen';  bgColour = 'green';  enemyName = 'garryGreenNamePlate';  xScale=1.2; break;
+            case 'green':  animName = '3DBlue';   bgColour = 'blue';   enemyName = 'brianBlueNamePlate';   xScale=1.0; break;
+            case 'blue':   animName = '3DPurple'; bgColour = 'purple'; enemyName = 'peterPurpleNamePlate'; xScale=1.3; break;
+            case 'purple': animName = '3DYellow'; bgColour = 'yellow'; enemyName = 'alexAmberNamePlate';   xScale=0.9; break;
+            default:       animName = '3DRed';    bgColour = 'red';    enemyName = 'rubyRedNamePlate';     xScale=0.85; break;
         }
         realColour = scene.consts.colours[bgColour][0];
         scene.children.getByName('3DBG').setTint(realColour);
         spinner = scene.add.sprite(vars.canvas.cX-esvar.offsetX,vars.canvas.cY-esvar.offsetX, animName).anims.play(animName).setName('spin3D').setData('colour', bgColour);
         enemyShadow = scene.add.image(vars.canvas.cX-esvar.offsetX, esvar.y,'3DBGShadow').setTint(realColour).setName('3DBGShadow').setAlpha(0.05).setScale(0.2);
         namePlate = scene.add.image(vars.canvas.cX, xy.namePlates.y, 'namePlates', enemyName).setName('namePlate');
+        scene.children.getByName('namePlateShadow').setScale(xScale,1);
         scene.groups.enemy3DGroup.addMultiple([spinner, enemyShadow, namePlate]).setName(bgColour);
     }
     let duration = 3000;
@@ -83,7 +85,7 @@ vars.test.test3DSprite = function() {
     // shadow alpha and scale
     scene.tweens.add({ targets: enemyShadow, alpha: 0.5, ease: 'Sine.easeInOut', scale: 1.0, duration: duration, yoyo: true, repeat: -1 })
     //nameplate
-    scene.tweens.add({ targets: namePlate, y: xy.namePlates.y+20, ease: 'Sine.easeInOut', scale: 1.0, duration: duration, yoyo: true, repeat: -1 })
+    scene.tweens.add({ targets: namePlate, y: xy.namePlates.y+15, ease: 'Sine.easeInOut', scale: 1.0, duration: duration, yoyo: true, repeat: -1 })
 
 }
 

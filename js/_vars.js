@@ -283,7 +283,7 @@ var vars = {
 
     DEBUGHIDE: true,
     DEBUGTEXT: '',
-    version : '0.9.188 (beta release)',
+    version : '0.9.190 (beta release)',
     versionCheckResult: -1,
 
     audio: {
@@ -316,11 +316,8 @@ var vars = {
                 let currentTrack = aV.gameTracks[aV.currentTrack];
                 let gM = scene.sound.add(currentTrack);
                 if (scene.sound.sounds.length===1) {
-                    gM.play();
+                    gM.play(); gM.once('complete', function() { aV.getNext(); })
                 }
-                gM.once('complete', function() {
-                    aV.getNext();
-                })
             }
         },
 
@@ -329,16 +326,12 @@ var vars = {
             if (aV.isEnabled===true) {
                 aV.isEnabled=false;
                 scene.sound.sounds.forEach( (c)=> {
-                    if (c.key==='intro' || c.key==='gamemusic1') {
-                        c.setVolume(0);
-                    }
+                    if (c.key==='intro' || c.key==='gamemusic1') { c.setVolume(0); }
                 })
             } else {
                 aV.isEnabled=true;
                 scene.sound.sounds.forEach( (c)=> {
-                    if (c.key==='intro' || c.key==='gamemusic1') {
-                        c.setVolume(1);
-                    }
+                    if (c.key==='intro' || c.key==='gamemusic1') { c.setVolume(1); }
                 })
             }
         },
@@ -1082,38 +1075,6 @@ var vars = {
             }
         },
 
-        introStart: function() {
-            if (vars.game.awaitingInput===true) {
-                vars.game.awaitingInput=false;
-                // fade out the loading screen
-                let loadingImage = scene.children.getByName('loadingImage');
-                let loaded = scene.children.getByName('loaded');
-                let title = scene.children.getByName('title');
-                scene.children.getByName('version').destroy();
-                scene.tweens.add({ targets: [loadingImage, title], alpha: 0, ease: 'linear', duration: 1000 })
-                scene.tweens.add({ targets: loaded, alpha: 0, ease: 'linear', duration: 1000, onComplete: vars.game.loadingImageDestroy })
-
-                // make the logo invisible if it exists (it destroys itself)
-                scene.groups.logoGroup.setVisible(false);
-
-                if (vars.localStorage.working===false) { // unable to write to local storage, show message
-                    let msgPopUp = scene.children.getByName('localStorageFail');
-                    msgPopUp.setVisible(true).setAlpha(0);
-                    scene.tweens.add({
-                        targets: msgPopUp,
-                        alpha: 1,
-                        duration: 4000,
-                        ease: 'Cubic.easeOut',
-                        yoyo: true,
-                        onComplete: vars.game.storyBegin
-                    })
-                } else {
-                    vars.game.storyBegin();
-                }
-
-            }
-        },
-
         loadingImageDestroy: function() {
             scene.children.getByName('loadingImage').destroy();
             scene.children.getByName('loaded').destroy();
@@ -1152,29 +1113,63 @@ var vars = {
             //scene.sys.canvas.style.cursor = 'default';
         },
 
-        storyBegin: function() {
-            if (vars.localStorage.working===false) { // local storage isnt working which means the warning needs to be destroyed.
-                scene.children.getByName('localStorageFail').destroy();
-            }
-            // start the game
-            if (vars.audio.isEnabled===true) {
-                scene.sound.play('intro', { loop: true });
-            }
-
-            vars.video.play();
-            storyInit();
-            player.setDepth(10);
-
-            // init camera views
-            vars.cameras.init();
-            vars.cameras.ignore(cam2, player);
-
-            // if debug is enabled add the debug overlay
-            if (vars.DEBUGHIDE===false) {
-                vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
-                vars.DEBUGTEXT.setOrigin(0,0);
-                vars.DEBUGTEXT.setStroke(scene.consts.colours.black,4);
-            }
+        startGame: function() {
+            // stop the intro video
+            scene.children.getByName('introVideo').destroy();
+            // set up the score text
+            scene.children.getByName('levelBG').setVisible(true);
+            vars.game.started=true;
+        
+            // UI
+            // text shadows
+            let sO = [5,3]; // shadowOffset
+            let alpha = 0.3;
+            let black = scene.consts.colours.black;
+            let scoreTitleShadow = scene.add.bitmapText(10+sO[0], 5+sO[1], 'azo', 'Score:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+            let scoreShadow = scene.add.bitmapText(120+sO[0], 5+sO[1], 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextIntS').setTint(black).setAlpha(alpha);
+            let waveTitleShadow = scene.add.bitmapText(vars.canvas.width*0.69+sO[0], 5+sO[1], 'azo', 'Wave:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+            let waveShadow = scene.add.bitmapText(vars.canvas.width*0.69+105+sO[0], 5+sO[1], 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextIntS').setTint(black).setAlpha(alpha);
+            let deathsTitleShadow = scene.add.bitmapText(vars.canvas.width*0.4+sO[0], 1080-29+sO[1], 'azo', 'Enemies destroyed:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+            let deathsShadow = scene.add.bitmapText(vars.canvas.width*0.4+300+sO[0], 1080-29+sO[1], 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextIntS').setTint(black).setAlpha(alpha);
+            let hpTitleShadow = scene.add.bitmapText(5+sO[0], 1080-30+sO[1], 'azo', 'HP:', 24).setOrigin(0).setTint(black).setAlpha(alpha);
+            let hpShadow = scene.add.bitmapText(60+sO[0], 1080-30+sO[1], 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextIntS').setTint(black).setAlpha(alpha);
+            scene.groups.scoreGroup.addMultiple([scoreTitleShadow, scoreShadow, waveTitleShadow, waveShadow, deathsTitleShadow, deathsShadow, hpTitleShadow, hpShadow]);
+        
+            // actual text
+            let scoreTitle = scene.add.bitmapText(10, 5, 'azo', 'Score:', 24).setOrigin(0);
+            let score = scene.add.bitmapText(120, 5, 'azo', vars.game.scores.current, 24).setOrigin(0).setName('scoreTextInt');
+            let waveTitle = scene.add.bitmapText(vars.canvas.width*0.69, 5, 'azo', 'Wave:', 24).setOrigin(0);
+            let wave = scene.add.bitmapText(vars.canvas.width*0.69+105, 5, 'azo', vars.levels.wave+89865, 24).setOrigin(0).setName('waveTextInt');
+            let deathsTitle = scene.add.bitmapText(vars.canvas.width*0.4, 1080-29, 'azo', 'Enemies destroyed:', 24).setOrigin(0);
+            let deaths = scene.add.bitmapText(vars.canvas.width*0.4+300, 1080-29, 'azo', vars.enemies.deathTotal, 24).setOrigin(0).setName('deathTextInt');
+            let hpTitle = scene.add.bitmapText(5, 1080-30, 'azo', 'HP:', 24).setOrigin(0);
+            let hp = scene.add.bitmapText(60, 1080-30, 'azo', vars.player.hitpoints, 24).setOrigin(0).setName('hpTextInt');
+            scene.groups.scoreGroup.addMultiple([scoreTitle, score, waveTitle, wave, deathsTitle, deaths, hpTitle, hp]);
+        
+        
+            // draw the hp/shield bar
+            let y = vars.canvas.height;
+            let a = scene.add.image(116,y-24, 'hpBarPlayer', 'BG').setOrigin(0,0);
+            let b = scene.add.image(117,y-23, 'hpBarPlayer', 'Red').setOrigin(0,0).setName('hpPBRed'); // we need to access these 3 when shields/hp change
+            let c = scene.add.image(117,y-12, 'hpBarPlayer', 'Blue').setOrigin(0,0).setName('hpPBBlue');
+            let d = scene.add.image(208,y-23, 'hpBarPlayer', 'Orange').setOrigin(0,0).setName('hpPBOrange').setAlpha(0.2);
+            // add them to the group
+            scene.groups.scoreGroup.addMultiple([a, b, c, d]);
+            // draw the upgrades box
+            let e = scene.add.image(233,y-24, 'upgradesBar', 'BG').setOrigin(0,0);
+            let f = scene.add.image(234,y-23, 'upgradesBar', 'uB_bulletsNormal').setOrigin(0,0).setName('UI_bulletTypeN');
+            let g = scene.add.image(234,y-23, 'upgradesBar', 'uB_bulletsDoubleDamage').setOrigin(0,0).setName('UI_bulletTypeDD').setVisible(false);
+            let h = scene.add.image(234,y-23, 'upgradesBar', 'uB_bulletsDoubleFireRate').setOrigin(0,0).setName('UI_bulletTypeDFR').setVisible(false);
+            let i = scene.add.image(234+25,y-23, 'upgradesBar', 'uB_ADI').setOrigin(0,0).setName('UI_ADI').setVisible(false);
+            let j = scene.add.image(234+25,y-23, 'upgradesBar', 'uB_SHADE').setOrigin(0,0).setName('UI_SHADE').setVisible(false);
+            scene.groups.scoreGroup.addMultiple([e,f,g,h,i,j]);
+        
+            cam1.ignore(scene.groups.scoreGroup);
+        
+            //show the player
+            player.setVisible(true);
+            vars.enemies.spawn();
+            wavePopUp();
         },
 
         unpause: function() {
@@ -1211,6 +1206,35 @@ var vars = {
     },
 
     intro: {
+
+        start: function() {
+            if (vars.game.awaitingInput===true) {
+                vars.game.awaitingInput=false;
+                // fade out the loading screen
+                let loadingImage = scene.children.getByName('loadingImage');
+                let loaded = scene.children.getByName('loaded');
+                let title = scene.children.getByName('title');
+                scene.children.getByName('version').destroy();
+                scene.tweens.add({ targets: [loadingImage, title], alpha: 0, ease: 'linear', duration: 1000 })
+                scene.tweens.add({ targets: loaded, alpha: 0, ease: 'linear', duration: 1000, onComplete: vars.game.loadingImageDestroy })
+
+                // make the logo invisible if it exists (it destroys itself)
+                scene.groups.logoGroup.setVisible(false);
+                // we also need to destroy the 3D sprites
+                if (scene.groups.enemy3DGroup.children.size!==0) {
+                    scene.groups.enemy3DGroup.children.each( (c)=> { c.destroy(); })
+                }
+
+                if (vars.localStorage.working===false) { // unable to write to local storage, show message
+                    let msgPopUp = scene.children.getByName('localStorageFail');
+                    msgPopUp.setVisible(true).setAlpha(0);
+                    scene.tweens.add({ targets: msgPopUp, alpha: 1, duration: 4000, ease: 'Cubic.easeOut', yoyo: true, onComplete: vars.story.begin })
+                } else {
+                    vars.story.begin();
+                }
+            }
+        },
+
         loadingImageFadeIn: function() {
             // check if weve transitioned to playing the game
             if (scene.children.getByName('loadingImage')===null) {
@@ -2420,7 +2444,74 @@ var vars = {
     },
 
     story: {
-        // populated from text.js
+        //  vars populated from text.js
+
+        begin: function() {
+            if (vars.localStorage.working===false) { // local storage isnt working which means the warning needs to be destroyed.
+                scene.children.getByName('localStorageFail').destroy();
+            }
+
+            // SHOW THE STORY
+            // --------------
+
+            // intro soundtrack
+            if (vars.audio.isEnabled===true) {
+                scene.sound.play('intro', { loop: true });
+            }
+
+            vars.video.play();
+            vars.story.init();
+            player.setDepth(10);
+
+            // init camera views
+            vars.cameras.init();
+            vars.cameras.ignore(cam2, player);
+
+            // if debug is enabled add the debug overlay
+            if (vars.DEBUGHIDE===false) {
+                vars.DEBUGTEXT = scene.add.text(0, 0, '', { font: '12px consolas', fill: '#ffffff' });
+                vars.DEBUGTEXT.setOrigin(0,0);
+                vars.DEBUGTEXT.setStroke(scene.consts.colours.black,4);
+            }
+        },
+
+        init() {
+            vars.versionCheck();
+            vars.canvas.setCursor('none');
+        
+            // START THE STORY SCROLLER
+            vars.game.storyVisible = true;
+            storyText = scene.add.bitmapText(0, vars.canvas.height, 'azoRed', vars.story.introText, 48).setCenterAlign().setAlpha(0).setMaxWidth(vars.canvas.width-20).setName('introStory');
+            storyText.x=10;
+            let scrollHeight = storyText.height;
+            let duration = scrollHeight*15;
+        
+            scene.tweens.add({ targets: storyText, alpha: 0.7, ease: 'Cubic.easeIn', duration: 7000 })
+            scene.tweens.add({ targets: storyText, y: -scrollHeight, ease: 'linear', duration: duration, onComplete: vars.game.startGame })
+        
+            // we fade out the loading image on click, so we need to set up a slight pause (5s) before enabling the intro skip
+            setTimeout( function() { vars.story.skipEnable(); }, 7000)
+        },
+
+        skipEnable: function() {
+            window.onmousedown = function(e) {
+                if (vars.game.storyVisible===true) {
+                    let iV = scene.children.getByName('introVideo'); scene.tweens.add({ targets: [storyText, iV], alpha: 0, duration: 3000, onComplete: vars.story.textSpeedUp })
+                    vars.game.storyVisible = false;
+                }
+            }
+            if (vars.canvas.pTest===-1) {
+                vars.canvas.getPixelAt();
+            }
+        },
+
+        textSpeedUp: function() {
+            vars.game.storyVisible = false;
+            tw = scene.tweens.getTweensOf(storyText);
+            tw[0].setTimeScale(1000);
+            // delete the intro music - moved to here so the game can tick and actually destroy the intro music before starting the game music
+            scene.sound.sounds.forEach( (c)=> { if (c.key==='intro') { c.destroy(); } })
+        }
     },
 
     UI: {

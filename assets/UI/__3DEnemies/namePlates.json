@@ -107,7 +107,7 @@
 		"image": "namePlates.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 2656,
+			"w": 2653,
 			"h": 67
 		},
 		"scale": "1"

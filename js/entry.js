@@ -330,7 +330,7 @@ function create() {
     // everything has loaded, swap the loading image
     scene.children.getByName('loadingImage').destroy();
     let loadingImage = scene.add.image(vars.canvas.cX, vars.canvas.cY, 'loadedImage').setName('loadingImage').setInteractive();
-    loadingImage.on('pointerdown', vars.game.introStart);
+    loadingImage.on('pointerdown', vars.intro.start);
     // show the new title (space invasion blue)
     scene.add.image(vars.canvas.cX, 745, 'title').setName('title');
 
